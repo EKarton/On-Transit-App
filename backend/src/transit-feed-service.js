@@ -1,8 +1,9 @@
 "use strict;"
 
 const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
+const CSV = require("fast-csv");
+const Unzip = require('unzip');
 const request = require('request');
-const fs = require("fs");
 
 const EARTH_RADIUS = 6371000; // in meters
 
@@ -97,16 +98,22 @@ class TransitFeedService{
     getNearbyTripsByLocation(latitude, longitude, radius){
         var requestSettings = {
             method: 'GET',
-            url: '',
+            url: 'https://www.miapp.ca/GTFS/google_transit.zip',
             encoding: null
         };
 
         return new Promise((resolve, reject) => {
-            request(requestSettings, (error, response, body) => {
-                if (error || response.statusCode != 200){
+            var requestStream = request(requestSettings, (error, response, body) => {
+                if (error || response.code != 200){
                     reject(error);
-                    return;
                 }
+            });
+
+            // Extract the files to a directory.
+            requestStream.pipe(Unzip.Extract({ path: __dirname + "/miway-gfts-files" }))
+            .end(() => {
+                // Get the routes which are in that radius
+                resolve();
             });
         });
     }
