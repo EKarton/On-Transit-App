@@ -2,6 +2,7 @@
 
 const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
 const request = require('request');
+const fs = require("fs");
 
 const EARTH_RADIUS = 6371000; // in meters
 
@@ -39,13 +40,13 @@ class TransitFeedService{
     }
 
     /**
-     * Returns a list of transit lines nearby a certain location at a certain radius
+     * Returns a list of transit lines that is close to a location by a certain radius
      * @param {number} latitude 
      * @param {number} longitude 
      * @param {number} radius
-     * @returns {Promise} A list of transit lines by ID
+     * @returns {Promise} A promise
      */
-    getNearbyTransitLinesByLocation(latitude, longitude, radius){        
+    getNearbyVehiclesByLocation(latitude, longitude, radius){        
         var requestSettings = {
             method: 'GET',
             url: 'https://www.miapp.ca/GTFS_RT/Vehicle/VehiclePositions.pb',
@@ -60,6 +61,8 @@ class TransitFeedService{
                 }
 
                 var feed = GtfsRealtimeBindings.FeedMessage.decode(body);
+
+                fs.writeFile("busses.txt", JSON.stringify(feed));
 
                 var validVehicles = [];
                 var index = 0;
@@ -80,6 +83,30 @@ class TransitFeedService{
                         resolve(validVehicles);
                     }
                 });
+            });
+        });
+    }
+
+    /**
+     * Returns a list of transit trips that are close to a location at a certain radius
+     * @param {number} latitude 
+     * @param {number} longitude 
+     * @param {number} radius
+     * @return {Promise} A promise
+     */
+    getNearbyTripsByLocation(latitude, longitude, radius){
+        var requestSettings = {
+            method: 'GET',
+            url: '',
+            encoding: null
+        };
+
+        return new Promise((resolve, reject) => {
+            request(requestSettings, (error, response, body) => {
+                if (error || response.statusCode != 200){
+                    reject(error);
+                    return;
+                }
             });
         });
     }
