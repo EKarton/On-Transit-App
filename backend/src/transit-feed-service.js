@@ -6,7 +6,8 @@ const Unzip = require('unzip');
 const request = require('request');
 const fs = require("fs");
 const Circle = require("./circle");
-const Point = require("./point");
+const Vector = require("./vector");
+const Geometry = require("./geometry");
 
 const EARTH_RADIUS = 6371000; // in meters
 
@@ -44,35 +45,6 @@ class TransitFeedService{
     }
 
     /**
-     * Returns true if the point is in the circle (including circle edges); 
-     * else returns false
-     * @param {Point} point 
-     * @param {Circle} circle
-     * @return {boolean} Returns true if it is in the circle; else false. 
-     */
-    _isPointInCircle(point, circle){
-        var deltaX = point.x - circle.centerPt.x;
-        var deltaY = point.y - circle.centerPt.y;
-        var deltaXPow = deltaX * deltaX;
-        var deltaYPow = deltaY * deltaY;
-
-        return deltaXPow + deltaYPow <= circle.radius * circle.radius;
-    }
-
-    /**
-     * Returns true if a line segment intersect the circle, or 
-     * if one of the points of the line segment touches the circle.
-     * @param {*} point1 An endpoint of a line segment
-     * @param {*} point2 The other endpoint of a line segment
-     * @param {*} circle A circle
-     * @return {boolean} Returns true if a line segment intersect the circle, or 
-*              if one of the points of the line segment touches the circle.
-     */
-    _isLineSegmentIntersectCircle(point1, point2, circle){
-
-    }
-
-    /**
      * Parses and returns a list of shapes based on their shape_id.
      * @param {string} filePath The file path to the csv file containing the shapes. 
      *  It must be relative to the project directory
@@ -97,14 +69,24 @@ class TransitFeedService{
                         throw new Error("The shape_pt_sequence is not unique!");
                     }
 
-                    shapes[data.shape_id][data.shape_pt_sequence] = {
-                        latitude: data.shape_pt_lat, 
-                        longitude: data.shape_pt_lon
-                    };
+                    var shapePoint = new Vector(data.shape_pt_lat, data.shape_pt_lon);
+                    shapes[data.shape_id][data.shape_pt_sequence] = shapePoint;
+
                 }).on("end", () => {
                     // This callback gets called when it has finished parsing the csv file.
-                    console.log("done!");
-                    resolve(shapes);
+
+                    var results = {};
+                    for (let shapeID in shapes){
+                        results[shapeID] = [];
+
+                        let points = shapes[shapeID];
+                        for (let pointID in points){
+                            let point = points[pointID];
+                            results[shapeID].push(point);
+                        }
+                    }
+
+                    resolve(results);
                 });
         });
     }
@@ -156,7 +138,6 @@ class TransitFeedService{
                             shapeId: data.shape_id,
                             wheelchairAssessible: data.wheelchair_accessible,
                             bikesAllowed: data.bikes_allowed
-
                         };
                     }
 
@@ -239,6 +220,97 @@ class TransitFeedService{
         });
     }
 
+    _getNearbyRoutesByLocation(shapes, routes, trips, geofence){
+        // Build a relational map
+        var shapeIDToTripIDs = {};
+        var tripIDToRouteID = {};
+        var routeIDToTripIDs = {};
+
+        for (let tripID in trips){
+            let shapeID = trips[tripID].shapeID;
+            
+            if (shapeIDToTripIDs[shapeID] == undefined){
+                shapeIDToTripIDs[shapeID] = [];
+            }
+
+            shapeIDToTripIDs[shapeID].push(tripID);
+
+            let routeID = trips[tripID].routeID;
+            tripIDToRouteID[tripID] = routeID;
+
+            if (routeIDToTripIDs[routeID] == undefined){
+                routeIDToTripIDs[routeID] = [];
+            }
+            routeIDToTripIDs[routeID].push(tripID);
+        }
+
+        // Find the shapes that are in the geofence
+        var response = {
+            routeIDToTripID: {},
+            tripIDToShapeID: {},
+            routeIDToRouteDetails: {},
+            tripIDToTripDetails: {},
+            shapeIDToShapeDetails: {}
+        };
+
+        for (let shapeID in shapes){
+            let points = shapes[shapeID];
+
+            // Test if the shape is in the geofence
+            let shapeInGeofence = false;
+            let point1 = null;
+            for (let point in points){
+                if (point1 == null){
+                    point1 = point;
+                }
+                else{
+                    let isInCircle = false;
+
+                    // Case 1: If the line segment is in the circle
+                    if (Geometry.isPointInCircle(point1, geofence) || Geometry.isPointInCircle(point, geofence)){
+                        isInCircle = true;
+                    }
+
+                    // Case 2: If the line segment intersects the circle
+                    else if (Geometry.isLineSegmentIntersectCircle(point1, point, geofence)){
+                        isInCircle = true;
+                    }
+
+                    // When this shape is found
+                    if (isInCircle){
+                        shapeInGeofence = true;
+                        break;
+                    }
+                }
+            }
+
+            if (shapeInGeofence){
+                let tripID = shapeIDToTripIDs[shapeID];
+                let routeID = tripIDToRouteID[tripID];
+
+                // Add the route, trip, and shape details
+                response.shapeIDToShapeDetails[shapeID] = curShape;
+
+                if (response.tripIDToTripDetails[tripID] == undefined){
+                    response.tripIDToTripDetails[tripID] = trips[tripID];
+                }
+
+                if (response.routeIDToRouteDetails[routeID] == undefined){
+                    response.routeIDToRouteDetails[routeID] = routes[routeID];
+                }
+
+                // Add the relational mappings
+                if (response.routeIDToTripID[routeID] == undefined){
+                    response.routeIDToTripID[routeID] = [];
+                }
+
+                response.routeIDToTripID[routeID].push(tripID);
+                response.tripIDToShapeID[tripID] = shapeID;
+            }
+        }
+        return response;
+    }
+
     /**
      * Returns a list of transit routes that are close to a location at a certain radius
      * @param {number} latitude The latitude of a point
@@ -251,87 +323,30 @@ class TransitFeedService{
 
             var geofence = new Circle(latitude, longitude, radius);
 
-            var shapes = this._getShapes("src/miway-gfts-files/shapes.txt");
-            var routes = this._getRoutes("src/miway-gfts-files/routes.txt");
-            var trips = this._getRoutes("src/miway-gfts-files/routes.txt");
+            this._getShapes("src/miway-gfts-files/shapes.txt")
+                .then(shapesPromiseResult => {
+                    this._getRoutes("src/miway-gfts-files/routes.txt")
+                        .then(routesPromiseResult => {
+                            this._getTrips("src/miway-gfts-files/trips.txt")
+                                .then(tripsPromiseResult => {
+                                    var shapes = shapesPromiseResult;
+                                    var routes = routesPromiseResult;
+                                    var trips = tripsPromiseResult;
 
-            // Build a relational map
-            var shapeIDToTripIDs = {};
-            var tripIDToRouteID = {};
-            var routeIDToTripIDs = {};
-
-            for (tripID in trips){
-                let shapeID = trips[tripID].shapeID;
-                
-                if (shapeIDToTripIDs[shapeID] == undefined){
-                    shapeIDToTripIDs[shapeID] = [];
-                }
-
-                shapeIDToTripIDs[shapeID].push(tripID);
-
-                let routeID = trips[tripID].routeID;
-                tripIDToRouteID[tripID] = routeID;
-
-                if (routeIDToTripIDs[routeID] == undefined){
-                    routeIDToTripIDs[routeID] = [];
-                }
-                routeIDToTripIDs[routeID].push(tripID);
-            }
-
-            // Find the shapes that are in the geofence
-            var response = {
-                routeIDToTripID: {},
-                tripIDToShapeID: {},
-                routeIDToRouteDetails: {},
-                tripIDToTripDetails: {},
-                shapeIDToShapeDetails: {}
-            };
-
-            for (let shapeID in shapes){
-                let curShape = shapes[shapeID];
-
-                // Test if the shape is in the geofence
-                let shapeInGeofence = false;
-                let point1 = null;
-                for (let point in curShape){
-                    if (point1 == null){
-                        point1 = point;
-                    }
-                    else{
-                        let isInCircle = false;
-
-                        // Case 1: If the line segment is in the circle
-                        if (this._isPointInCircle(point1, geofence) && this._isPointInCircle(point, geofence)){
-                            isInCircle = true;
-                        }
-    
-                        // Case 2: If the line segment intersects the circle
-                        if (this._isLineSegmentIntersectCircle(point1, point, geofence)){
-                            isInCircle = true;
-                        }
-    
-                        // When this shape is found
-                        if (isInCircle){
-                            shapeInGeofence = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (shapeInGeofence){
-                    response.shapeIDToShapeDetails[shapeID] = curShape;
-                    let tripID = shapeIDToTripIDs[shapeID];
-                    let routeID = tripIDToRouteID[tripID];
-
-                    if (response.tripIDToTripDetails[tripID] == undefined){
-                        response.tripIDToTripDetails[tripID] = trips[tripID];
-                    }
-
-                    if (response.routeIDToRouteDetails[routeID] == undefined){
-                        response.routeIDToRouteDetails[routeID] = routes[routeID];
-                    }
-                }
-            }
+                                    var result = this._getNearbyRoutesByLocation(shapes, routes, trips, geofence);
+                                    resolve(result);
+                                })
+                                .catch(tripsPromiseError => {
+                                    reject(tripsPromiseError);
+                                });
+                        })
+                        .catch(routesPromiseError => {
+                            reject(routesPromiseError);
+                        });
+                })
+                .catch(shapesPromiseError => {
+                    reject(shapesPromiseError);
+                });
         });
     }
 }

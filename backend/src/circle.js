@@ -1,15 +1,23 @@
 class Circle{
     constructor(centerPt, radius){
-        this.centerPt = centerPt;
-        this.radius = radius;
+        this._centerPt = centerPt;
+        this._radius = radius;
     }
 
     get centerPt(){
-        return this.centerPt;
+        return this._centerPt;
     }
 
     get radius(){
-        return this.radius;
+        return this._radius;
+    }
+
+    set centerPt(newCenterPt){
+        this._centerPt = newCenterPt;
+    }
+
+    set radius(newRadius){
+        this._radius = newRadius;
     }
 }
 
