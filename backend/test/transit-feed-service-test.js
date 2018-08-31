@@ -20,7 +20,7 @@ describe("getNearbyVehiclesByLocation()", () => {
 describe("getNearbyRoutesByLocation()", () => {
     it("simple test", (done) => {
         var service = new TransitFeedService();
-        service.getNearbyRoutesByLocation(43.554029, -79.722100, 5000)
+        service.getNearbyRoutesByLocation(43.554029, -79.722100, 50)
             .then(result => {
                 fs.writeFileSync("results.json", JSON.stringify(result));
                 console.log("DONE");
@@ -39,6 +39,7 @@ describe("_getShapes()", () => {
         var service = new TransitFeedService();
         service._getShapes("src/miway-gfts-files/shapes.txt")
             .then((results) => {
+                fs.writeFileSync("shapes.json", JSON.stringify(results));
                 done();
             }).catch(error => {
                 assert.fail(error);
@@ -59,10 +60,4 @@ describe("_getRoutes()", () => {
                 done();
             });
     }).timeout(5000);
-});
-
-describe("_isLineSegmentIntersectCircle()", () => {
-    it("Test 1", done => {
-
-    });
 });

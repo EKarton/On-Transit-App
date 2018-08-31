@@ -129,13 +129,13 @@ class TransitFeedService{
                 .on("data", data => {
                     if (trips[data.trip_id] == undefined){
                         trips[data.trip_id] = {
-                            routeId: data.route_id,
-                            serviceId: data.service_id,
+                            routeID: data.route_id,
+                            serviceID: data.service_id,
                             tripHeadSign: data.trip_headsign,
                             tripShortName: data.trip_short_name,
-                            directionId: data.direction_id,
-                            blockId: data.block_id,
-                            shapeId: data.shape_id,
+                            directionID: data.direction_id,
+                            blockID: data.block_id,
+                            shapeID: data.shape_id,
                             wheelchairAssessible: data.wheelchair_accessible,
                             bikesAllowed: data.bikes_allowed
                         };
@@ -244,9 +244,10 @@ class TransitFeedService{
             routeIDToTripIDs[routeID].push(tripID);
         }
 
+        console.log(shapeIDToTripIDs);
         // Find the shapes that are in the geofence
         var response = {
-            routeIDToTripID: {},
+            tripIDToRouteID: {},
             tripIDToShapeID: {},
             routeIDToRouteDetails: {},
             tripIDToTripDetails: {},
@@ -258,54 +259,57 @@ class TransitFeedService{
 
             // Test if the shape is in the geofence
             let shapeInGeofence = false;
-            let point1 = null;
-            for (let point in points){
-                if (point1 == null){
-                    point1 = point;
+            for (let i = 1; i < points.length; i++){
+                let point1 = points[i - 1];
+                let point2 = points[i];
+
+                let isInCircle = false;
+
+                // Case 1: If the line segment is in the circle
+                if (Geometry.isPointInCircle(point1, geofence) || Geometry.isPointInCircle(point2, geofence)){
+                    isInCircle = true;
                 }
-                else{
-                    let isInCircle = false;
 
-                    // Case 1: If the line segment is in the circle
-                    if (Geometry.isPointInCircle(point1, geofence) || Geometry.isPointInCircle(point, geofence)){
-                        isInCircle = true;
-                    }
-
-                    // Case 2: If the line segment intersects the circle
-                    else if (Geometry.isLineSegmentIntersectCircle(point1, point, geofence)){
-                        isInCircle = true;
-                    }
-
-                    // When this shape is found
-                    if (isInCircle){
-                        shapeInGeofence = true;
-                        break;
-                    }
+                // Case 2: If the line segment intersects the circle
+                else if (Geometry.isLineSegmentIntersectCircle(point1, point2, geofence)){
+                    isInCircle = true;
                 }
-            }
 
+                // When this shape is found stop the loop
+                if (isInCircle){
+                    shapeInGeofence = true;
+                    break;
+                }
+            };
+
+            // var response = {
+            //     routeIDToTripID: {},
+            //     tripIDToShapeID: {},
+            //     routeIDToRouteDetails: {},
+            //     tripIDToTripDetails: {},
+            //     shapeIDToShapeDetails: {}
+            // };
             if (shapeInGeofence){
-                let tripID = shapeIDToTripIDs[shapeID];
-                let routeID = tripIDToRouteID[tripID];
+                // Add the shape details
+                response.shapeIDToShapeDetails[shapeID] = shapes[shapeID];
 
-                // Add the route, trip, and shape details
-                response.shapeIDToShapeDetails[shapeID] = curShape;
+                // Add the trips that are part of this shape
+                let tripIDs = shapeIDToTripIDs[shapeID];
+                tripIDs.forEach(tripID => {
+                    response.tripIDToShapeID[tripID] = shapeID;
 
-                if (response.tripIDToTripDetails[tripID] == undefined){
-                    response.tripIDToTripDetails[tripID] = trips[tripID];
-                }
+                    if (response.tripIDToTripDetails[tripID] == undefined){
+                        response.tripIDToTripDetails[tripID] = trips[tripID];
+                    }
 
-                if (response.routeIDToRouteDetails[routeID] == undefined){
-                    response.routeIDToRouteDetails[routeID] = routes[routeID];
-                }
+                    // Add the routes that are part of this trip
+                    let routeID = tripIDToRouteID[tripID];
+                    response.tripIDToRouteID[tripID] = routeID;
 
-                // Add the relational mappings
-                if (response.routeIDToTripID[routeID] == undefined){
-                    response.routeIDToTripID[routeID] = [];
-                }
-
-                response.routeIDToTripID[routeID].push(tripID);
-                response.tripIDToShapeID[tripID] = shapeID;
+                    if (response.routeIDToRouteDetails[routeID] == undefined){
+                        response.routeIDToRouteDetails[routeID] = routes[routeID];
+                    }
+                });
             }
         }
         return response;
@@ -321,7 +325,7 @@ class TransitFeedService{
     getNearbyRoutesByLocation(latitude, longitude, radius){
         return new Promise((resolve, reject) => {
 
-            var geofence = new Circle(latitude, longitude, radius);
+            var geofence = new Circle(new Vector(latitude, longitude), radius);
 
             this._getShapes("src/miway-gfts-files/shapes.txt")
                 .then(shapesPromiseResult => {
