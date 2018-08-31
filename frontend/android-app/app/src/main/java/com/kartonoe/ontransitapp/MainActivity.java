@@ -14,6 +14,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -26,6 +27,7 @@ import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.kartonoe.ontransitapp.models.Route;
 import com.kartonoe.ontransitapp.models.RouteAPIGateway;
+import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 
 import java.util.List;
@@ -35,10 +37,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private TextView routeShortNameLabel;
     private TextView routeLongNameLabel;
     private TextView routeDirectionLabel;
+    private ListView stopsListView;
 
     private GoogleMap mMap;
     private LocationManager locationManager;
     private LocationListener locationListener;
+
+    private StopsAdapter stopsAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,6 +59,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         this.routeShortNameLabel = findViewById(R.id.routeShortNameLabel);
         this.routeLongNameLabel = findViewById(R.id.routeLongNameLabel);
         this.routeDirectionLabel = findViewById(R.id.routeDirectionLabel);
+        this.stopsListView = findViewById(R.id.stopsListView);
 
         // Add a click listener on location button
         FloatingActionButton resetLocationButton = findViewById(R.id.resetLocationButton);
@@ -152,15 +158,32 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         RouteAPIGateway apiGateway = RouteAPIGateway.getInstance();
         List<Route> routesNearMe = apiGateway.getRoutesNearLocation(curLocation, 5);
         List<Vector> path = apiGateway.getPath(routesNearMe.get(0));
-        updateMaps(curLocation, routesNearMe.get(0), path);
+
+        updateRouteDetailsUI(routesNearMe.get(0));
+        updateStopsUI(routesNearMe.get(0).getNextStops());
+        updateMapsUI(curLocation, path);
     }
 
-    private void updateMaps(Vector curLocation, Route newRoute, List<Vector> path){
-
+    private void updateRouteDetailsUI(Route newRoute){
         // Update the top header
         this.routeShortNameLabel.setText(newRoute.getRouteShortName());
         this.routeLongNameLabel.setText(newRoute.getRouteLongName());
         this.routeDirectionLabel.setText(newRoute.getRouteDirection());
+    }
+
+    private void updateStopsUI(List<Stop> stops){
+        if (stopsAdapter == null){
+            stopsAdapter = new StopsAdapter(this, stops);
+        }
+        else{
+            this.stopsAdapter.clear();
+            this.stopsAdapter.addAll(stops);
+        }
+
+        stopsListView.setAdapter(this.stopsAdapter);
+    }
+
+    private void updateMapsUI(Vector curLocation, List<Vector> path){
 
         // Change the path in google maps
         PolylineOptions polylineOptions = new PolylineOptions();

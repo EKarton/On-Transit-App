@@ -189,18 +189,15 @@ $ curl http://localhost:3000/api/v1/vehicles?lat=43.5540929&long=-79.7220238
 $ curl http://localhost:3000/api/v1/vehicles/105454545
 ```
 
-### Todos
-
- - Write MORE Tests
- - Add Night Mode
+### Credits
+This project was made by Emilio Kartono
 
 License
 ----
 
 MIT
 
-[//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
-
+[//]
 
    [dill]: <https://github.com/joemccann/dillinger>
    [git-repo-url]: <https://github.com/joemccann/dillinger.git>
