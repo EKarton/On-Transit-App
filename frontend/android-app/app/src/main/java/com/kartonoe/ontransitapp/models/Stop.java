@@ -8,8 +8,11 @@ import java.sql.Time;
 public class Stop {
     private Vector location;
     private Time expectedArrivalTime;
-    private String stopShortName;
-    private String stopLongName;
+    private String name;
+
+    public Stop(Vector location){
+        this(location, null);
+    }
 
     public Stop(Vector location, Time expectedArrivalTime){
         this.location = location;
@@ -32,19 +35,11 @@ public class Stop {
         this.expectedArrivalTime = expectedArrivalTime;
     }
 
-    public String getStopShortName() {
-        return stopShortName;
+    public String getName() {
+        return name;
     }
 
-    public void setStopShortName(String stopShortName) {
-        this.stopShortName = stopShortName;
-    }
-
-    public String getStopLongName() {
-        return stopLongName;
-    }
-
-    public void setStopLongName(String stopLongName) {
-        this.stopLongName = stopLongName;
+    public void setName(String name) {
+        this.name = name;
     }
 }

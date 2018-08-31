@@ -15,7 +15,6 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
-import android.widget.TextView;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -23,20 +22,20 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.kartonoe.ontransitapp.models.Route;
-import com.kartonoe.ontransitapp.models.RouteAPIGateway;
+import com.kartonoe.ontransitapp.models.OnTransitMockService;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
+import com.kartonoe.ontransitapp.views.RouteDetailsView;
+import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.List;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private TextView routeShortNameLabel;
-    private TextView routeLongNameLabel;
-    private TextView routeDirectionLabel;
     private ListView stopsListView;
 
     private GoogleMap mMap;
@@ -44,6 +43,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationListener locationListener;
 
     private StopsAdapter stopsAdapter;
+    private RouteDetailsView routeDetailsView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +56,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         // Get the UI components
-        this.routeShortNameLabel = findViewById(R.id.routeShortNameLabel);
-        this.routeLongNameLabel = findViewById(R.id.routeLongNameLabel);
-        this.routeDirectionLabel = findViewById(R.id.routeDirectionLabel);
+        this.routeDetailsView = findViewById(R.id.routeDetails);
         this.stopsListView = findViewById(R.id.stopsListView);
+
+        // Fix the drag and scrolling with the listview in the sliding panel
+        SlidingUpPanelLayout scrollPanel = findViewById(R.id.sliding_layout);
+        scrollPanel.setScrollableView(this.stopsListView);
 
         // Add a click listener on location button
         FloatingActionButton resetLocationButton = findViewById(R.id.resetLocationButton);
@@ -112,7 +114,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @SuppressLint("MissingPermission")
             Location location = locationManager.getLastKnownLocation(provider);
 
-            updateRoutes(new Vector(location.getLatitude(), location.getLongitude()));
+            if (location != null) {
+                updateRoutes(new Vector(location.getLatitude(), location.getLongitude()));
+            }
         }
     }
 
@@ -155,20 +159,18 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void updateRoutes(Vector curLocation){
-        RouteAPIGateway apiGateway = RouteAPIGateway.getInstance();
+        OnTransitMockService apiGateway = OnTransitMockService.getInstance();
         List<Route> routesNearMe = apiGateway.getRoutesNearLocation(curLocation, 5);
         List<Vector> path = apiGateway.getPath(routesNearMe.get(0));
+        List<Stop> stops = routesNearMe.get(0).getNextStops();
 
         updateRouteDetailsUI(routesNearMe.get(0));
         updateStopsUI(routesNearMe.get(0).getNextStops());
-        updateMapsUI(curLocation, path);
+        updateMapsUI(curLocation, path, stops);
     }
 
     private void updateRouteDetailsUI(Route newRoute){
-        // Update the top header
-        this.routeShortNameLabel.setText(newRoute.getRouteShortName());
-        this.routeLongNameLabel.setText(newRoute.getRouteLongName());
-        this.routeDirectionLabel.setText(newRoute.getRouteDirection());
+        this.routeDetailsView.setRoute(newRoute);
     }
 
     private void updateStopsUI(List<Stop> stops){
@@ -183,7 +185,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         stopsListView.setAdapter(this.stopsAdapter);
     }
 
-    private void updateMapsUI(Vector curLocation, List<Vector> path){
+    private void updateMapsUI(Vector curLocation, List<Vector> path, List<Stop> stops){
+        mMap.clear();
 
         // Change the path in google maps
         PolylineOptions polylineOptions = new PolylineOptions();
@@ -191,6 +194,17 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             polylineOptions.add(new LatLng(point.getX(), point.getY()));
         }
         Polyline polyline = mMap.addPolyline(polylineOptions);
+
+        // Change the stops
+        for (Stop stop : stops){
+            LatLng latLng = new LatLng(stop.getLocation().getX(), stop.getLocation().getY());
+
+            MarkerOptions markerOptions = new MarkerOptions()
+                    .position(latLng)
+                    .title(stop.getName())
+                    .draggable(false);
+            mMap.addMarker(markerOptions);
+        }
 
         // Change the camera
         CameraPosition newCameraPosition = new CameraPosition.Builder()

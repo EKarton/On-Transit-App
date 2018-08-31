@@ -19,51 +19,12 @@
         android:layout_height="match_parent"
         android:id="@+id/constraintLayout">
 
-        <android.support.constraint.ConstraintLayout
+        <com.kartonoe.ontransitapp.views.RouteDetailsView
             android:id="@+id/routeDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent">
-
-            <TextView
-                android:id="@+id/routeShortNameLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginTop="8dp"
-                android:text="109"
-                android:textSize="30sp"
-                app:layout_constraintLeft_toLeftOf="@id/routeDetails"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/routeDirectionLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="24dp"
-                android:layout_marginTop="4dp"
-                android:text="N"
-                android:textSize="24sp"
-                app:layout_constraintLeft_toLeftOf="@id/routeDetails"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/routeShortNameLabel" />
-
-            <TextView
-                android:id="@+id/routeLongNameLabel"
-                android:layout_width="274dp"
-                android:layout_height="35dp"
-                android:layout_marginLeft="80dp"
-                android:layout_marginTop="16dp"
-                android:text="Meadowvale Express"
-                android:textSize="24sp"
-                app:layout_constraintLeft_toLeftOf="@id/routeShortNameLabel"
-                app:layout_constraintTop_toTopOf="parent" />
-
-        </android.support.constraint.ConstraintLayout>
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"/>
 
         <!-- The maps fragment -->
         <fragment xmlns:android="http://schemas.android.com/apk/res/android"
@@ -99,7 +60,8 @@
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:gravity="center|top">
+        android:gravity="center|top"
+        android:layout_weight="0.7">
 
         <ListView
             android:id="@+id/stopsListView"

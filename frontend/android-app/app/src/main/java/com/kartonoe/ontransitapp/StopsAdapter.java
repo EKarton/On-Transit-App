@@ -35,16 +35,16 @@ public class StopsAdapter extends ArrayAdapter<Stop> {
     public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
         View listItem = convertView;
         if(listItem == null)
-            listItem = LayoutInflater.from(this.context).inflate(R.layout.stops_item, parent, false);
+            listItem = LayoutInflater.from(this.context).inflate(R.layout.stop_detail_view, parent, false);
 
         Stop currentStop = this.stops.get(position);
 
         // Change the UI text
         TextView stopNameLabel = listItem.findViewById(R.id.stopNameLabel);
-        stopNameLabel.setText(currentStop.getStopLongName());
+        stopNameLabel.setText(currentStop.getName());
 
         TextView stopTimeValueLabel = listItem.findViewById(R.id.stopTimeValueLabel);
-        stopTimeValueLabel.setText(currentStop.getExpectedArrivalTime().toString());
+        stopTimeValueLabel.setText("5");
 
         TextView stopTimeUnitLabel = listItem.findViewById(R.id.stopTimeUnitLabel);
         stopTimeUnitLabel.setText("minutes");
