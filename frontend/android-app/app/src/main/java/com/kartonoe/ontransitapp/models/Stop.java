@@ -28,7 +28,7 @@ public class Stop {
     }
 
     public Time getExpectedArrivalTime() {
-        return expectedArrivalTime;
+        return new Time(0, 5, 5);
     }
 
     public void setExpectedArrivalTime(Time expectedArrivalTime) {
@@ -36,7 +36,7 @@ public class Stop {
     }
 
     public String getName() {
-        return name;
+        return this.name;
     }
 
     public void setName(String name) {

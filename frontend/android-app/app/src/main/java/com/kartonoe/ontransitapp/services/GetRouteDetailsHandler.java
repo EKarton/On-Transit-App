@@ -47,13 +47,16 @@ public abstract class GetRouteDetailsHandler implements Response.Listener<JSONOb
                     // Parse the location
                     String rawLatitude = rawStopData.getString("lat");
                     String rawLongitude = rawStopData.getString("long");
+                    String rawStopName = rawStopData.getString("name");
+
                     double latitude = Double.parseDouble(rawLatitude);
                     double longitude = Double.parseDouble(rawLongitude);
                     Vector location = new Vector(latitude, longitude);
 
-                    String rawTime = rawStopData.getString("time");
+                    //String rawTime = rawStopData.getString("time");
 
                     Stop stop = new Stop(location, null);
+                    stop.setName(rawStopName);
                     stops.add(stop);
                 }
 

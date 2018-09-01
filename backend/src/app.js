@@ -33,8 +33,140 @@ app.get("/api/v1/routes/:routeID", (request, response) => {
                 shortName: "109",
                 longName: "Meadowvale Express",
                 stops: [
+                    {
+                       lat: 43.583898,
+                       long: -79.758828,
+                       name: "Meadowvale Town Centre Bus Terminal Platform J"
+                   },
 
-                ],
+                   {
+                       lat: 43.579251,
+                       long: -79.758974,
+                       name: "Winston Churchill Blvd At Battleford Rd"
+                   },
+
+                   {
+                       lat: 43.568766,
+                       long: -79.744589,
+                       name: "Winston Churchill Blvd At Britannia Rd"
+                   },
+
+                   {
+                       lat: 43.560914,
+                       long: -79.733931,
+                       name: "Winston Churchill Blvd At Thomas St"
+                   },
+
+                   {
+                       lat: 43.553124,
+                       long: -79.723298,
+                       name: "Winston Churchill Blvd At Erin Centre Blvd"
+                   },
+
+                   {
+                       lat: 43.549174,
+                       long: -79.717898,
+                       name: "Winston Churchill Blvd At Eglinton Ave"
+                   },
+
+                   {
+                       lat: 43.542020,
+                       long: -79.712183,
+                       name: "Winston Churchill Station East Platform 6"
+                   },
+
+                   {
+                       lat: 43.552245,
+                       long: -79.699942,
+                       name: "Erin Mills Station East Platform 6"
+                   },
+
+                   {
+                       lat: 43.594748,
+                       long: -79.646556,
+                       name: "City Centre Transit Terminal Platform A"
+                   },
+
+                   {
+                       lat: 43.607769,
+                       long: -79.635966,
+                       name: "Central Parkway Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.616433,
+                       long: -79.628585,
+                       name: "Cawthra Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.621769,
+                       long: -79.623491,
+                       name: "Tomken Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.629860,
+                       long: -79.614727,
+                       name: "Dixie Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.638867,
+                       long: -79.609972,
+                       name: "Tahoe Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.645500,
+                       long: -79.610227,
+                       name: "Etobicoke Creek Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.649799,
+                       long: -79.605575,
+                       name: "Spectrum Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.656851,
+                       long: -79.598334,
+                       name: "Orbitor Station East Platform A"
+                   },
+
+                   {
+                       lat: 43.663130,
+                       long: -79.590892,
+                       name: "Renforth Station East Platform 7"
+                   },
+
+                   {
+                       lat: 43.630411,
+                       long: -79.548677,
+                       name: "Dundas St At Billingham Rd"
+                   },
+
+                   {
+                       lat: 43.638352,
+                       long: -79.538060,
+                       name: "Dundas St At Aukland Rd"
+                   },
+
+                   {
+                       lat: 43.645061,
+                       long: -79.523734,
+                       name: "Islington Subway Drop Off"
+                   },
+
+                   {
+                       lat: 43.644680,
+                       long: -79.524767,
+                       name: "Islington Subway Bus Terminal Platform A"
+                   }
+               ]
+
+                ,
                 path: [
                     { lat: 43.6446333401,  long: -79.5247483425 },
                     { lat: 43.6445544452,  long: -79.5251234796 },

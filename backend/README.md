@@ -93,7 +93,7 @@ $ curl http://localhost:3000/api/v1/routes?lat=43.5540929&long=-79.7220238&radiu
 		shortName: "109",
 		longName: "Meadowvale Express",
 		stops: [
-			{ lat: , long: , time: },
+			{ lat: , long: , name: , time: },
 			...
 		],
 		path: [
