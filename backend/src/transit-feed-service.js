@@ -195,8 +195,6 @@ class TransitFeedService{
 
                 var feed = GtfsRealtimeBindings.FeedMessage.decode(body);
 
-                fs.writeFile("busses.txt", JSON.stringify(feed));
-
                 var validVehicles = [];
                 var index = 0;
 
@@ -208,7 +206,13 @@ class TransitFeedService{
                         vehiclePosition_latitude, vehiclePosition_longitude);
 
                     if (distance < radius){
-                        validVehicles.push(entity.vehicle);
+                        var vehicle = {
+                            id: entity.id,
+                            lat: vehiclePosition_latitude,
+                            long: vehiclePosition_longitude,
+                            routeID: entity.vehicle.trip.trip_id
+                        }
+                        validVehicles.push(vehicle);
                     }
 
                     index ++;

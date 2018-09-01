@@ -5,9 +5,10 @@ const TransitFeedService = require("./../src/transit-feed-service");
 describe("getNearbyVehiclesByLocation()", () => {
     it("simple test", (done) => {
         var service = new TransitFeedService();
-        service.getNearbyVehiclesByLocation(43.554029, -79.722100, 500)
+        service.getNearbyVehiclesByLocation(43.554029, -79.722100, 5000)
             .then(results => {
                 console.log(results);
+                fs.writeFileSync("results.json", JSON.stringify(results));
                 console.log(results.length);
                 done();
             }).catch(error => {
@@ -16,6 +17,16 @@ describe("getNearbyVehiclesByLocation()", () => {
             });
     }).timeout(5000);
 });
+
+/**
+ * The data should look like:
+ * [R143243: {
+ *  routeInfo: ...
+ *  path: [(lat, long)
+ *    
+ *  ]
+ * }]
+ */
 
 describe("getNearbyRoutesByLocation()", () => {
     it("simple test", (done) => {

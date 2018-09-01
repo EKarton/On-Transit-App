@@ -102,3 +102,5 @@ local.properties
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+backend/src/miway-gfts-files/
