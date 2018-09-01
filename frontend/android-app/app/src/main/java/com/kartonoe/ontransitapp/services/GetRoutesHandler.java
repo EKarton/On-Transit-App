@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.kartonoe.ontransitapp.models.Stop;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -42,7 +43,7 @@ public abstract class GetRoutesHandler implements Response.Listener<JSONObject>,
             }
 
         } catch (JSONException e) {
-            onError(500, e.getMessage());
+            throw new RuntimeException(e);
         }
     }
 

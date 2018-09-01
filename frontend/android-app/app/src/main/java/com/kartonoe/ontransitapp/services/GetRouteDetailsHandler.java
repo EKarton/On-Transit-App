@@ -39,42 +39,12 @@ public abstract class GetRouteDetailsHandler implements Response.Listener<JSONOb
                 String longName = rawData.getString("longName");
 
                 // Parse the stops
-                List<Stop> stops = new ArrayList<>();
                 JSONArray rawStopsData = rawData.getJSONArray("stops");
-                for (int i = 0; i < rawStopsData.length(); i++){
-                    JSONObject rawStopData = rawStopsData.getJSONObject(i);
-
-                    // Parse the location
-                    String rawLatitude = rawStopData.getString("lat");
-                    String rawLongitude = rawStopData.getString("long");
-                    String rawStopName = rawStopData.getString("name");
-
-                    double latitude = Double.parseDouble(rawLatitude);
-                    double longitude = Double.parseDouble(rawLongitude);
-                    Vector location = new Vector(latitude, longitude);
-
-                    //String rawTime = rawStopData.getString("time");
-
-                    Stop stop = new Stop(location, null);
-                    stop.setName(rawStopName);
-                    stops.add(stop);
-                }
+                List<Stop> stops = parseStops(rawStopsData);
 
                 // Parse the shapes
-                List<Vector> path = new ArrayList<>();
                 JSONArray rawPathData = rawData.getJSONArray("path");
-                for (int i = 0; i < rawPathData.length(); i++){
-                    JSONObject rawPointData = rawPathData.getJSONObject(i);
-
-                    // Parse the location
-                    String rawLatitude = rawPointData.getString("lat");
-                    String rawLongitude = rawPointData.getString("long");
-                    double latitude = Double.parseDouble(rawLatitude);
-                    double longitude = Double.parseDouble(rawLongitude);
-                    Vector point = new Vector(latitude, longitude);
-
-                    path.add(point);
-                }
+                List<Vector> path = parsePath(rawPathData);
 
                 // Create the route object
                 Route route = new Route(routeID);
@@ -87,8 +57,48 @@ public abstract class GetRouteDetailsHandler implements Response.Listener<JSONOb
             }
 
         } catch (JSONException e) {
-            onError(500, e.getMessage());
+            throw new RuntimeException(e);
         }
+    }
+
+    private List<Stop> parseStops(JSONArray rawStopsArray) throws JSONException {
+        List<Stop> stops = new ArrayList<>();
+        for (int i = 0; i < rawStopsArray.length(); i++){
+            JSONObject rawStopData = rawStopsArray.getJSONObject(i);
+
+            // Parse the location
+            String rawLatitude = rawStopData.getString("lat");
+            String rawLongitude = rawStopData.getString("long");
+            String rawStopName = rawStopData.getString("name");
+
+            double latitude = Double.parseDouble(rawLatitude);
+            double longitude = Double.parseDouble(rawLongitude);
+            Vector location = new Vector(latitude, longitude);
+
+            //String rawTime = rawStopData.getString("time");
+
+            Stop stop = new Stop(location, null);
+            stop.setName(rawStopName);
+            stops.add(stop);
+        }
+        return stops;
+    }
+
+    private List<Vector> parsePath(JSONArray rawPathData) throws JSONException {
+        List<Vector> path = new ArrayList<>();
+        for (int i = 0; i < rawPathData.length(); i++){
+            JSONObject rawPointData = rawPathData.getJSONObject(i);
+
+            // Parse the location
+            String rawLatitude = rawPointData.getString("lat");
+            String rawLongitude = rawPointData.getString("long");
+            double latitude = Double.parseDouble(rawLatitude);
+            double longitude = Double.parseDouble(rawLongitude);
+            Vector point = new Vector(latitude, longitude);
+
+            path.add(point);
+        }
+        return path;
     }
 
     public abstract void onSuccess(Route route);
