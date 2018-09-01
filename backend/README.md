@@ -48,7 +48,6 @@ Once the server is up, you are able to make many HTTP requests to the server.
     lat=[double],
     long=[double], 
     radius=[double], 
-    direction=[double]
 
 **Sample Success Response:**
 ```
@@ -74,7 +73,7 @@ Once the server is up, you are able to make many HTTP requests to the server.
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3000/api/v1/routes?lat=43.5540929&long=-79.7220238&radius=10&dir=12.564
+$ curl http://localhost:3000/api/v1/routes?lat=43.5540929&long=-79.7220238&radius=10
 ```
 
 ##### Getting routes details:
@@ -126,6 +125,7 @@ $ curl http://localhost:3000/api/v1/12131321231
 * **URL Query Params:**
     lat=[double]
     long=[double]
+    radius=[double]
     
 
 **Sample Success Response:**
@@ -134,9 +134,17 @@ $ curl http://localhost:3000/api/v1/12131321231
 	status: "success",
 	data: {
 		vehicles: [
-			{ vehicleID: 105454545, routeID: 46456456 },
+			{ 
+				id: 105454545, 
+				routeID: 46456456,
+				type: 3
+			},
 			...
-			{ vehicleID: 123123165, routeID: 98789787 }
+			{ 
+				id: 123123165, 
+				routeID: 98789787,
+				type: 3
+			}
 		]
 	}
 }
@@ -152,41 +160,7 @@ $ curl http://localhost:3000/api/v1/12131321231
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3000/api/v1/vehicles?lat=43.5540929&long=-79.7220238
-```
-
-##### Getting vehicle details:
-* **URL**:    
-    api/v1/vehicles/:vehicleID
-* **Method**: 
-    GET
-* **URL Params:**
-    vehicleID=[string]
-
-**Sample Success Response:**
-```
-{
-	status: "success",
-	data: {
-		vehicleID: 105454545,
-		routeID: 46456456,
-		vehicleType: 3,
-		...
-	}
-}
-```
-
-**Sample Failure Response:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-**Sample Call:**
-```
-$ curl http://localhost:3000/api/v1/vehicles/105454545
+$ curl http://localhost:3000/api/v1/vehicles?lat=43.5540929&long=-79.7220238&radius=10
 ```
 
 ### Credits
