@@ -7,8 +7,11 @@ import com.google.android.gms.maps.model.LatLng;
 import java.net.URISyntaxException;
 
 public interface OnTransitService {
-    void getRoutesNearLocation(LatLng location, GetRoutesHandler handler);
+
+    // For debugging purposes (to put in the Log.d())
+    String LOG_TAG = "OnTransitService";
+
+    void getRoutesNearLocation(LatLng location, double radius, GetRoutesHandler handler);
     void getRouteDetails(String routeID, GetRouteDetailsHandler handler);
     void getVehiclesNearLocation(LatLng location, double radius, GetVehiclesHandler handler);
-    void getVehicleDetails(String vehicleID, GetVehicleDetailsHandler handler);
 }

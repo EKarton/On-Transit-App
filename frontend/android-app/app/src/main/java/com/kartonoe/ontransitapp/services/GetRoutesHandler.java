@@ -7,17 +7,18 @@ import com.android.volley.VolleyError;
 
 import java.util.List;
 
+import static com.kartonoe.ontransitapp.services.OnTransitService.LOG_TAG;
+
 public abstract class GetRoutesHandler implements Response.Listener<String>, Response.ErrorListener{
 
     @Override
     public void onErrorResponse(VolleyError error) {
-
+        Log.d(LOG_TAG, "Received ERROR Response: " + error.getMessage());
     }
 
     @Override
     public void onResponse(String response) {
-        Log.d("MainActivity", "I AM HERERERERERE");
-        Log.d("MainActivity", response);
+        Log.d(LOG_TAG, "Received HTTP Response: " + response);
     }
 
     public abstract void onSuccess(List<String> routeIDs);

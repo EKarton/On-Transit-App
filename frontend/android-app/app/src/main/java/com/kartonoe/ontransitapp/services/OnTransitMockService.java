@@ -26,7 +26,7 @@ public class OnTransitMockService implements OnTransitService {
     private OnTransitMockService(){}
 
     @Override
-    public void getRoutesNearLocation(LatLng location, GetRoutesHandler handler) {
+    public void getRoutesNearLocation(LatLng location, double radius, GetRoutesHandler handler) {
         List<String> fakeRouteIDs = new ArrayList<>();
         fakeRouteIDs.add("123456789");
         fakeRouteIDs.add("987654321");
@@ -1297,10 +1297,5 @@ public class OnTransitMockService implements OnTransitService {
     public void getVehiclesNearLocation(LatLng location, double radius, GetVehiclesHandler handler) {
         handler.onError(404, "NOT HANDLED YET!");
 
-    }
-
-    @Override
-    public void getVehicleDetails(String vehicleID, GetVehicleDetailsHandler handler) {
-        handler.onError(404, "NOT HANDLED YET!");
     }
 }

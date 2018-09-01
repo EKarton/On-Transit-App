@@ -33,6 +33,7 @@ import com.kartonoe.ontransitapp.services.OnTransitMockService;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 import com.kartonoe.ontransitapp.services.OnTransitService;
+import com.kartonoe.ontransitapp.services.OnTransitWebService;
 import com.kartonoe.ontransitapp.views.RouteDetailsView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -163,9 +164,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void updateRoutes(LatLng curLocation){
         final LatLng currentLocation = curLocation;
-        final OnTransitService service = OnTransitMockService.getInstance();
+        final OnTransitService service = OnTransitWebService.getInstance(this);
 
-        service.getRoutesNearLocation(curLocation, new GetRoutesHandler() {
+        service.getRoutesNearLocation(curLocation, 500, new GetRoutesHandler() {
             @Override
             public void onSuccess(List<String> routeIDs) {
 

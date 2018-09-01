@@ -1,6 +1,7 @@
 package com.kartonoe.ontransitapp.services;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
@@ -19,12 +20,12 @@ public class OnTransitWebService implements OnTransitService {
     // Basic server details
     private final String SERVER_PROTOCOL = "http";
     private final String SERVER_AUTH = null;
-    private final String SERVER_HOSTNAME = "localhost";
+    private final String SERVER_HOSTNAME = "192.168.100.169";
     private final int SERVER_PORT = 3000;
 
     // Routes
-    private final String ROUTES_URI = "api/v1/routes";
-    private final String VEHICLES_URI = "api/v1/vehicles";
+    private final String ROUTES_URI = "/api/v1/routes";
+    private final String VEHICLES_URI = "/api/v1/vehicles";
 
     private static OnTransitService instance = null;
 
@@ -41,23 +42,31 @@ public class OnTransitWebService implements OnTransitService {
         this.requestQueue = Volley.newRequestQueue(context);
     }
 
-    public void getRoutesNearLocation(LatLng location, GetRoutesHandler handler) {
+    public void getRoutesNearLocation(LatLng location, double radius, GetRoutesHandler handler) {
         String query = new StringBuilder("lat=")
                 .append(location.latitude)
                 .append("&long=")
-                .append(location.longitude).toString();
-        URI uri = null;
+                .append(location.longitude)
+                .append("&radius=")
+                .append(radius)
+                .toString();
+
+
         try {
-            uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
+            URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
                     ROUTES_URI, query, null);
+
+            Log.d(LOG_TAG, "Making HTTP request to " + uri);
+
+
+            StringRequest request = new StringRequest(Request.Method.GET, uri.toString(),
+                    handler, handler);
+
+            this.requestQueue.add(request);
         } catch (URISyntaxException e) {
-            handler.onError(404, "Invalid query, " + uri);
+            Log.d(LOG_TAG, e.getMessage());
+            handler.onError(404, e.getMessage());
         }
-
-        StringRequest request = new StringRequest(Request.Method.GET, uri.toString(),
-                handler, handler);
-
-        this.requestQueue.add(request);
     }
 
     public void getRouteDetails(String routeID, GetRouteDetailsHandler handler) {
@@ -66,18 +75,19 @@ public class OnTransitWebService implements OnTransitService {
                 .append(routeID)
                 .toString();
 
-        URI uri = null;
         try {
-            uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
+            URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
                     apiEndpoint, null, null);
+
+            Log.d(LOG_TAG, "Making HTTP request to " + uri);
+            StringRequest request = new StringRequest(Request.Method.GET, uri.toString(),
+                    handler, handler);
+
+            this.requestQueue.add(request);
         } catch (URISyntaxException e) {
-            handler.onError(404, "Invalid query, " + uri);
+            Log.d(LOG_TAG, e.getMessage());
+            handler.onError(404, e.getMessage());
         }
-
-        StringRequest request = new StringRequest(Request.Method.GET, uri.toString(),
-                handler, handler);
-
-        this.requestQueue.add(request);
     }
 
     public void getVehiclesNearLocation(LatLng location, double radius, GetVehiclesHandler handler) {
@@ -85,38 +95,23 @@ public class OnTransitWebService implements OnTransitService {
         String query = new StringBuilder("lat=")
                 .append(location.latitude)
                 .append("&long=")
-                .append(location.longitude).toString();
-        URI uri = null;
-        try {
-            uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT, VEHICLES_URI,
-                    query, null);
-        } catch (URISyntaxException e) {
-            handler.onError(404, "Invalid query, " + uri);
-        }
-
-        // Send the request
-        StringRequest request = new StringRequest(Request.Method.GET, uri.toString(), handler, handler);
-
-        this.requestQueue.add(request);
-    }
-
-    public void getVehicleDetails(String vehicleID, GetVehicleDetailsHandler handler) {
-        String apiEndpoint = new StringBuilder(VEHICLES_URI)
-                .append("/")
-                .append(vehicleID)
+                .append(location.longitude)
+                .append("&radius=")
+                .append(radius)
                 .toString();
 
-        URI uri = null;
         try {
-            uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT, apiEndpoint,
-                    null, null);
+            URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT, VEHICLES_URI,
+                    query, null);
+
+            Log.d(LOG_TAG, "Making HTTP request to " + uri);
+
+            // Send the request
+            StringRequest request = new StringRequest(Request.Method.GET, uri.toString(), handler, handler);
+            this.requestQueue.add(request);
         } catch (URISyntaxException e) {
-            handler.onError(404, "Invalid query, " + uri);
+            Log.d(LOG_TAG, e.getMessage());
+            handler.onError(404, e.getMessage());
         }
-
-        // Send the request
-        StringRequest request = new StringRequest(Request.Method.GET, uri.toString(), handler, handler);
-
-        this.requestQueue.add(request);
     }
 }
