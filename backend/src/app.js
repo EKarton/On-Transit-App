@@ -23,13 +23,13 @@ app.get("/api/v1/routes", (request, response) => {
     response.send(JSON.stringify(jsonResponse));
 });
 
-app.get("api/v1/routes/:routeID", (request, response) => {
+app.get("/api/v1/routes/:routeID", (request, response) => {
     var routeID = request.params.routeID;
     if (routeID == "109"){
         var jsonResponse = {
             status: "success",
             data: {
-                routeID: routeID,
+                id: routeID,
                 shortName: "109",
                 longName: "Meadowvale Express",
                 stops: [
@@ -1142,9 +1142,27 @@ app.get("api/v1/routes/:routeID", (request, response) => {
                 ]
             }
         };
+
+        response.setHeader('Content-Type', 'application/json');
+        response.send(JSON.stringify(jsonResponse));
     }
     else if (routeID == "110"){
-
+        var jsonResponse = {
+            status: "failure",
+            data: { },
+            message: "Not handled yet by server!"
+        }
+        response.setHeader('Content-Type', 'application/json');
+        response.send(JSON.stringify(jsonResponse));
+    }
+    else{
+        var jsonResponse = {
+            status: "failure",
+            data: { },
+            message: "Not handled yet by server!"
+        }
+        response.setHeader('Content-Type', 'application/json');
+        response.send(JSON.stringify(jsonResponse));
     }
 });
 

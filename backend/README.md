@@ -89,7 +89,7 @@ $ curl http://localhost:3000/api/v1/routes?lat=43.5540929&long=-79.7220238&radiu
 {
 	status: "success",
 	data: {
-		routeID: 12131321231,
+		id: 12131321231,
 		shortName: "109",
 		longName: "Meadowvale Express",
 		stops: [

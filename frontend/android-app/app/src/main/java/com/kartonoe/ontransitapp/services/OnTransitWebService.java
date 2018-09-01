@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.model.LatLng;
@@ -59,8 +60,8 @@ public class OnTransitWebService implements OnTransitService {
             Log.d(LOG_TAG, "Making HTTP request to " + uri);
 
 
-            StringRequest request = new StringRequest(Request.Method.GET, uri.toString(),
-                    handler, handler);
+            JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
+                    uri.toString(), null, handler, handler);
 
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
@@ -80,8 +81,9 @@ public class OnTransitWebService implements OnTransitService {
                     apiEndpoint, null, null);
 
             Log.d(LOG_TAG, "Making HTTP request to " + uri);
-            StringRequest request = new StringRequest(Request.Method.GET, uri.toString(),
-                    handler, handler);
+
+            JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
+                    uri.toString(), null, handler, handler);
 
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
@@ -107,7 +109,9 @@ public class OnTransitWebService implements OnTransitService {
             Log.d(LOG_TAG, "Making HTTP request to " + uri);
 
             // Send the request
-            StringRequest request = new StringRequest(Request.Method.GET, uri.toString(), handler, handler);
+            JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
+                    uri.toString(), null, handler, handler);
+
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
             Log.d(LOG_TAG, e.getMessage());
