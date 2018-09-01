@@ -1,16 +1,22 @@
-package com.kartonoe.ontransitapp.models;
+package com.kartonoe.ontransitapp.services;
 
+import com.google.android.gms.maps.model.LatLng;
+import com.kartonoe.ontransitapp.models.Route;
+import com.kartonoe.ontransitapp.models.Stop;
+import com.kartonoe.ontransitapp.models.Vector;
+
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * A singleton that is used to make calls to the server
  */
-public class OnTransitMockService {
+public class OnTransitMockService implements OnTransitService {
 
     private static OnTransitMockService instance = null;
 
-    public static OnTransitMockService getInstance(){
+    public static OnTransitService getInstance(){
         if (instance == null){
             instance = new OnTransitMockService();
         }
@@ -19,96 +25,25 @@ public class OnTransitMockService {
 
     private OnTransitMockService(){}
 
-    public List<Route> getRoutesNearLocation(Vector location, double radius){
-        Route detail1 = new Route("123456789", "123456789");
-        detail1.setRouteShortName("109");
-        detail1.setRouteLongName("Meadowvale Express");
+    @Override
+    public void getRoutesNearLocation(LatLng location, GetRoutesHandler handler) {
+        List<String> fakeRouteIDs = new ArrayList<>();
+        fakeRouteIDs.add("123456789");
+        fakeRouteIDs.add("987654321");
 
-        Route detail2 = new Route("987654321", "987654321");
-        detail2.setRouteShortName("110");
-        detail2.setRouteLongName("University Express");
-
-        List<Route> details = new ArrayList<>();
-        details.add(detail1);
-        details.add(detail2);
-
-        List<Stop> stops = new ArrayList<>();
-        detail1.setNextStops(stops);
-        Stop stop = new Stop(null);
-        stop = new Stop(new Vector(43.583898, -79.758828));
-        stop.setName("Meadowvale Town Centre Bus Terminal Platform J");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.579251, -79.758974));
-        stop.setName("Winston Churchill Blvd At Battleford Rd");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.568766, -79.744589));
-        stop.setName("Winston Churchill Blvd At Britannia Rd");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.560914, -79.733931));
-        stop.setName("Winston Churchill Blvd At Thomas St");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.553124, -79.723298));
-        stop.setName("Winston Churchill Blvd At Erin Centre Blvd");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.549174, -79.717898));
-        stop.setName("Winston Churchill Blvd At Eglinton Ave");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.542020, -79.712183));
-        stop.setName("Winston Churchill Station East Platform 6");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.552245, -79.699942));
-        stop.setName("Erin Mills Station East Platform 6");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.594748, -79.646556));
-        stop.setName("City Centre Transit Terminal Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.607769, -79.635966));
-        stop.setName("Central Parkway Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.616433, -79.628585));
-        stop.setName("Cawthra Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.621769, -79.623491));
-        stop.setName("Tomken Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.629860, -79.614727));
-        stop.setName("Dixie Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.638867, -79.609972));
-        stop.setName("Tahoe Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.645500, -79.610227));
-        stop.setName("Etobicoke Creek Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.649799, -79.605575));
-        stop.setName("Spectrum Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.656851, -79.598334));
-        stop.setName("Orbitor Station East Platform A");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.663130, -79.590892));
-        stop.setName("Renforth Station East Platform 7");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.630411, -79.548677));
-        stop.setName("Dundas St At Billingham Rd");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.638352, -79.538060));
-        stop.setName("Dundas St At Aukland Rd");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.645061, -79.523734));
-        stop.setName("Islington Subway Drop Off");
-        stops.add(stop);
-        stop = new Stop(new Vector(43.644680, -79.524767));
-        stop.setName("Islington Subway Bus Terminal Platform A");
-        stops.add(stop);
-
-        return details;
+        handler.onSuccess(fakeRouteIDs);
     }
 
-    public List<Vector> getPath(Route route){
-        switch(route.getPathID()){
+    @Override
+    public void getRouteDetails(String routeID, GetRouteDetailsHandler handler) {
+        switch(routeID){
             case "123456789":
+                Route detail1 = new Route("123456789");
+                detail1.setRouteShortName("109");
+                detail1.setRouteLongName("Meadowvale Express");
+
                 List<Vector> pts = new ArrayList<>();
+                detail1.setPath(pts);
                 pts.add(new Vector(43.5838608682, -79.7588903274));
                 pts.add(new Vector(43.5839575000, -79.7589998202));
                 pts.add(new Vector(43.5844419744, -79.7596686510));
@@ -1272,11 +1207,100 @@ public class OnTransitMockService {
                 pts.add(new Vector(43.6448276217, -79.5238260665));
                 pts.add(new Vector(43.6446333401, -79.5247483425));
 
-                return pts;
+                List<Stop> stops = new ArrayList<>();
+                detail1.setNextStops(stops);
+                Stop stop = new Stop(null);
+                stop = new Stop(new Vector(43.583898, -79.758828));
+                stop.setName("Meadowvale Town Centre Bus Terminal Platform J");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.579251, -79.758974));
+                stop.setName("Winston Churchill Blvd At Battleford Rd");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.568766, -79.744589));
+                stop.setName("Winston Churchill Blvd At Britannia Rd");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.560914, -79.733931));
+                stop.setName("Winston Churchill Blvd At Thomas St");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.553124, -79.723298));
+                stop.setName("Winston Churchill Blvd At Erin Centre Blvd");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.549174, -79.717898));
+                stop.setName("Winston Churchill Blvd At Eglinton Ave");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.542020, -79.712183));
+                stop.setName("Winston Churchill Station East Platform 6");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.552245, -79.699942));
+                stop.setName("Erin Mills Station East Platform 6");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.594748, -79.646556));
+                stop.setName("City Centre Transit Terminal Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.607769, -79.635966));
+                stop.setName("Central Parkway Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.616433, -79.628585));
+                stop.setName("Cawthra Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.621769, -79.623491));
+                stop.setName("Tomken Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.629860, -79.614727));
+                stop.setName("Dixie Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.638867, -79.609972));
+                stop.setName("Tahoe Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.645500, -79.610227));
+                stop.setName("Etobicoke Creek Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.649799, -79.605575));
+                stop.setName("Spectrum Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.656851, -79.598334));
+                stop.setName("Orbitor Station East Platform A");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.663130, -79.590892));
+                stop.setName("Renforth Station East Platform 7");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.630411, -79.548677));
+                stop.setName("Dundas St At Billingham Rd");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.638352, -79.538060));
+                stop.setName("Dundas St At Aukland Rd");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.645061, -79.523734));
+                stop.setName("Islington Subway Drop Off");
+                stops.add(stop);
+                stop = new Stop(new Vector(43.644680, -79.524767));
+                stop.setName("Islington Subway Bus Terminal Platform A");
+                stops.add(stop);
+
+                handler.onSuccess(detail1);
+                break;
             case "987654321":
-                return new ArrayList<Vector>();
+                Route detail2 = new Route("987654321");
+                detail2.setRouteShortName("110");
+                detail2.setRouteLongName("University Express");
+
+                handler.onSuccess(detail2);
+                break;
+
             default:
-                return new ArrayList<Vector>();
+                handler.onError(100, "Unknown route ID!");
+                break;
         }
+    }
+
+    @Override
+    public void getVehiclesNearLocation(LatLng location, double radius, GetVehiclesHandler handler) {
+        handler.onError(404, "NOT HANDLED YET!");
+
+    }
+
+    @Override
+    public void getVehicleDetails(String vehicleID, GetVehicleDetailsHandler handler) {
+        handler.onError(404, "NOT HANDLED YET!");
     }
 }

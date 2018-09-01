@@ -12,17 +12,13 @@ public class Route {
     private String routeShortName;
     private String routeLongName;
     private String routeDirection;
-    private String pathID;
+    private List<Vector> path;
     private List<Stop> nextStops;
 
-    public Route(String routeID, String pathID){
+    public Route(String routeID){
         this.routeID = routeID;
-        this.pathID = pathID;
+        this.path = new ArrayList<>();
         this.nextStops = new ArrayList<>();
-    }
-
-    public String getPathID() {
-        return pathID;
     }
 
     public String getRouteID() {
@@ -44,6 +40,12 @@ public class Route {
     public void setRouteLongName(String routeLongName) {
         this.routeLongName = routeLongName;
     }
+
+    public List<Vector> getPath() {
+        return path;
+    }
+
+    public void setPath(List<Vector> newPath) { this.path = newPath; }
 
     public List<Stop> getNextStops() {
         return nextStops;

@@ -16,6 +16,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
+import com.android.volley.VolleyError;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -26,9 +27,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.kartonoe.ontransitapp.models.Route;
-import com.kartonoe.ontransitapp.models.OnTransitMockService;
+import com.kartonoe.ontransitapp.services.GetRouteDetailsHandler;
+import com.kartonoe.ontransitapp.services.GetRoutesHandler;
+import com.kartonoe.ontransitapp.services.OnTransitMockService;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
+import com.kartonoe.ontransitapp.services.OnTransitService;
 import com.kartonoe.ontransitapp.views.RouteDetailsView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -79,8 +83,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onLocationChanged(Location location) {
                 Log.d("Main Activity", "Location changed!");
-                Vector vectorLocation = new Vector(location.getLatitude(), location.getLongitude());
-                updateRoutes(vectorLocation);
+                updateRoutes(new LatLng(location.getLatitude(), location.getLongitude()));
             }
 
             @Override
@@ -115,7 +118,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
             Location location = locationManager.getLastKnownLocation(provider);
 
             if (location != null) {
-                updateRoutes(new Vector(location.getLatitude(), location.getLongitude()));
+                updateRoutes(new LatLng(location.getLatitude(), location.getLongitude()));
             }
         }
     }
@@ -158,15 +161,35 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
-    private void updateRoutes(Vector curLocation){
-        OnTransitMockService apiGateway = OnTransitMockService.getInstance();
-        List<Route> routesNearMe = apiGateway.getRoutesNearLocation(curLocation, 5);
-        List<Vector> path = apiGateway.getPath(routesNearMe.get(0));
-        List<Stop> stops = routesNearMe.get(0).getNextStops();
+    private void updateRoutes(LatLng curLocation){
+        final LatLng currentLocation = curLocation;
+        final OnTransitService service = OnTransitMockService.getInstance();
 
-        updateRouteDetailsUI(routesNearMe.get(0));
-        updateStopsUI(routesNearMe.get(0).getNextStops());
-        updateMapsUI(curLocation, path, stops);
+        service.getRoutesNearLocation(curLocation, new GetRoutesHandler() {
+            @Override
+            public void onSuccess(List<String> routeIDs) {
+
+                service.getRouteDetails(routeIDs.get(0), new GetRouteDetailsHandler() {
+                    @Override
+                    public void onSuccess(Route route) {
+                        updateRouteDetailsUI(route);
+                        updateStopsUI(route.getNextStops());
+                        updateMapsUI(currentLocation, route.getPath(), route.getNextStops());
+                    }
+
+                    @Override
+                    public void onError(int errorCode, String errorMessage) {
+
+                    }
+                });
+
+            }
+
+            @Override
+            public void onError(int errorCode, String errorMessage) {
+
+            }
+        });
     }
 
     private void updateRouteDetailsUI(Route newRoute){
@@ -185,7 +208,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         stopsListView.setAdapter(this.stopsAdapter);
     }
 
-    private void updateMapsUI(Vector curLocation, List<Vector> path, List<Stop> stops){
+    private void updateMapsUI(LatLng curLocation, List<Vector> path, List<Stop> stops){
         mMap.clear();
 
         // Change the path in google maps
@@ -208,7 +231,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
         // Change the camera
         CameraPosition newCameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(curLocation.getX(), curLocation.getY()))
+                .target(new LatLng(curLocation.latitude, curLocation.longitude))
                 .zoom(20) // Show buildings
                 .tilt(65)
                 //.bearing() The direction
