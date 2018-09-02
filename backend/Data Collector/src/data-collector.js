@@ -1,4 +1,4 @@
-"use strict;"
+"use strict";
 
 const CSV = require("fast-csv");
 const AdmZip = require('adm-zip');

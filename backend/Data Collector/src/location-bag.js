@@ -38,6 +38,15 @@ class LocationBag{
     }
 
     /**
+     * Returns the location object associated with that ID.
+     * If no location object is found with that ID it will return undefined.
+     * @param {string} locationID The location ID
+     */
+    getLocation(locationID){
+        return this._locationIDToLocations[locationID];
+    }
+
+    /**
      * Returns true if it is empty; else false.
      * @return {boolean} Returns true if it is empty; else false.
      */
