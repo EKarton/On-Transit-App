@@ -1,3 +1,5 @@
+"use strict";
+
 const MongoClient = require('mongodb').MongoClient;
 const CSV = require("fast-csv");
 const fs = require("fs");
@@ -20,7 +22,10 @@ const DATABASE_NAME = "miway-gtfs-static-data";
 class DataCollectorV2{
 
     /**
-     * Clears any files in the <DOWNLOADS_DIRECTORY>.
+     * Clears any files in the DOWNLOADS_DIRECTORY.
+     * Pre-condition: "DOWNLOADS_DIRECTORY" must be present which is relative to 
+     *  the project directory.
+     * 
      * @return {Promise} A Promise. When there are no errors thrown, it will pass NO 
      *  data to the .then() callback.
      *  When an error is thrown, it will pass the error to the catch() callback.
@@ -45,6 +50,9 @@ class DataCollectorV2{
 
     /**
      * Downloads the GTFS static files and extracts them to DOWNLOADS_DIRECTORY
+     * Pre-condition: The folder "DOWNLOADS_DIRECTORY" must be present which is
+     *  relative to the project directory
+     * 
      * @param {string} url The URL to the ZIP files containing the GTFS static files.
      * @return {Promise} A Promise. When there are no errors thrown, 
      *  it will not pass any values to the .then() callback.
@@ -85,6 +93,21 @@ class DataCollectorV2{
         });
     }
 
+    /**
+     * Parses shapes.txt, adds the locations that make up the paths in 
+     * the LocationBag "pathLocationBag", and returns a list of paths.
+     * 
+     * Pre-condition: DOWNLOADS_DIRECTORY/shapes.txt must be present 
+     *  relative to the project directory!
+     * 
+     * @param {LocationBag} pathLocationBag A location bag that will 
+     *  be added with GPS locations that make up the paths.
+     * 
+     * @return {Promise} A Promise object. If no error is thrown, it 
+     *  will pass the list of paths parsed to the .then() method. 
+     *  If any errors were thrown, it will pass the error object to 
+     *  the .catch() method.
+     */
     _getPaths(pathLocationBag){
         return new Promise((resolve, reject) => {
             var locationIDToSequence = {};
@@ -111,7 +134,7 @@ class DataCollectorV2{
                 })
                 .on("end", () => {
                     
-                    // Sort the shapes[] for each shapeID by their sequence
+                    // Sort the points in each path by their sequence
                     Object.keys(pathIDToPathDetails).forEach(pathID => {
                         pathIDToPathDetails[pathID].points.sort((a, b) => {
 
@@ -146,15 +169,20 @@ class DataCollectorV2{
 
     /**
      * Saves the contents in the LocationBag to the database
+     * "dbo" in the collection "collectionName"
      * where each entry in the database is:
      * {
      *      _id: <locationID>,
      *      latitude: <latitude>
      *      longitude: <longitude>
      * }
-     * @param {Db} dbo 
-     * @param {string} collectionName 
+     * 
+     * @param {Db} dbo A MongoDB database
+     * @param {string} collectionName A collection name
      * @param {LocationBag} locationBag A location bag instance
+     * @return {Promise} A promise object.
+     *  If no errors are thrown, it will pass nothing to the .then() method.
+     *  If an error is thrown, it will pass the error to the .catch() method.
      */
     saveLocationBagToDatabase(dbo, collectionName, locationBag){
         return new Promise((resolve, reject) => {
@@ -189,6 +217,18 @@ class DataCollectorV2{
         });
     }
 
+    /**
+     * Stores the "paths" in the database "dbo" in the collection "collectionName"
+     * 
+     * Pre-condition: "paths" must be an array of path objects.
+     * 
+     * @param {Db} dbo A MongoDB database
+     * @param {string} collectionName A collection name to store paths[] in "Db"
+     * @param {Array} paths A list of paths 
+     * @return {Promise} A promise. 
+     *  If no error is thrown, it will pass nothing to the .then() method. 
+     *  If an error is thrown, it will pass the error to the .catch() method.
+     */
     savePathsToDatabase(dbo, collectionName, paths){
         return new Promise((resolve, reject) => {
             dbo.createCollection("paths", async (error, response) => {
@@ -207,12 +247,14 @@ class DataCollectorV2{
 
     /**
      * Parses and returns the data stored in the routes.txt CSV file.
+     * 
      * Pre-condition: DOWNLOADS_DIRECTORY/routes.txt must be present
      *  relative to the project directory
      * 
-     * @return {Promise} A Promise. When successful, it will return a 
-     *  map of route IDs (as keys) to the route details (as values).
-     *  When an error is thrown, it will reject(error)
+     * @return {Promise} A Promise object.
+     *  When no errors are thrown,it will pass a map of route IDs to the 
+     *  route details to the .then() method. 
+     *  When an error is thrown, it will pass the error to the .catch() method.
      */
     _getRoutes(){
         return new Promise((resolve, reject) => {
@@ -244,14 +286,17 @@ class DataCollectorV2{
     }
 
     /**
-     * Parses and aggregates the contents in trips.txt and routes.txt to one data structure
+     * Parses and compresses the contents in trips.txt and "routeIDToRouteDetails"
+     * to one data structure in a list.
+     * 
      * Pre-condition:  
      *  DOWNLOADS_DIRECTORY/trips.txt and DOWNLOADS_DIRECTORY/routes.txt must be present
      *  relative to the project directory
      * 
-     * @return {Promise} Returns a Promise. 
-     *  When successful, it returns teh aggregated data; 
-     *  else it returns the Error object that the error has thrown.
+     * @param {Map} routeIDToRouteDetails A map that maps route IDs to route details
+     * @return {Promise} A promise object.
+     *  If no error is thrown, it will pass a list of trips to the .then() method.
+     *  If an error is thrown, it will pass the error to the .catch() method.
      */
     _getTrips(routeIDToRouteDetails){
         return new Promise(async (resolve, reject) => {
@@ -289,27 +334,30 @@ class DataCollectorV2{
     }
 
     /**
-     * Parses, aggregates, and stores the content in trips.txt and routes.txt
-     * in a collection name "trips".
-     * Pre-condition:  
-     *  DOWNLOADS_DIRECTORY/trips.txt and DOWNLOADS_DIRECTORY/routes.txt must be present
-     *  relative to the project directory
+     * Stores a list of trips ("trips") to a database ("dbo") in a collection 
+     * named "collectionName"
      * 
-     * @param {db} dbo The Mongo Database instance 
-     * @return {Promise} A promise. When successful, it does not return any data back. 
-     *  If an error was thrown, it will pass the Error object in the reject()
+     * Pre-condition:  
+     * - DOWNLOADS_DIRECTORY/trips.txt and DOWNLOADS_DIRECTORY/routes.txt must be present
+     *   relative to the project directory
+     * - "trips" must be a list. 
+     * 
+     * @param {db} dbo The Mongo Database instance
+     * @param {string} collectionName A collection name 
+     * @param {Array} trips A list of trips
+     * @return {Promise} A promise.
+     *  If no errors are thrown, it will pass nothing to the .then() method.
+     *  If an error is thrown, it will pass the error to the .catch() method.
      */
-    saveTripsToDatabase(dbo, trips){
+    saveTripsToDatabase(dbo, collectionName, trips){
         return new Promise(async (resolve, reject) => {
-            dbo.createCollection("trips", async (error, response) => {
+            dbo.createCollection(collectionName, async (error, response) => {
                 if (error)
                     reject(error);
 
                 try{
-
-
                     console.log("Saving " + trips.length + " routes!");
-                    dbo.collection("trips").insertMany(trips, (error, response) => {
+                    dbo.collection(collectionName).insertMany(trips, (error, response) => {
                         if (error)
                             reject(error);
 
@@ -337,7 +385,7 @@ class DataCollectorV2{
                     // Save the trips and the route details in the database
                     var routeIDToRouteDetails = await this._getRoutes();
                     var trips = await this._getTrips(routeIDToRouteDetails);
-                    await this.saveTripsToDatabase(dbo, trips);
+                    await this.saveTripsToDatabase(dbo, "trips", trips);
 
                     console.log("Finished saving routes and trips to database!");
 
