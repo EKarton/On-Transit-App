@@ -8,7 +8,7 @@ class QuadTree{
 
         this._quadTrees = [];
         this._locationIDs = [];
-        this._level = 0;
+        this._level = level;
     }
 
     add(locationID, locationBag){
@@ -69,10 +69,6 @@ class QuadTree{
             });
             this._locationIDs = [];
         }
-    }
-
-    delete(locationID, locationData){
-
     }
 
     findLocations(boundingBox){

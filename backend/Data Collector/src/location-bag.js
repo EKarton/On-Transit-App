@@ -46,6 +46,10 @@ class LocationBag{
         return this._locationIDToLocations[locationID];
     }
 
+    getStoredLocations(){
+        return this._locationIDToLocations;
+    }
+
     /**
      * Returns true if it is empty; else false.
      * @return {boolean} Returns true if it is empty; else false.
@@ -71,7 +75,9 @@ class LocationBag{
      * @return {string} The location ID
      */
     _getLocationID(location){
-        return location.latitude + "," + location.longitude;
+        var locationID = location.latitude + "," + location.longitude;
+        locationID = locationID.replace(".", "_").replace(".", "_");
+        return locationID;
     }
 }
 
