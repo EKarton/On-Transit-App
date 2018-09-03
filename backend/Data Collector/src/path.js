@@ -1,3 +1,5 @@
+"use strict";
+
 class Path{
     constructor(){
         this.points = [];

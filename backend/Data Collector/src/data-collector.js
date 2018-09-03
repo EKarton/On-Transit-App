@@ -184,7 +184,7 @@ class DataCollector{
      *  If no errors are thrown, it will pass nothing to the .then() method.
      *  If an error is thrown, it will pass the error to the .catch() method.
      */
-    saveLocationBagToDatabase(dbo, collectionName, locationBag){
+    _saveLocationBagToDatabase(dbo, collectionName, locationBag){
         return new Promise((resolve, reject) => {
             /**
              * Convert the LocationBag to a simple list where each entry is
@@ -229,7 +229,7 @@ class DataCollector{
      *  If no error is thrown, it will pass nothing to the .then() method. 
      *  If an error is thrown, it will pass the error to the .catch() method.
      */
-    savePathsToDatabase(dbo, collectionName, paths){
+    _savePathsToDatabase(dbo, collectionName, paths){
         return new Promise((resolve, reject) => {
             dbo.createCollection("paths", async (error, response) => {
                 if (error)
@@ -349,7 +349,7 @@ class DataCollector{
      *  If no errors are thrown, it will pass nothing to the .then() method.
      *  If an error is thrown, it will pass the error to the .catch() method.
      */
-    saveTripsToDatabase(dbo, collectionName, trips){
+    _saveTripsToDatabase(dbo, collectionName, trips){
         return new Promise(async (resolve, reject) => {
             dbo.createCollection(collectionName, async (error, response) => {
                 if (error)
@@ -385,15 +385,15 @@ class DataCollector{
                     // Save the trips and the route details in the database
                     var routeIDToRouteDetails = await this._getRoutes();
                     var trips = await this._getTrips(routeIDToRouteDetails);
-                    await this.saveTripsToDatabase(dbo, "trips", trips);
+                    await this._saveTripsToDatabase(dbo, "trips", trips);
 
                     console.log("Finished saving routes and trips to database!");
 
                     // Save the paths and its locations to the database
                     var pathsLocationBag = new LocationBag();
                     var paths = await this._getPaths(pathsLocationBag);
-                    await this.savePathsToDatabase(dbo, "paths", paths);
-                    await this.saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
+                    await this._savePathsToDatabase(dbo, "paths", paths);
+                    await this._saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
 
                     resolve();    
                 }
