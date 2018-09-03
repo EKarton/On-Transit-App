@@ -1,6 +1,5 @@
 "use strict";
 
-const MongoClient = require('mongodb').MongoClient;
 const CSV = require("fast-csv");
 const fs = require("fs");
 const path = require("path");
