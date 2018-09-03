@@ -9,7 +9,7 @@ class Path{
         this.maxLongitude = -100;
     }
 
-    addPoint(locationID, location, order=0){
+    addPoint(locationID, location){
         // Update the min and max lat and longitude
         if (location.longitude > this.maxLongitude){
             this.maxLongitude = location.longitude;
@@ -28,10 +28,7 @@ class Path{
         }
 
         // Add the stop to the array
-        this.points.push({
-            locationID: locationID,
-            order: order
-        });
+        this.points.push(locationID);
     }
 
     /**

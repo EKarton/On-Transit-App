@@ -85,6 +85,117 @@ class DataCollectorV2{
         });
     }
 
+    _getPaths(){
+        return new Promise((resolve, reject) => {
+            var pathLocationBag = new LocationBag();
+            var locationIDToSequence = {};
+            var pathIDToPathDetails = {};
+
+            var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/shapes.txt");
+            CSV.fromStream(fileStream, { headers: true })
+                .on("data", shape => {
+                    var pathID = shape.shape_id;
+
+                    if (pathIDToPathDetails[pathID] == undefined){
+                        pathIDToPathDetails[pathID] = new Path();
+                    }
+
+                    // Add the location to the LocationMap and keep track of its order
+                    var newPathLocation = new Location(shape.shape_pt_lat, shape.shape_pt_lon);
+                    var locationID = pathLocationBag.addLocation(newPathLocation);
+                    locationIDToSequence[locationID] = shape.shape_pt_sequence;
+
+                    pathIDToPathDetails[pathID].addPoint(locationID, newPathLocation);
+                })
+                .on("error", error => {
+                    reject(error);
+                })
+                .on("end", () => {
+                    
+                    // Sort the shapes[] for each shapeID by their sequence
+                    Object.keys(pathIDToPathDetails).forEach(pathID => {
+                        pathIDToPathDetails[pathID].points.sort((a, b) => {
+
+                            // Note that "a" and "b" are location IDs
+                            var aOrder = locationIDToSequence[a];
+                            var bOrder = locationIDToSequence[b];
+
+                            if (aOrder < bOrder){
+                                return -1;
+                            }
+                            else {
+                                return 1;
+                            }
+                        })
+                    });
+
+                    // Adding the _id properties to each value in pathIDToPathDetails{}
+                    Object.keys(pathIDToPathDetails).forEach(pathID => {
+                        pathIDToPathDetails[pathID]._id = pathID;
+                    });
+
+                    // Convert the pathIDToPathDetails{} to a list
+                    var pathsList = [];
+                    Object.keys(pathIDToPathDetails).forEach(pathID => {
+                        pathsList.push(pathIDToPathDetails[pathID]);
+                    });
+
+
+                    // Return the data back to the caller
+                    var dataToReturn = {
+                        paths: pathsList,
+                        locationsBag: pathLocationBag
+                    };
+                    resolve(dataToReturn);
+                });
+        });
+    }
+
+    /**
+     * Saves the contents in the LocationBag to the database
+     * where each entry in the database is:
+     * {
+     *      _id: <locationID>,
+     *      latitude: <latitude>
+     *      longitude: <longitude>
+     * }
+     * @param {Db} dbo 
+     * @param {string} collectionName 
+     * @param {LocationBag} locationBag A location bag instance
+     */
+    _saveLocationBagToDatabase(dbo, collectionName, locationBag){
+        return new Promise((resolve, reject) => {
+            /**
+             * Convert the LocationBag to a simple list where each entry is
+             * {
+             *      _id: <locationID>,
+             *      latitude: <latitude>
+             *      longitude: <longitude>
+             * }
+             */
+            var pathLocationsToBeSaved = [];
+            Object.keys(locationBag.getStoredLocations()).forEach(locationID => {
+                var locationObj = locationBag.getLocation(locationID);
+
+                var locationDataToSave = {
+                    _id: locationID,
+                    latitude: locationObj.latitude,
+                    longitude: locationObj.longitude
+                };
+                pathLocationsToBeSaved.push(locationDataToSave);
+            });
+
+            // Store pathLocationsToBeSaved[] in the database
+            dbo.collection(collectionName).insertMany(pathLocationsToBeSaved, (error, response) => {
+                if (error)
+                    reject(error);
+
+                console.log("Finished saving path locations!");
+                resolve();
+            });
+        });
+    }
+
     /**
      * It will parse the locations, grab those that are common, and 
      * @param {Db} dbo The database 
@@ -92,94 +203,116 @@ class DataCollectorV2{
     savePathsToDatabase(dbo){
         return new Promise((resolve, reject) => {
 
-            dbo.createCollection("paths", (error, response) => {
+            dbo.createCollection("paths", async (error, response) => {
                 if (error)
                     reject(error);
-                var pathLocationBag = new LocationBag();
-                var paths = {};
-    
-                var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/shapes.txt");
-                CSV.fromStream(fileStream, { headers: true })
-                    .on("data", shape => {
-                        var shapeID = shape.shape_id;
-    
-                        if (paths[shapeID] == undefined){
-                            paths[shapeID] = new Path();
-                        }
-    
-                        var newPathLocation = new Location(shape.shape_pt_lat, shape.shape_pt_lon);
-                        var locationID = pathLocationBag.addLocation(newPathLocation);
-    
-                        paths[shapeID].addPoint(
-                            locationID,
-                            newPathLocation,
-                            shape.shape_pt_sequence,
-                        );
-                    })
-                    .on("error", error => {
-                        reject(error);
-                    })
-                    .on("end", () => {
-                        
-                        // Sort the shapes[] for each shapeID by their sequence
-                        Object.keys(paths).forEach(shapeID => {
-                            paths[shapeID].points.sort((a, b) => {
-                                if (parseInt(a.order) < parseInt(b.order)){
-                                    return -1;
-                                }
-                                else {
-                                    return 1;
-                                }
-                            })
-                        });
 
-                        var pathsList = [];
-                        Object.keys(paths).forEach(shapeID => {
-                            paths[shapeID]._id = shapeID;
+                try{
+                    var pathsResult = await this._getPaths();
+                    var paths = pathsResult.paths;
+                    var locationsBag = pathsResult.locationsBag;
 
-                            var pathLocationIDList = [];
-                            for (let i = 0; i < paths[shapeID].points.length; i++){
-                                pathLocationIDList.push(paths[shapeID].points[i].locationID);
-                            }
-                            paths[shapeID].points = pathLocationIDList;
+                    await this._saveLocationBagToDatabase(dbo, "pathLocations", locationsBag);
+                    dbo.collection("paths").insertMany(paths, (error, response) => {
+                        if (error)
+                            reject(error);
 
-                            pathsList.push(paths[shapeID]);
-                        });
-    
-                        // Save the paths
-                        dbo.collection("paths").insertMany(pathsList, (error, response) => {
-                            if (error)
-                                reject(error);
-                            console.log("Finished saving paths! " + response.insertedCount);
-
-                            dbo.createCollection("pathLocations", (error, response) => {
-                                if (error)
-                                    reject(error);
-
-                                console.log("Created pathLocations collection!");
-
-                                var pathLocationsToBeSaved = [];
-                                Object.keys(pathLocationBag.getStoredLocations()).forEach(locationID => {
-                                    var locationObj = pathLocationBag.getLocation(locationID);
-                                    var locationDataToSave = {
-                                        _id: locationID,
-                                        latitude: locationObj.latitude,
-                                        longitude: locationObj.longitude
-                                    };
-                                    pathLocationsToBeSaved.push(locationDataToSave);
-                                });
-
-                                dbo.collection("pathLocations").insertMany(pathLocationsToBeSaved, (error, response) => {
-                                    if (error)
-                                        reject(error);
-
-                                    console.log("Finished saving path locations!");
-                                    resolve();
-                                });
-                            });
-                        });
+                        resolve();
                     });
+                }
+                catch(error){
+                    reject(error);
+                }
             });
+
+            // dbo.createCollection("paths", (error, response) => {
+            //     if (error)
+            //         reject(error);
+            //     var pathLocationBag = new LocationBag();
+            //     var paths = {};
+    
+            //     var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/shapes.txt");
+            //     CSV.fromStream(fileStream, { headers: true })
+            //         .on("data", shape => {
+            //             var shapeID = shape.shape_id;
+    
+            //             if (paths[shapeID] == undefined){
+            //                 paths[shapeID] = new Path();
+            //             }
+    
+            //             var newPathLocation = new Location(shape.shape_pt_lat, shape.shape_pt_lon);
+            //             var locationID = pathLocationBag.addLocation(newPathLocation);
+    
+            //             paths[shapeID].addPoint(
+            //                 locationID,
+            //                 newPathLocation,
+            //                 shape.shape_pt_sequence,
+            //             );
+            //         })
+            //         .on("error", error => {
+            //             reject(error);
+            //         })
+            //         .on("end", () => {
+                        
+            //             // Sort the shapes[] for each shapeID by their sequence
+            //             Object.keys(paths).forEach(shapeID => {
+            //                 paths[shapeID].points.sort((a, b) => {
+            //                     if (parseInt(a.order) < parseInt(b.order)){
+            //                         return -1;
+            //                     }
+            //                     else {
+            //                         return 1;
+            //                     }
+            //                 })
+            //             });
+
+            //             var pathsList = [];
+            //             Object.keys(paths).forEach(shapeID => {
+            //                 paths[shapeID]._id = shapeID;
+
+            //                 var pathLocationIDList = [];
+            //                 for (let i = 0; i < paths[shapeID].points.length; i++){
+            //                     pathLocationIDList.push(paths[shapeID].points[i].locationID);
+            //                 }
+            //                 paths[shapeID].points = pathLocationIDList;
+
+            //                 pathsList.push(paths[shapeID]);
+            //             });
+    
+            //             // Save the paths
+            //             dbo.collection("paths").insertMany(pathsList, (error, response) => {
+            //                 if (error)
+            //                     reject(error);
+            //                 console.log("Finished saving paths! " + response.insertedCount);
+
+            //                 dbo.createCollection("pathLocations", (error, response) => {
+            //                     if (error)
+            //                         reject(error);
+
+            //                     console.log("Created pathLocations collection!");
+
+            //                     var pathLocationsToBeSaved = [];
+            //                     Object.keys(pathLocationBag.getStoredLocations()).forEach(locationID => {
+            //                         var locationObj = pathLocationBag.getLocation(locationID);
+            //                         var locationDataToSave = {
+            //                             _id: locationID,
+            //                             latitude: locationObj.latitude,
+            //                             longitude: locationObj.longitude
+            //                         };
+            //                         pathLocationsToBeSaved.push(locationDataToSave);
+            //                     });
+
+            //                     dbo.collection("pathLocations").insertMany(pathLocationsToBeSaved, (error, response) => {
+            //                         if (error)
+            //                             reject(error);
+
+            //                         console.log("Finished saving path locations!");
+            //                         resolve();
+            //                     });
+            //                 });
+            //             });
+            //         });
+            // });
         });
     }
 
