@@ -85,9 +85,8 @@ class DataCollectorV2{
         });
     }
 
-    _getPaths(){
+    _getPaths(pathLocationBag){
         return new Promise((resolve, reject) => {
-            var pathLocationBag = new LocationBag();
             var locationIDToSequence = {};
             var pathIDToPathDetails = {};
 
@@ -140,13 +139,7 @@ class DataCollectorV2{
                         pathsList.push(pathIDToPathDetails[pathID]);
                     });
 
-
-                    // Return the data back to the caller
-                    var dataToReturn = {
-                        paths: pathsList,
-                        locationsBag: pathLocationBag
-                    };
-                    resolve(dataToReturn);
+                    resolve(pathsList);
                 });
         });
     }
@@ -163,7 +156,7 @@ class DataCollectorV2{
      * @param {string} collectionName 
      * @param {LocationBag} locationBag A location bag instance
      */
-    _saveLocationBagToDatabase(dbo, collectionName, locationBag){
+    saveLocationBagToDatabase(dbo, collectionName, locationBag){
         return new Promise((resolve, reject) => {
             /**
              * Convert the LocationBag to a simple list where each entry is
@@ -196,123 +189,19 @@ class DataCollectorV2{
         });
     }
 
-    /**
-     * It will parse the locations, grab those that are common, and 
-     * @param {Db} dbo The database 
-     */
-    savePathsToDatabase(dbo){
+    savePathsToDatabase(dbo, collectionName, paths){
         return new Promise((resolve, reject) => {
-
             dbo.createCollection("paths", async (error, response) => {
                 if (error)
                     reject(error);
 
-                try{
-                    var pathsResult = await this._getPaths();
-                    var paths = pathsResult.paths;
-                    var locationsBag = pathsResult.locationsBag;
+                dbo.collection(collectionName).insertMany(paths, (error, response) => {
+                    if (error)
+                        reject(error);
 
-                    await this._saveLocationBagToDatabase(dbo, "pathLocations", locationsBag);
-                    dbo.collection("paths").insertMany(paths, (error, response) => {
-                        if (error)
-                            reject(error);
-
-                        resolve();
-                    });
-                }
-                catch(error){
-                    reject(error);
-                }
+                    resolve();
+                });
             });
-
-            // dbo.createCollection("paths", (error, response) => {
-            //     if (error)
-            //         reject(error);
-            //     var pathLocationBag = new LocationBag();
-            //     var paths = {};
-    
-            //     var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/shapes.txt");
-            //     CSV.fromStream(fileStream, { headers: true })
-            //         .on("data", shape => {
-            //             var shapeID = shape.shape_id;
-    
-            //             if (paths[shapeID] == undefined){
-            //                 paths[shapeID] = new Path();
-            //             }
-    
-            //             var newPathLocation = new Location(shape.shape_pt_lat, shape.shape_pt_lon);
-            //             var locationID = pathLocationBag.addLocation(newPathLocation);
-    
-            //             paths[shapeID].addPoint(
-            //                 locationID,
-            //                 newPathLocation,
-            //                 shape.shape_pt_sequence,
-            //             );
-            //         })
-            //         .on("error", error => {
-            //             reject(error);
-            //         })
-            //         .on("end", () => {
-                        
-            //             // Sort the shapes[] for each shapeID by their sequence
-            //             Object.keys(paths).forEach(shapeID => {
-            //                 paths[shapeID].points.sort((a, b) => {
-            //                     if (parseInt(a.order) < parseInt(b.order)){
-            //                         return -1;
-            //                     }
-            //                     else {
-            //                         return 1;
-            //                     }
-            //                 })
-            //             });
-
-            //             var pathsList = [];
-            //             Object.keys(paths).forEach(shapeID => {
-            //                 paths[shapeID]._id = shapeID;
-
-            //                 var pathLocationIDList = [];
-            //                 for (let i = 0; i < paths[shapeID].points.length; i++){
-            //                     pathLocationIDList.push(paths[shapeID].points[i].locationID);
-            //                 }
-            //                 paths[shapeID].points = pathLocationIDList;
-
-            //                 pathsList.push(paths[shapeID]);
-            //             });
-    
-            //             // Save the paths
-            //             dbo.collection("paths").insertMany(pathsList, (error, response) => {
-            //                 if (error)
-            //                     reject(error);
-            //                 console.log("Finished saving paths! " + response.insertedCount);
-
-            //                 dbo.createCollection("pathLocations", (error, response) => {
-            //                     if (error)
-            //                         reject(error);
-
-            //                     console.log("Created pathLocations collection!");
-
-            //                     var pathLocationsToBeSaved = [];
-            //                     Object.keys(pathLocationBag.getStoredLocations()).forEach(locationID => {
-            //                         var locationObj = pathLocationBag.getLocation(locationID);
-            //                         var locationDataToSave = {
-            //                             _id: locationID,
-            //                             latitude: locationObj.latitude,
-            //                             longitude: locationObj.longitude
-            //                         };
-            //                         pathLocationsToBeSaved.push(locationDataToSave);
-            //                     });
-
-            //                     dbo.collection("pathLocations").insertMany(pathLocationsToBeSaved, (error, response) => {
-            //                         if (error)
-            //                             reject(error);
-
-            //                         console.log("Finished saving path locations!");
-            //                         resolve();
-            //                     });
-            //                 });
-            //             });
-            //         });
-            // });
         });
     }
 
@@ -364,11 +253,9 @@ class DataCollectorV2{
      *  When successful, it returns teh aggregated data; 
      *  else it returns the Error object that the error has thrown.
      */
-    _getTrips(){
+    _getTrips(routeIDToRouteDetails){
         return new Promise(async (resolve, reject) => {
             try{
-                var routeIDToRouteDetails = await this._getRoutes();
-
                 var trips = [];
                 var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/trips.txt");
                 CSV.fromStream(fileStream, { headers: true } )
@@ -412,14 +299,14 @@ class DataCollectorV2{
      * @return {Promise} A promise. When successful, it does not return any data back. 
      *  If an error was thrown, it will pass the Error object in the reject()
      */
-    saveTripsToDatabase(dbo){
+    saveTripsToDatabase(dbo, trips){
         return new Promise(async (resolve, reject) => {
             dbo.createCollection("trips", async (error, response) => {
                 if (error)
                     reject(error);
 
                 try{
-                    var trips = await this._getTrips();
+
 
                     console.log("Saving " + trips.length + " routes!");
                     dbo.collection("trips").insertMany(trips, (error, response) => {
@@ -446,10 +333,20 @@ class DataCollectorV2{
                 try{
                     db = await MongoClient.connect(MONGODB_URL);
                     var dbo = db.db(DATABASE_NAME);
-                    // await this.saveRoutesToDatabase(dbo);
-                    await this.saveTripsToDatabase(dbo);
+
+                    // Save the trips and the route details in the database
+                    var routeIDToRouteDetails = await this._getRoutes();
+                    var trips = await this._getTrips(routeIDToRouteDetails);
+                    await this.saveTripsToDatabase(dbo, trips);
+
                     console.log("Finished saving routes and trips to database!");
-                    await this.savePathsToDatabase(dbo);
+
+                    // Save the paths and its locations to the database
+                    var pathsLocationBag = new LocationBag();
+                    var paths = await this._getPaths(pathsLocationBag);
+                    await this.savePathsToDatabase(dbo, "paths", paths);
+                    await this.saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
+
                     resolve();    
                 }
                 catch (error){
