@@ -93,6 +93,140 @@ class DataCollector{
         });
     }
 
+    _getStopLocations(){
+        return new Promise((resolve, reject) => {
+            var stopLocationIDToStopLocation = {};
+            var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/stops.txt");
+            CSV.fromStream(fileStream, { headers: true })
+                .on("data", rawStopLocationData => {
+                    var stopID = rawStopLocationData.stop_id;
+                    var stopName = rawStopLocationData.stop_name;
+                    var latitude = rawStopLocationData.stop_lat;
+                    var longitude = rawStopLocationData.stop_lon;
+
+                    stopLocationIDToStopLocation[stopID] = {
+                        _id: stopID,
+                        name: stopName,
+                        latitude: latitude,
+                        longitude: longitude
+                    };
+                })
+                .on("end", () => {
+                    var stopLocations = [];
+                    Object.keys(stopLocationIDToStopLocation).forEach(stopLocationID => {
+                        var stopLocation = stopLocationIDToStopLocation[stopLocationID];
+                        stopLocations.push(stopLocation);
+                    });
+                    resolve(stopLocations);
+                })
+                .on("error", error => {
+                    reject(error);
+                });
+        });
+    }
+
+    _getStops(){
+        return new Promise((resolve, reject) => {
+
+            var tripIDToStops = {};
+
+            // tripID + stopID (concatenated) maps to the stop sequence for that stop.
+            var stopIDToStopSequence = {};
+
+            var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/stop_times.txt");
+            CSV.fromStream(fileStream, { headers: true })
+                .on("data", rawStopTimeData => {
+                    var tripID = rawStopTimeData.trip_id;
+                    var arrivalTime = rawStopTimeData.arrival_time;
+                    var departureTime = rawStopTimeData.departure_time;
+                    var stopLocationID = rawStopTimeData.stop_id;
+                    var stopSequence = parseInt(rawStopTimeData.stop_sequence);
+
+                    if (tripIDToStops[tripID] === undefined){
+                        tripIDToStops[tripID] = {
+                            _id: tripID,
+                            numStops: 0,
+                            stops: []
+                        };
+                    }
+
+                    tripIDToStops[tripID].numStops ++;
+                    tripIDToStops[tripID].stops.push({
+                        arrivalTime: arrivalTime,
+                        departureTime: departureTime,
+                        stopLocationID: stopLocationID,
+                    });
+
+                    var tripIDAndStopIDKey = tripID + "_" + stopLocationID;
+                    stopIDToStopSequence[tripIDAndStopIDKey] = stopSequence;
+                })
+                .on("end", () => {
+
+                    // Sort the stops by stop sequence
+                    Object.keys(tripIDToStops).forEach(tripID => {
+                        var stops = tripIDToStops[tripID].stops;
+                        stops.sort((a, b) => {
+                            var stopID_A = tripID + "_" + a.stopLocationID;
+                            var stopID_B = tripID + "_" + b.stopLocationID;
+                            var stopOrder_A = stopIDToStopSequence[stopID_A];
+                            var stopOrder_B = stopIDToStopSequence[stopID_B];
+
+                            if (stopOrder_A < stopOrder_B)
+                                return -1;
+                            else
+                                return 1;
+                        });
+                    });
+
+                    // Convert tripIDToStops{} to a list of stops
+                    var stops = [];
+                    Object.keys(tripIDToStops).forEach(tripID => {
+                        var stopsObject = tripIDToStops[tripID];
+                        stops.push(stopsObject);
+                    });
+
+                    resolve(stops);
+                })
+                .on("error", error => {
+                    reject(error); 
+                });
+        });
+    }
+
+    _saveStopLocationsToDatabase(dbo, collectionName, stopLocations){
+        return new Promise((resolve, reject) => {
+            dbo.createCollection(collectionName, (error, response) => {
+                if (error)
+                    reject(error);
+
+                dbo.collection(collectionName).insertMany(stopLocations, (error, response) => {
+                    if (error)
+                        reject(error);
+
+                    console.log("Successfully saved stop locations to database!");
+                    resolve();
+                });
+            });
+        })
+    }
+
+    _saveStopsToDatabase(dbo, collectionName, stops){
+        return new Promise((resolve, reject) => {
+            dbo.createCollection(collectionName, (error, response) => {
+                if (error)
+                    reject(error);
+
+                dbo.collection(collectionName).insertMany(stops, (error, response) => {
+                    if (error)
+                        reject(error);
+
+                    console.log("Successfully saved stops to database!");
+                    resolve();
+                })
+            });
+        });
+    }
+
     /**
      * Parses shapes.txt, adds the locations that make up the paths in 
      * the LocationBag "pathLocationBag", and returns a list of paths.
@@ -231,7 +365,7 @@ class DataCollector{
      */
     _savePathsToDatabase(dbo, collectionName, paths){
         return new Promise((resolve, reject) => {
-            dbo.createCollection("paths", async (error, response) => {
+            dbo.createCollection("paths", (error, response) => {
                 if (error)
                     reject(error);
 
@@ -394,6 +528,15 @@ class DataCollector{
                     var paths = await this._getPaths(pathsLocationBag);
                     await this._savePathsToDatabase(dbo, "paths", paths);
                     await this._saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
+
+                    console.log("Finished saving path and path locations to database!");
+
+                    var stopLocations = await this._getStopLocations();
+                    var stops = await this._getStops();
+                    await this._saveStopLocationsToDatabase(dbo, "stopLocations", stopLocations);
+                    await this._saveStopsToDatabase(dbo, "stops", stops);
+
+                    console.log("Finished saving stops and stop locations to database!");
 
                     resolve();    
                 }
