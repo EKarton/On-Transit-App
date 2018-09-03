@@ -194,40 +194,6 @@ class DataCollector{
         });
     }
 
-    _saveStopLocationsToDatabase(dbo, collectionName, stopLocations){
-        return new Promise((resolve, reject) => {
-            dbo.createCollection(collectionName, (error, response) => {
-                if (error)
-                    reject(error);
-
-                dbo.collection(collectionName).insertMany(stopLocations, (error, response) => {
-                    if (error)
-                        reject(error);
-
-                    console.log("Successfully saved stop locations to database!");
-                    resolve();
-                });
-            });
-        })
-    }
-
-    _saveStopsToDatabase(dbo, collectionName, stops){
-        return new Promise((resolve, reject) => {
-            dbo.createCollection(collectionName, (error, response) => {
-                if (error)
-                    reject(error);
-
-                dbo.collection(collectionName).insertMany(stops, (error, response) => {
-                    if (error)
-                        reject(error);
-
-                    console.log("Successfully saved stops to database!");
-                    resolve();
-                })
-            });
-        });
-    }
-
     /**
      * Parses shapes.txt, adds the locations that make up the paths in 
      * the LocationBag "pathLocationBag", and returns a list of paths.
@@ -299,84 +265,6 @@ class DataCollector{
 
                     resolve(pathsList);
                 });
-        });
-    }
-
-    /**
-     * Saves the contents in the LocationBag to the database
-     * "dbo" in the collection "collectionName"
-     * where each entry in the database is:
-     * {
-     *      _id: <locationID>,
-     *      latitude: <latitude>
-     *      longitude: <longitude>
-     * }
-     * 
-     * @param {Db} dbo A MongoDB database
-     * @param {string} collectionName A collection name
-     * @param {LocationBag} locationBag A location bag instance
-     * @return {Promise} A promise object.
-     *  If no errors are thrown, it will pass nothing to the .then() method.
-     *  If an error is thrown, it will pass the error to the .catch() method.
-     */
-    _saveLocationBagToDatabase(dbo, collectionName, locationBag){
-        return new Promise((resolve, reject) => {
-            /**
-             * Convert the LocationBag to a simple list where each entry is
-             * {
-             *      _id: <locationID>,
-             *      latitude: <latitude>
-             *      longitude: <longitude>
-             * }
-             */
-            var pathLocationsToBeSaved = [];
-            Object.keys(locationBag.getStoredLocations()).forEach(locationID => {
-                var locationObj = locationBag.getLocation(locationID);
-
-                var locationDataToSave = {
-                    _id: locationID,
-                    latitude: locationObj.latitude,
-                    longitude: locationObj.longitude
-                };
-                pathLocationsToBeSaved.push(locationDataToSave);
-            });
-
-            // Store pathLocationsToBeSaved[] in the database
-            dbo.collection(collectionName).insertMany(pathLocationsToBeSaved, (error, response) => {
-                if (error)
-                    reject(error);
-
-                console.log("Finished saving path locations!");
-                resolve();
-            });
-        });
-    }
-
-    /**
-     * Stores the "paths" in the database "dbo" in the collection "collectionName"
-     * 
-     * Pre-condition: "paths" must be an array of path objects.
-     * 
-     * @param {Db} dbo A MongoDB database
-     * @param {string} collectionName A collection name to store paths[] in "Db"
-     * @param {Array} paths A list of paths 
-     * @return {Promise} A promise. 
-     *  If no error is thrown, it will pass nothing to the .then() method. 
-     *  If an error is thrown, it will pass the error to the .catch() method.
-     */
-    _savePathsToDatabase(dbo, collectionName, paths){
-        return new Promise((resolve, reject) => {
-            dbo.createCollection("paths", (error, response) => {
-                if (error)
-                    reject(error);
-
-                dbo.collection(collectionName).insertMany(paths, (error, response) => {
-                    if (error)
-                        reject(error);
-
-                    resolve();
-                });
-            });
         });
     }
 
@@ -468,45 +356,6 @@ class DataCollector{
         });
     }
 
-    /**
-     * Stores a list of trips ("trips") to a database ("dbo") in a collection 
-     * named "collectionName"
-     * 
-     * Pre-condition:  
-     * - DOWNLOADS_DIRECTORY/trips.txt and DOWNLOADS_DIRECTORY/routes.txt must be present
-     *   relative to the project directory
-     * - "trips" must be a list. 
-     * 
-     * @param {db} dbo The Mongo Database instance
-     * @param {string} collectionName A collection name 
-     * @param {Array} trips A list of trips
-     * @return {Promise} A promise.
-     *  If no errors are thrown, it will pass nothing to the .then() method.
-     *  If an error is thrown, it will pass the error to the .catch() method.
-     */
-    _saveTripsToDatabase(dbo, collectionName, trips){
-        return new Promise(async (resolve, reject) => {
-            dbo.createCollection(collectionName, async (error, response) => {
-                if (error)
-                    reject(error);
-
-                try{
-                    console.log("Saving " + trips.length + " routes!");
-                    dbo.collection(collectionName).insertMany(trips, (error, response) => {
-                        if (error)
-                            reject(error);
-
-                        console.log("Done saving routes!");
-                        resolve();
-                    });
-                }
-                catch(error){
-                    reject(error);
-                }                
-            });
-        });
-    }
-
     saveLocationBagToDatabase(database, collectionName, locationBag){
         return new Promise(async (resolve, reject) => {
             /**
@@ -564,7 +413,6 @@ class DataCollector{
                 var paths = await this._getPaths(pathsLocationBag);
                 await database.saveArrayToDatabase("paths", paths);
                 await this.saveLocationBagToDatabase(database, "pathLocations", pathsLocationBag);
-                // TODO: Fix this!! await database.saveArrayToDatabase("pathLocations", pathsLocationBag);
 
                 console.log("Successfully saved paths and path locations to database");
 
@@ -583,42 +431,6 @@ class DataCollector{
             catch(error){
                 reject(error);
             }
-            // MongoClient.connect(MONGODB_URL, async (error, db) => {
-            //     if (error)
-            //         reject(error);
-
-            //     try{
-            //         db = await MongoClient.connect(MONGODB_URL);
-            //         var dbo = db.db(DATABASE_NAME);
-
-            //         // Save the trips and the route details in the database
-            //         var routeIDToRouteDetails = await this._getRoutes();
-            //         var trips = await this._getTrips(routeIDToRouteDetails);
-            //         await this._saveTripsToDatabase(dbo, "trips", trips);
-
-            //         console.log("Finished saving routes and trips to database!");
-
-            //         // Save the paths and its locations to the database
-            //         var pathsLocationBag = new LocationBag();
-            //         var paths = await this._getPaths(pathsLocationBag);
-            //         await this._savePathsToDatabase(dbo, "paths", paths);
-            //         await this._saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
-
-            //         console.log("Finished saving path and path locations to database!");
-
-            //         var stopLocations = await this._getStopLocations();
-            //         var stops = await this._getStops();
-            //         await this._saveStopLocationsToDatabase(dbo, "stopLocations", stopLocations);
-            //         await this._saveStopsToDatabase(dbo, "stops", stops);
-
-            //         console.log("Finished saving stops and stop locations to database!");
-
-            //         resolve();    
-            //     }
-            //     catch (error){
-            //         reject(error);
-            //     }
-            // });
         });
     }
 }
