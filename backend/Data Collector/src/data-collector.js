@@ -7,6 +7,7 @@ const path = require("path");
 const request = require("request");
 const AdmZip = require('adm-zip');
 
+const Database = require("./database");
 const LocationBag = require("./location-bag");
 const Location = require("./location");
 const Path = require("./path");
@@ -506,44 +507,118 @@ class DataCollector{
         });
     }
 
-    saveFilesToDatabase(){
-        return new Promise((resolve, reject) => {
-            MongoClient.connect(MONGODB_URL, async (error, db) => {
-                if (error)
-                    reject(error);
+    saveLocationBagToDatabase(database, collectionName, locationBag){
+        return new Promise(async (resolve, reject) => {
+            /**
+             * Convert the LocationBag to a simple list where each entry is
+             * {
+             *      _id: <locationID>,
+             *      latitude: <latitude>
+             *      longitude: <longitude>
+             * }
+             */
+            var pathLocationsToBeSaved = [];
+            Object.keys(locationBag.getStoredLocations()).forEach(locationID => {
+                var locationObj = locationBag.getLocation(locationID);
 
-                try{
-                    db = await MongoClient.connect(MONGODB_URL);
-                    var dbo = db.db(DATABASE_NAME);
-
-                    // Save the trips and the route details in the database
-                    var routeIDToRouteDetails = await this._getRoutes();
-                    var trips = await this._getTrips(routeIDToRouteDetails);
-                    await this._saveTripsToDatabase(dbo, "trips", trips);
-
-                    console.log("Finished saving routes and trips to database!");
-
-                    // Save the paths and its locations to the database
-                    var pathsLocationBag = new LocationBag();
-                    var paths = await this._getPaths(pathsLocationBag);
-                    await this._savePathsToDatabase(dbo, "paths", paths);
-                    await this._saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
-
-                    console.log("Finished saving path and path locations to database!");
-
-                    var stopLocations = await this._getStopLocations();
-                    var stops = await this._getStops();
-                    await this._saveStopLocationsToDatabase(dbo, "stopLocations", stopLocations);
-                    await this._saveStopsToDatabase(dbo, "stops", stops);
-
-                    console.log("Finished saving stops and stop locations to database!");
-
-                    resolve();    
-                }
-                catch (error){
-                    reject(error);
-                }
+                var locationDataToSave = {
+                    _id: locationID,
+                    latitude: locationObj.latitude,
+                    longitude: locationObj.longitude
+                };
+                pathLocationsToBeSaved.push(locationDataToSave);
             });
+
+            try{
+                await database.saveArrayToDatabase(collectionName, pathLocationsToBeSaved);
+                resolve();
+            }
+            catch(error){
+                reject(error);
+            }
+        });
+    }
+
+    saveFilesToDatabase(){
+        return new Promise(async (resolve, reject) => {
+            try{
+                var database = new Database();
+                await database.connectToDatabase(MONGODB_URL, DATABASE_NAME);
+
+                // Create the collections
+                await database.createCollectionInDatabase("pathLocations");
+                await database.createCollectionInDatabase("paths");
+                await database.createCollectionInDatabase("stopLocations");
+                await database.createCollectionInDatabase("stops");
+                await database.createCollectionInDatabase("trips");
+
+                // Get the trips and save it in the database
+                var routeIDToRouteDetails = await this._getRoutes();
+                var trips = await this._getTrips(routeIDToRouteDetails);
+                await database.saveArrayToDatabase("trips", trips);
+
+                console.log("Successfully saved trips to database");
+
+                // Get paths and path locations and save it to the database
+                var pathsLocationBag = new LocationBag();
+                var paths = await this._getPaths(pathsLocationBag);
+                await database.saveArrayToDatabase("paths", paths);
+                await this.saveLocationBagToDatabase(database, "pathLocations", pathsLocationBag);
+                // TODO: Fix this!! await database.saveArrayToDatabase("pathLocations", pathsLocationBag);
+
+                console.log("Successfully saved paths and path locations to database");
+
+                // Get the stop and stop locations and save it to te database
+                var stopLocations = await this._getStopLocations();
+                var stops = await this._getStops();
+                await database.saveArrayToDatabase("stopLocations", stopLocations);
+                await database.saveArrayToDatabase("stops", stops);
+
+                console.log("Successfully saved stop and stop locations to database");
+
+                await database.closeDatabase();
+                console.log("Successfully shut down database connection");
+                resolve();
+            }
+            catch(error){
+                reject(error);
+            }
+            // MongoClient.connect(MONGODB_URL, async (error, db) => {
+            //     if (error)
+            //         reject(error);
+
+            //     try{
+            //         db = await MongoClient.connect(MONGODB_URL);
+            //         var dbo = db.db(DATABASE_NAME);
+
+            //         // Save the trips and the route details in the database
+            //         var routeIDToRouteDetails = await this._getRoutes();
+            //         var trips = await this._getTrips(routeIDToRouteDetails);
+            //         await this._saveTripsToDatabase(dbo, "trips", trips);
+
+            //         console.log("Finished saving routes and trips to database!");
+
+            //         // Save the paths and its locations to the database
+            //         var pathsLocationBag = new LocationBag();
+            //         var paths = await this._getPaths(pathsLocationBag);
+            //         await this._savePathsToDatabase(dbo, "paths", paths);
+            //         await this._saveLocationBagToDatabase(dbo, "pathLocations", pathsLocationBag);
+
+            //         console.log("Finished saving path and path locations to database!");
+
+            //         var stopLocations = await this._getStopLocations();
+            //         var stops = await this._getStops();
+            //         await this._saveStopLocationsToDatabase(dbo, "stopLocations", stopLocations);
+            //         await this._saveStopsToDatabase(dbo, "stops", stops);
+
+            //         console.log("Finished saving stops and stop locations to database!");
+
+            //         resolve();    
+            //     }
+            //     catch (error){
+            //         reject(error);
+            //     }
+            // });
         });
     }
 }
