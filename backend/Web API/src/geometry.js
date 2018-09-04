@@ -1,6 +1,20 @@
 const Vector = require("./vector");
 
+/**
+ * A class used to perform geometrical computations, such as 
+ * detecting if two objects are intersecting, or converting degrees to radians.
+ */
 class Geometry{
+
+    /**
+     * Converts an angle from degrees to radians.
+     * @param {number} degrees Angle in degrees
+     * @return {number} Angle in radians
+     */
+    static convertDegreesToRadians(degrees){
+        return degrees * Math.PI / 180;
+    }
+
     /**
      * Determines if a line segment intersects a circle
      * @param {Vector} point1 An endpoint to the line segment
