@@ -101,8 +101,8 @@ class DataCollector{
                 .on("data", rawStopLocationData => {
                     var stopID = rawStopLocationData.stop_id;
                     var stopName = rawStopLocationData.stop_name;
-                    var latitude = rawStopLocationData.stop_lat;
-                    var longitude = rawStopLocationData.stop_lon;
+                    var latitude = parseFloat(rawStopLocationData.stop_lat.trim());
+                    var longitude = parseFloat(rawStopLocationData.stop_lon.trim());
 
                     stopLocationIDToStopLocation[stopID] = {
                         _id: stopID,
@@ -180,8 +180,8 @@ class DataCollector{
 
                     // Convert tripIDToStops{} to a list of stops
                     var stops = [];
-                    Object.keys(tripIDToStops).forEach(tripID => {
-                        var stopsObject = tripIDToStops[tripID];
+                    Object.keys(tripIDToStops).forEach(curTripID => {
+                        var stopsObject = tripIDToStops[curTripID];
                         stops.push(stopsObject);
                     });
 
@@ -217,15 +217,19 @@ class DataCollector{
             CSV.fromStream(fileStream, { headers: true })
                 .on("data", shape => {
                     var pathID = shape.shape_id;
+                    var pathLocationSequence = parseFloat(shape.shape_pt_sequence.trim());
 
                     if (pathIDToPathDetails[pathID] == undefined){
                         pathIDToPathDetails[pathID] = new Path();
                     }
 
                     // Add the location to the LocationMap and keep track of its order
-                    var newPathLocation = new Location(shape.shape_pt_lat, shape.shape_pt_lon);
+                    var latitude = parseFloat(shape.shape_pt_lat.trim());
+                    var longitude = parseFloat(shape.shape_pt_lon.trim());
+                    var newPathLocation = new Location(latitude, longitude);
+
                     var locationID = pathLocationBag.addLocation(newPathLocation);
-                    locationIDToSequence[locationID] = shape.shape_pt_sequence;
+                    locationIDToSequence[locationID] = pathLocationSequence;
 
                     pathIDToPathDetails[pathID].addPoint(locationID, newPathLocation);
                 })
@@ -389,8 +393,9 @@ class DataCollector{
 
     saveFilesToDatabase(){
         return new Promise(async (resolve, reject) => {
+            var database = null;
             try{
-                var database = new Database();
+                database = new Database();
                 await database.connectToDatabase(MONGODB_URL, DATABASE_NAME);
 
                 // Create the collections
@@ -428,6 +433,8 @@ class DataCollector{
                 resolve();
             }
             catch(error){
+                if (database != null)
+                    await database.closeDatabase();
                 reject(error);
             }
         });

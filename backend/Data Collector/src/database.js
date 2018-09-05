@@ -50,7 +50,13 @@ class Database{
     }
 
     closeDatabase(){
-        return this._db.close();
+        return new Promise((resolve, reject) => {
+            this._db.close((error, result) => {
+                if (error)
+                    reject(error);
+                else(resolve);
+            });
+        });
     }
 }
 
