@@ -25,14 +25,14 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
-import com.kartonoe.ontransitapp.models.Route;
+import com.kartonoe.ontransitapp.models.Trip;
 import com.kartonoe.ontransitapp.services.GetTripDetailsHandler;
 import com.kartonoe.ontransitapp.services.GetTripsHandler;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 import com.kartonoe.ontransitapp.services.OnTransitService;
 import com.kartonoe.ontransitapp.services.OnTransitWebService;
-import com.kartonoe.ontransitapp.views.RouteDetailsView;
+import com.kartonoe.ontransitapp.views.TripDetailsView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.List;
@@ -46,7 +46,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private LocationListener locationListener;
 
     private StopsAdapter stopsAdapter;
-    private RouteDetailsView routeDetailsView;
+    private TripDetailsView tripDetailsView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +59,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         mapFragment.getMapAsync(this);
 
         // Get the UI components
-        this.routeDetailsView = findViewById(R.id.routeDetails);
+        this.tripDetailsView = findViewById(R.id.routeDetails);
         this.stopsListView = findViewById(R.id.stopsListView);
 
         // Fix the drag and scrolling with the listview in the sliding panel
@@ -170,10 +170,10 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
 
                 service.getTripDetails(routeIDs.get(0), new GetTripDetailsHandler() {
                     @Override
-                    public void onSuccess(Route route) {
-                        updateRouteDetailsUI(route);
-                        updateStopsUI(route.getNextStops());
-                        updateMapsUI(currentLocation, route.getPath(), route.getNextStops());
+                    public void onSuccess(Trip trip) {
+                        updateTripDetailsUI(trip);
+                        updateStopsUI(trip.getNextStops());
+                        updateMapsUI(currentLocation, trip.getPath(), trip.getNextStops());
                     }
 
                     @Override
@@ -191,8 +191,8 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         });
     }
 
-    private void updateRouteDetailsUI(Route newRoute){
-        this.routeDetailsView.setRoute(newRoute);
+    private void updateTripDetailsUI(Trip newTrip){
+        this.tripDetailsView.setRoute(newTrip);
     }
 
     private void updateStopsUI(List<Stop> stops){

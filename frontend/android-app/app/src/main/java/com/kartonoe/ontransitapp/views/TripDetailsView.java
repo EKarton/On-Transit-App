@@ -6,24 +6,24 @@ import android.util.AttributeSet;
 import android.widget.TextView;
 
 import com.kartonoe.ontransitapp.R;
-import com.kartonoe.ontransitapp.models.Route;
+import com.kartonoe.ontransitapp.models.Trip;
 
-public class RouteDetailsView extends ConstraintLayout {
+public class TripDetailsView extends ConstraintLayout {
 
-    private Route route;
+    private Trip trip;
     private TextView routeShortNameLabel;
     private TextView routeLongNameLabel;
     private TextView routeDirectionsLabel;
 
-    public RouteDetailsView(Context context){
+    public TripDetailsView(Context context){
         this(context, null);
     }
 
-    public RouteDetailsView(Context context, AttributeSet attrs){
+    public TripDetailsView(Context context, AttributeSet attrs){
         this(context, attrs, 0);
     }
 
-    public RouteDetailsView(Context context, AttributeSet attrs, int defStyleAttr){
+    public TripDetailsView(Context context, AttributeSet attrs, int defStyleAttr){
         super(context, attrs, defStyleAttr);
         init();
     }
@@ -31,12 +31,12 @@ public class RouteDetailsView extends ConstraintLayout {
     private void init(){
 
         // Add the XML resource
-        inflate(getContext(), R.layout.route_details_view, this);
+        inflate(getContext(), R.layout.trip_details_view, this);
 
         // Get the UI components
-        routeShortNameLabel = this.findViewById(R.id.routeShortNameLabel);
-        routeLongNameLabel = this.findViewById(R.id.routeLongNameLabel);
-        routeDirectionsLabel = this.findViewById(R.id.routeDirectionLabel);
+        routeShortNameLabel = this.findViewById(R.id.tripShortNameLabel);
+        routeLongNameLabel = this.findViewById(R.id.tripLongNameLabel);
+        routeDirectionsLabel = this.findViewById(R.id.tripDirectionLabel);
 
         // Initially the UI components are hidden because there is no data in them!
         routeShortNameLabel.setVisibility(GONE);
@@ -44,36 +44,36 @@ public class RouteDetailsView extends ConstraintLayout {
         routeDirectionsLabel.setVisibility(GONE);
     }
 
-    public void setRoute(Route route){
-        this.route = route;
+    public void setRoute(Trip trip){
+        this.trip = trip;
 
         // Update the UI
-        if (this.route.getRouteShortName() != null){
+        if (this.trip.getTripShortName() != null){
             this.routeShortNameLabel.setVisibility(VISIBLE);
-            this.routeShortNameLabel.setText(this.route.getRouteShortName());
+            this.routeShortNameLabel.setText(this.trip.getTripShortName());
         }
         else{
             this.routeShortNameLabel.setVisibility(GONE);
         }
 
-        if (this.route.getRouteLongName() != null){
+        if (this.trip.getTripLongName() != null){
             this.routeLongNameLabel.setVisibility(VISIBLE);
-            this.routeLongNameLabel.setText(this.route.getRouteLongName());
+            this.routeLongNameLabel.setText(this.trip.getTripLongName());
         }
         else{
             this.routeLongNameLabel.setVisibility(GONE);
         }
 
-        if (this.route.getRouteDirection() != null){
+        if (this.trip.getTripDirection() != null){
             this.routeDirectionsLabel.setVisibility(VISIBLE);
-            this.routeDirectionsLabel.setText(this.route.getRouteDirection());
+            this.routeDirectionsLabel.setText(this.trip.getTripDirection());
         }
         else{
             this.routeDirectionsLabel.setVisibility(GONE);
         }
     }
 
-    public Route getRoute(){
-        return this.route;
+    public Trip getRoute(){
+        return this.trip;
     }
 }

@@ -1,7 +1,7 @@
 package com.kartonoe.ontransitapp.services;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.kartonoe.ontransitapp.models.Route;
+import com.kartonoe.ontransitapp.models.Trip;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 
@@ -37,9 +37,9 @@ public class OnTransitMockService implements OnTransitService {
     public void getTripDetails(String routeID, GetTripDetailsHandler handler) {
         switch(routeID){
             case "123456789":
-                Route detail1 = new Route("123456789");
-                detail1.setRouteShortName("109");
-                detail1.setRouteLongName("Meadowvale Express");
+                Trip detail1 = new Trip("123456789");
+                detail1.setTripShortName("109");
+                detail1.setTripLongName("Meadowvale Express");
 
                 List<Vector> pts = new ArrayList<>();
                 detail1.setPath(pts);
@@ -1279,9 +1279,9 @@ public class OnTransitMockService implements OnTransitService {
                 handler.onSuccess(detail1);
                 break;
             case "987654321":
-                Route detail2 = new Route("987654321");
-                detail2.setRouteShortName("110");
-                detail2.setRouteLongName("University Express");
+                Trip detail2 = new Trip("987654321");
+                detail2.setTripShortName("110");
+                detail2.setTripLongName("University Express");
 
                 handler.onSuccess(detail2);
                 break;

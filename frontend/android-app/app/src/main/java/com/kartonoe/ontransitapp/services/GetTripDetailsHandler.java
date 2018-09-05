@@ -4,7 +4,7 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
-import com.kartonoe.ontransitapp.models.Route;
+import com.kartonoe.ontransitapp.models.Trip;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 
@@ -46,14 +46,14 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
                 JSONArray rawPathData = rawData.getJSONArray("path");
                 List<Vector> path = parsePath(rawPathData);
 
-                // Create the route object
-                Route route = new Route(routeID);
-                route.setRouteShortName(shortName);
-                route.setRouteLongName(longName);
-                route.setPath(path);
-                route.setNextStops(stops);
+                // Create the trip object
+                Trip trip = new Trip(routeID);
+                trip.setTripShortName(shortName);
+                trip.setTripLongName(longName);
+                trip.setPath(path);
+                trip.setNextStops(stops);
 
-                this.onSuccess(route);
+                this.onSuccess(trip);
             }
 
         } catch (JSONException e) {
@@ -101,6 +101,6 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
         return path;
     }
 
-    public abstract void onSuccess(Route route);
+    public abstract void onSuccess(Trip trip);
     public abstract void onError(int errorCode, String errorMessage);
 }

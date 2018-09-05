@@ -12,7 +12,12 @@ var tripDataService = new TripDataService(database);
 var vehicleLocator = new VehicleLocator("https://www.miapp.ca/GTFS_RT/Vehicle/VehiclePositions.pb");
 var tripsLocator = new TripsLocator(database);
 
-app.get("/api/v1/routes", (request, response) => {
+/**
+ * Returns a set of trip IDs that are close to a location by a certain radius
+ * Example of HTTP GET request:
+ * https://localhost:3000/api/v1/trips?lat=43&long=-73.6&radius=40
+ */
+app.get("/api/v1/trips", (request, response) => {
     var latitude = request.query.lat;
     var longitude = request.query.long;
     var radius = request.query.radius;
@@ -41,9 +46,14 @@ app.get("/api/v1/routes", (request, response) => {
         });
 });
 
-app.get("/api/v1/routes/:routeID", (request, response) => {
-    var routeID = request.params.routeID;
-    tripDataService.getTripData(routeID)
+/**
+ * Returns the trip details given its trip ID.
+ * Example of HTTP GET request:
+ * http://localhost:3000/api/v1/trips/123456
+ */
+app.get("/api/v1/trips/:tripID", (request, response) => {
+    var tripID = request.params.tripID;
+    tripDataService.getTripData(tripID)
         .then(tripData => {
 
             var jsonResponse = {
@@ -66,6 +76,11 @@ app.get("/api/v1/routes/:routeID", (request, response) => {
         });
 });
 
+/**
+ * Returns the vehicles and its position close to a location by a certain radius
+ * Example of HTTP request:
+ * http://localhost:3000/api/v1/vehicles?lat=43&long=-73.6&radius=40
+ */
 app.get("/api/v1/vehicles", (request, response) => {
     var latitude = request.query.lat;
     var longitude = request.query.long;

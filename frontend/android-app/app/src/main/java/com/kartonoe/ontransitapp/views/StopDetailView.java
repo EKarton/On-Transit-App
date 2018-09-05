@@ -31,7 +31,7 @@ public class StopDetailView extends ConstraintLayout {
     private void init(){
 
         // Set the resource
-        inflate(getContext(), R.layout.route_details_view, this);
+        inflate(getContext(), R.layout.trip_details_view, this);
 
         // Get the UI elements
         this.stopNameLabel = this.findViewById(R.id.stopNameLabel);
