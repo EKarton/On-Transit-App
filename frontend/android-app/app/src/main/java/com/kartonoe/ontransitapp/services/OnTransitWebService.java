@@ -3,6 +3,7 @@ package com.kartonoe.ontransitapp.services;
 import android.content.Context;
 import android.util.Log;
 
+import com.android.volley.DefaultRetryPolicy;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
@@ -24,7 +25,7 @@ public class OnTransitWebService implements OnTransitService {
     private final int SERVER_PORT = 3000;
 
     // Routes
-    private final String ROUTES_URI = "/api/v1/routes";
+    private final String ROUTES_URI = "/api/v1/trips";
     private final String VEHICLES_URI = "/api/v1/vehicles";
 
     private static OnTransitService instance = null;
@@ -51,7 +52,6 @@ public class OnTransitWebService implements OnTransitService {
                 .append(radius)
                 .toString();
 
-
         try {
             URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
                     ROUTES_URI, query, null);
@@ -61,6 +61,11 @@ public class OnTransitWebService implements OnTransitService {
 
             JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
                     uri.toString(), null, handler, handler);
+
+            request.setRetryPolicy(new DefaultRetryPolicy(
+                    500000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
@@ -83,6 +88,11 @@ public class OnTransitWebService implements OnTransitService {
 
             JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
                     uri.toString(), null, handler, handler);
+
+            request.setRetryPolicy(new DefaultRetryPolicy(
+                    500000,
+                    DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
+                    DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
 
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
