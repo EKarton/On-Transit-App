@@ -6,7 +6,6 @@ import android.util.Log;
 import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.JsonObjectRequest;
-import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -43,7 +42,7 @@ public class OnTransitWebService implements OnTransitService {
         this.requestQueue = Volley.newRequestQueue(context);
     }
 
-    public void getRoutesNearLocation(LatLng location, double radius, GetRoutesHandler handler) {
+    public void getTripIDsNearLocation(LatLng location, double radius, GetTripsHandler handler) {
         String query = new StringBuilder("lat=")
                 .append(location.latitude)
                 .append("&long=")
@@ -70,7 +69,7 @@ public class OnTransitWebService implements OnTransitService {
         }
     }
 
-    public void getRouteDetails(String routeID, GetRouteDetailsHandler handler) {
+    public void getTripDetails(String routeID, GetTripDetailsHandler handler) {
         String apiEndpoint = new StringBuilder(ROUTES_URI)
                 .append("/")
                 .append(routeID)

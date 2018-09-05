@@ -17,7 +17,7 @@ import java.util.List;
 
 import static com.kartonoe.ontransitapp.services.OnTransitService.LOG_TAG;
 
-public abstract class GetRouteDetailsHandler implements Response.Listener<JSONObject>, Response.ErrorListener {
+public abstract class GetTripDetailsHandler implements Response.Listener<JSONObject>, Response.ErrorListener {
 
     @Override
     public void onErrorResponse(VolleyError error) {

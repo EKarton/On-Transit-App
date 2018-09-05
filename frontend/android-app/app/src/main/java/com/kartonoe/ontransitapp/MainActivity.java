@@ -16,7 +16,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
 
-import com.android.volley.VolleyError;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -27,9 +26,8 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.kartonoe.ontransitapp.models.Route;
-import com.kartonoe.ontransitapp.services.GetRouteDetailsHandler;
-import com.kartonoe.ontransitapp.services.GetRoutesHandler;
-import com.kartonoe.ontransitapp.services.OnTransitMockService;
+import com.kartonoe.ontransitapp.services.GetTripDetailsHandler;
+import com.kartonoe.ontransitapp.services.GetTripsHandler;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 import com.kartonoe.ontransitapp.services.OnTransitService;
@@ -166,11 +164,11 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         final LatLng currentLocation = curLocation;
         final OnTransitService service = OnTransitWebService.getInstance(this);
 
-        service.getRoutesNearLocation(curLocation, 500, new GetRoutesHandler() {
+        service.getTripIDsNearLocation(curLocation, 500, new GetTripsHandler() {
             @Override
             public void onSuccess(List<String> routeIDs) {
 
-                service.getRouteDetails(routeIDs.get(0), new GetRouteDetailsHandler() {
+                service.getTripDetails(routeIDs.get(0), new GetTripDetailsHandler() {
                     @Override
                     public void onSuccess(Route route) {
                         updateRouteDetailsUI(route);

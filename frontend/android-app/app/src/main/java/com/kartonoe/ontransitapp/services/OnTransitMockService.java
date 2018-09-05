@@ -5,7 +5,6 @@ import com.kartonoe.ontransitapp.models.Route;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
 
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +25,7 @@ public class OnTransitMockService implements OnTransitService {
     private OnTransitMockService(){}
 
     @Override
-    public void getRoutesNearLocation(LatLng location, double radius, GetRoutesHandler handler) {
+    public void getTripIDsNearLocation(LatLng location, double radius, GetTripsHandler handler) {
         List<String> fakeRouteIDs = new ArrayList<>();
         fakeRouteIDs.add("123456789");
         fakeRouteIDs.add("987654321");
@@ -35,7 +34,7 @@ public class OnTransitMockService implements OnTransitService {
     }
 
     @Override
-    public void getRouteDetails(String routeID, GetRouteDetailsHandler handler) {
+    public void getTripDetails(String routeID, GetTripDetailsHandler handler) {
         switch(routeID){
             case "123456789":
                 Route detail1 = new Route("123456789");

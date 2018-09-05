@@ -14,7 +14,7 @@ import java.util.List;
 
 import static com.kartonoe.ontransitapp.services.OnTransitService.LOG_TAG;
 
-public abstract class GetRoutesHandler implements Response.Listener<JSONObject>, Response.ErrorListener{
+public abstract class GetTripsHandler implements Response.Listener<JSONObject>, Response.ErrorListener{
 
     @Override
     public void onErrorResponse(VolleyError error) {
@@ -30,15 +30,15 @@ public abstract class GetRoutesHandler implements Response.Listener<JSONObject>,
             }
             else{
                 JSONObject rawData = response.getJSONObject("data");
-                JSONArray rawRouteIDs = rawData.getJSONArray("routeIDs");
+                JSONArray rawTripIDs = rawData.getJSONArray("tripIDs");
 
-                List<String> routeIDs = new ArrayList<>();
-                for (int i = 0; i < rawRouteIDs.length(); i++) {
-                    String routeID = rawRouteIDs.getString(i);
-                    routeIDs.add(routeID);
+                List<String> tripIDs = new ArrayList<>();
+                for (int i = 0; i < rawTripIDs.length(); i++) {
+                    String routeID = rawTripIDs.getString(i);
+                    tripIDs.add(routeID);
                 }
 
-                onSuccess(routeIDs);
+                onSuccess(tripIDs);
             }
 
         } catch (JSONException e) {

@@ -39,9 +39,9 @@ $ npm stop
 ### Usage
 Once the server is up, you are able to make many HTTP requests to the server.
 
-##### Getting routes based on GPS location:
+##### Getting trips based on GPS location:
 * **URL**:    
-    api/v1/routes
+    api/v1/trips
 * **Method**: 
     GET
 * **URL Query Params:**
@@ -54,10 +54,11 @@ Once the server is up, you are able to make many HTTP requests to the server.
 {
 	status: "success",
 	data: {
-		routeIDs: [
+		tripIDs: [
 			12131321231,
 			as132d1as1d,
 			87987889789
+			...
 		]
 	}
 }
@@ -73,16 +74,16 @@ Once the server is up, you are able to make many HTTP requests to the server.
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3000/api/v1/routes?lat=43.5540929&long=-79.7220238&radius=10
+$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius=10
 ```
 
-##### Getting routes details:
+##### Getting trip details:
 * **URL**:    
-    api/v1/routes/:routeID
+    api/v1/trip/:tripID
 * **Method**: 
     GET
 * **URL Params:**
-    routeID=[string]
+    tripID=[string]
 
 **Sample Success Response:**
 ```
@@ -114,7 +115,7 @@ $ curl http://localhost:3000/api/v1/routes?lat=43.5540929&long=-79.7220238&radiu
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3000/api/v1/12131321231
+$ curl http://localhost:3000/api/v1/trips/12131321231
 ```
 
 ##### Getting vehicles based on GPS location:
@@ -136,13 +137,13 @@ $ curl http://localhost:3000/api/v1/12131321231
 		vehicles: [
 			{ 
 				id: 105454545, 
-				routeID: 46456456,
+				tripID: 46456456,
 				type: 3
 			},
 			...
 			{ 
 				id: 123123165, 
-				routeID: 98789787,
+				tripID: 98789787,
 				type: 3
 			}
 		]
