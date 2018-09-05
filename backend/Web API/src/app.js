@@ -3,13 +3,14 @@ const app = express();
 const Database = require("./database");
 const VehicleLocator = require("./vehicles-locator");
 const TripDataService = require("./trip-data-service");
+const TripsLocator = require("./trips-locator");
 
 var database = new Database();
 database.connectToDatabase("mongodb://localhost:27017/", "miway-gtfs-static-data");
 
 var tripDataService = new TripDataService(database);
 var vehicleLocator = new VehicleLocator("https://www.miapp.ca/GTFS_RT/Vehicle/VehiclePositions.pb");
-var tripsLocator = new tripsLocator(database);
+var tripsLocator = new TripsLocator(database);
 
 app.get("/api/v1/routes", (request, response) => {
     var latitude = request.query.lat;
