@@ -7,14 +7,10 @@ import java.sql.Time;
  */
 public class Stop {
     private Vector location;
-    private Time expectedArrivalTime;
+    private int expectedArrivalTime;
     private String name;
 
-    public Stop(Vector location){
-        this(location, null);
-    }
-
-    public Stop(Vector location, Time expectedArrivalTime){
+    public Stop(Vector location, int expectedArrivalTime){
         this.location = location;
         this.expectedArrivalTime = expectedArrivalTime;
     }
@@ -27,11 +23,11 @@ public class Stop {
         this.location = location;
     }
 
-    public Time getExpectedArrivalTime() {
-        return new Time(0, 5, 5);
+    public int getExpectedArrivalTime() {
+        return expectedArrivalTime;
     }
 
-    public void setExpectedArrivalTime(Time expectedArrivalTime) {
+    public void setExpectedArrivalTime(int expectedArrivalTime) {
         this.expectedArrivalTime = expectedArrivalTime;
     }
 

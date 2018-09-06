@@ -12,7 +12,7 @@ describe("TripsLocator.getTripIDsNearLocation()", () => {
             await database.connectToDatabase("mongodb://localhost:27017/", "miway-gtfs-static-data");
 
             var tripsLocator = new TripsLocator(database);
-            var results = await tripsLocator.getTripIDsNearLocation(43.553040, -79.722790, 50);
+            var results = await tripsLocator.getTripIDsNearLocation(43.553040, -79.722790, 50, 50000);
 
             fs.writeFileSync("tmp/tripsNearMe.json", JSON.stringify(results));
             database.closeConnection();

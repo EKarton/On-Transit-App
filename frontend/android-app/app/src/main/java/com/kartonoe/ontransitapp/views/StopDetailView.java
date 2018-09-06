@@ -36,7 +36,7 @@ public class StopDetailView extends ConstraintLayout {
         // Get the UI elements
         this.stopNameLabel = this.findViewById(R.id.stopNameLabel);
         this.stopTimeValueLabel = this.findViewById(R.id.stopTimeValueLabel);
-        this.stopTimeUnitLabel = this.findViewById(R.id.stopTimeValueLabel);
+        this.stopTimeUnitLabel = this.findViewById(R.id.stopTimeUnitLabel);
 
         // Make them hidden (as they have no data yet)
         this.stopNameLabel.setVisibility(GONE);
@@ -56,17 +56,8 @@ public class StopDetailView extends ConstraintLayout {
             this.stopNameLabel.setVisibility(GONE);
         }
 
-        if (this.stop.getExpectedArrivalTime() != null){
-            this.stopTimeValueLabel.setVisibility(VISIBLE);
-            this.stopTimeValueLabel.setText(this.stop.getExpectedArrivalTime().toString());
-
-            this.stopTimeUnitLabel.setVisibility(VISIBLE);
-            this.stopTimeUnitLabel.setText("minutes");
-        }
-        else{
-            this.stopTimeValueLabel.setVisibility(GONE);
-            this.stopTimeUnitLabel.setVisibility(GONE);
-        }
+        this.stopTimeValueLabel.setVisibility(GONE);
+        this.stopTimeUnitLabel.setVisibility(GONE);
     }
 
     public Stop getStop(){

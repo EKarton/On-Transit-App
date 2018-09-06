@@ -7,7 +7,7 @@ class TripsLocator{
         this.pathsLocator = new PathsLocator(database);
     }
 
-    async getTripIDsNearLocation(latitude, longitude, radius){
+    async getTripIDsNearLocation(latitude, longitude, radius, time){
         var pathIDs = await this.pathsLocator.getPathIDsNearLocation(latitude, longitude, radius);
         console.log("Done getting path IDs!");
 
@@ -18,7 +18,15 @@ class TripsLocator{
             while (await cursor.hasNext()){
                 var data = await cursor.next();
                 var tripID = data._id;
-                tripIDs.push(tripID);
+
+                // Check if it satisfies the time constraints
+                var tripStops = await this.database.getObject("stops", { "_id": tripID });
+                var startTime = tripStops.startTime;
+                var endTime = tripStops.endTime;
+
+                if (startTime <= time && time <= endTime){
+                    tripIDs.push(tripID);
+                }
             }
         }
         return tripIDs;

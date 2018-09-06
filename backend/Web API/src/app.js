@@ -21,8 +21,16 @@ app.get("/api/v1/trips", (request, response) => {
     var latitude = request.query.lat;
     var longitude = request.query.long;
     var radius = request.query.radius;
+    var rawTime = request.query.time;
+
+    // Convert raw time to the number of seconds after midnight
+    var timeSections = rawTime.split(":");
+    var numHrsFromMidnight = parseInt(timeSections[0]);
+    var numMinFromHr = parseInt(timeSections[1]);
+    var numSecFromMin = parseInt(timeSections[2]);
+    var numSecondsFromMidnight = numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
     
-    tripsLocator.getTripIDsNearLocation(latitude, longitude, radius)
+    tripsLocator.getTripIDsNearLocation(latitude, longitude, radius, numSecondsFromMidnight)
         .then(tripIDs => {
             var jsonResponse = {
                 status: "success",

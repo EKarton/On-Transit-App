@@ -26,16 +26,28 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.kartonoe.ontransitapp.models.Trip;
+import com.kartonoe.ontransitapp.models.Vehicle;
 import com.kartonoe.ontransitapp.services.GetTripDetailsHandler;
 import com.kartonoe.ontransitapp.services.GetTripsHandler;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Vector;
+import com.kartonoe.ontransitapp.services.GetVehiclesHandler;
 import com.kartonoe.ontransitapp.services.OnTransitService;
 import com.kartonoe.ontransitapp.services.OnTransitWebService;
 import com.kartonoe.ontransitapp.views.TripDetailsView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
+import java.sql.Time;
+import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
+import java.util.TreeSet;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -130,11 +142,9 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private boolean handlePermissions(){
-        boolean isGranted = handlePermissions(Manifest.permission.ACCESS_FINE_LOCATION) &&
+        return handlePermissions(Manifest.permission.ACCESS_FINE_LOCATION) &&
                 handlePermissions(Manifest.permission.ACCESS_COARSE_LOCATION) &&
                 handlePermissions(Manifest.permission.INTERNET);
-
-        return isGranted;
     }
 
     private boolean handlePermissions(String permission) {
@@ -160,33 +170,97 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         }
     }
 
+
+    private TreeSet<String> tripIDs = new TreeSet<>();
+
     private void updateRoutes(LatLng curLocation){
         final LatLng currentLocation = curLocation;
         final OnTransitService service = OnTransitWebService.getInstance(this);
 
-        service.getTripIDsNearLocation(curLocation, 500, new GetTripsHandler() {
-            @Override
-            public void onSuccess(List<String> routeIDs) {
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        Date curTime = Calendar.getInstance().getTime();
+        String formattedTime = format.format(curTime);
 
-                service.getTripDetails(routeIDs.get(0), new GetTripDetailsHandler() {
+        service.getTripIDsNearLocation(curLocation, 500, formattedTime, new GetTripsHandler() {
+            @Override
+            public void onSuccess(TreeSet<String> curTripIDs) {
+
+                if (tripIDs.size() == 0){
+                    tripIDs = curTripIDs;
+                }
+                else {
+                    TreeSet<String> sharedTripIDs = new TreeSet<>();
+                    for (String curTripID : curTripIDs){
+                        if (tripIDs.contains(curTripID)){
+                            sharedTripIDs.add(curTripID);
+                        }
+                    }
+                    tripIDs = sharedTripIDs;
+                }
+
+                service.getVehiclesNearLocation(currentLocation, 500, new GetVehiclesHandler() {
                     @Override
-                    public void onSuccess(Trip trip) {
-                        updateTripDetailsUI(trip);
-                        updateStopsUI(trip.getNextStops());
-                        updateMapsUI(currentLocation, trip.getPath(), trip.getNextStops());
+                    public void onSuccess(List<Vehicle> vehicles) {
+
+                        // If there are no vehicles that means that we have bad reception
+                        // or that the locations on the vehicles are outdated.
+                        if (tripIDs.size() > 0 && vehicles.size() > 0){
+                            TreeSet<String> sharedTripIDs = new TreeSet<>();
+                            for (Vehicle vehicle : vehicles) {
+                                if (tripIDs.contains(vehicle.getTripID())) {
+                                    sharedTripIDs.add(vehicle.getTripID());
+                                }
+                            }
+
+                            if (sharedTripIDs.size() > 0){
+                                tripIDs = sharedTripIDs;
+                            }
+                        }
+
+                        if (tripIDs.size() == 0){
+                            return;
+                        }
+
+                        service.getTripDetails(tripIDs.first(), new GetTripDetailsHandler() {
+                            @Override
+                            public void onSuccess(Trip trip) {
+                                // Get the current time in seconds from midnight
+                                Calendar curTime = Calendar.getInstance(TimeZone.getDefault());
+                                int numHoursFromMidnight = curTime.get(Calendar.HOUR_OF_DAY);
+                                int numMinutesFromHour = curTime.get(Calendar.MINUTE);
+                                int numSecondsFromMin = curTime.get(Calendar.SECOND);
+                                Log.d("MainActivity", "Time " + numHoursFromMidnight + ":" + numMinutesFromHour + ":" + numSecondsFromMin);
+                                int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
+
+                                // Get the stops that are still pending
+                                List<Stop> incomingStops = new ArrayList<>();
+                                for (Stop stop : trip.getNextStops()){
+                                    if (numSecondsFromMidnight < stop.getExpectedArrivalTime()){
+                                        incomingStops.add(stop);
+                                    }
+                                }
+
+                                Log.d("MainActivity", "Num stops left: " + incomingStops.size());
+
+                                updateTripDetailsUI(trip);
+                                updateStopsUI(incomingStops);
+                                updateMapsUI(currentLocation, trip.getPath(), incomingStops);
+                            }
+
+                            @Override
+                            public void onError(Exception exception) {
+                            }
+                        });
                     }
 
                     @Override
-                    public void onError(int errorCode, String errorMessage) {
-
+                    public void onError(Exception exception) {
                     }
                 });
-
             }
 
             @Override
-            public void onError(int errorCode, String errorMessage) {
-
+            public void onError(Exception exception) {
             }
         });
     }
@@ -213,7 +287,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Change the path in google maps
         PolylineOptions polylineOptions = new PolylineOptions();
         for (Vector point : path){
-            polylineOptions.add(new LatLng(point.getX(), point.getY()));
+            polylineOptions.add(new LatLng(point.getY(), point.getX()));
         }
         Polyline polyline = mMap.addPolyline(polylineOptions);
 

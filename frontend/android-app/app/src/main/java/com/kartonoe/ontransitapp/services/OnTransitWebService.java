@@ -43,13 +43,15 @@ public class OnTransitWebService implements OnTransitService {
         this.requestQueue = Volley.newRequestQueue(context);
     }
 
-    public void getTripIDsNearLocation(LatLng location, double radius, GetTripsHandler handler) {
+    public void getTripIDsNearLocation(LatLng location, double radius, String time, GetTripsHandler handler) {
         String query = new StringBuilder("lat=")
                 .append(location.latitude)
                 .append("&long=")
                 .append(location.longitude)
                 .append("&radius=")
                 .append(radius)
+                .append("&time=")
+                .append(time)
                 .toString();
 
         try {
@@ -70,7 +72,7 @@ public class OnTransitWebService implements OnTransitService {
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
             Log.d(LOG_TAG, e.getMessage());
-            handler.onError(404, e.getMessage());
+            handler.onError(e);
         }
     }
 
@@ -97,7 +99,7 @@ public class OnTransitWebService implements OnTransitService {
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
             Log.d(LOG_TAG, e.getMessage());
-            handler.onError(404, e.getMessage());
+            handler.onError(e);
         }
     }
 
@@ -124,7 +126,7 @@ public class OnTransitWebService implements OnTransitService {
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {
             Log.d(LOG_TAG, e.getMessage());
-            handler.onError(404, e.getMessage());
+            handler.onError(e);
         }
     }
 }

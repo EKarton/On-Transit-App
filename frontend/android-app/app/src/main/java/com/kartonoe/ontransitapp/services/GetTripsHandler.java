@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.maps.model.LatLng;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -11,6 +12,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TreeSet;
 
 import static com.kartonoe.ontransitapp.services.OnTransitService.LOG_TAG;
 
@@ -19,6 +21,7 @@ public abstract class GetTripsHandler implements Response.Listener<JSONObject>, 
     @Override
     public void onErrorResponse(VolleyError error) {
         Log.d(LOG_TAG, "Received ERROR Response: " + error.getMessage());
+        this.onError(error);
     }
 
     @Override
@@ -26,13 +29,13 @@ public abstract class GetTripsHandler implements Response.Listener<JSONObject>, 
         Log.d(LOG_TAG, "Received HTTP Response: " + response);
         try {
             if (!response.getString("status").equals("success")){
-                onError(500, "status is not success!");
+                onError(new Exception("Status returned is not successful!"));
             }
             else{
                 JSONObject rawData = response.getJSONObject("data");
                 JSONArray rawTripIDs = rawData.getJSONArray("tripIDs");
 
-                List<String> tripIDs = new ArrayList<>();
+                TreeSet<String> tripIDs = new TreeSet<>();
                 for (int i = 0; i < rawTripIDs.length(); i++) {
                     String routeID = rawTripIDs.getString(i);
                     tripIDs.add(routeID);
@@ -46,6 +49,6 @@ public abstract class GetTripsHandler implements Response.Listener<JSONObject>, 
         }
     }
 
-    public abstract void onSuccess(List<String> routeIDs);
-    public abstract void onError(int errorCode, String errorMessage);
+    public abstract void onSuccess(TreeSet<String> tripIDs);
+    public abstract void onError(Exception exception);
 }

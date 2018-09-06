@@ -22,6 +22,7 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
     @Override
     public void onErrorResponse(VolleyError error) {
         Log.d(LOG_TAG, "Received ERROR Response: " + error.getMessage());
+        this.onError(error);
     }
 
     @Override
@@ -29,7 +30,7 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
         Log.d(LOG_TAG, "Received HTTP Response: " + response);
         try {
             if (!response.getString("status").equals("success")){
-                onError(500, "status is not success!");
+                onError(new Exception("status is not success!"));
             }
             else{
                 // Parse the data
@@ -75,9 +76,9 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
             double longitude = Double.parseDouble(rawLongitude);
             Vector location = new Vector(latitude, longitude);
 
-            //String rawTime = rawStopData.getString("time");
+            int arrivalTime = rawStopData.getInt("time");
 
-            Stop stop = new Stop(location, null);
+            Stop stop = new Stop(location, arrivalTime);
             stop.setName(rawStopName);
             stops.add(stop);
         }
@@ -102,5 +103,5 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
     }
 
     public abstract void onSuccess(Trip trip);
-    public abstract void onError(int errorCode, String errorMessage);
+    public abstract void onError(Exception exception);
 }

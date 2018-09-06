@@ -54,7 +54,8 @@ class Database{
             this._db.close((error, result) => {
                 if (error)
                     reject(error);
-                else(resolve);
+                else
+                    resolve();
             });
         });
     }

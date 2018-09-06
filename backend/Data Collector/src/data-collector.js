@@ -21,6 +21,10 @@ const DATABASE_NAME = "miway-gtfs-static-data";
  */
 class DataCollector{
 
+    replaceAll(data, search, replacement){
+        
+    }
+
     /**
      * Clears any files in the DOWNLOADS_DIRECTORY.
      * Pre-condition: "DOWNLOADS_DIRECTORY" must be present which is relative to 
@@ -125,6 +129,14 @@ class DataCollector{
         });
     }
 
+    _convertTimeToInteger(time){
+        var splittedTime = time.split(":");
+        var numHrsFromNoon = parseInt(splittedTime[0]);
+        var numMinFromHr = parseInt(splittedTime[1]);
+        var numSecFromMin = parseInt(splittedTime[2]);
+        return numSecFromMin + (numMinFromHr * 60) + (numHrsFromNoon * 3600);
+    }
+
     _getStops(){
         return new Promise((resolve, reject) => {
 
@@ -142,18 +154,32 @@ class DataCollector{
                     var stopLocationID = rawStopTimeData.stop_id;
                     var stopSequence = parseInt(rawStopTimeData.stop_sequence);
 
+                    // Convert the time from HH:MM:SS to HHMMSS
+                    var arrivalTime_Converted = this._convertTimeToInteger(arrivalTime);
+                    var departTime_Converted = this._convertTimeToInteger(departureTime);
+
                     if (tripIDToStops[tripID] === undefined){
                         tripIDToStops[tripID] = {
                             _id: tripID,
                             numStops: 0,
+                            startTime: 100000000,
+                            endTime: -100000000,
                             stops: []
                         };
                     }
 
+                    if (arrivalTime_Converted < tripIDToStops[tripID].startTime){
+                        tripIDToStops[tripID].startTime = arrivalTime_Converted;
+                    }
+
+                    if (departTime_Converted > tripIDToStops[tripID].endTime){
+                        tripIDToStops[tripID].endTime = departTime_Converted;
+                    }
+
                     tripIDToStops[tripID].numStops ++;
                     tripIDToStops[tripID].stops.push({
-                        arrivalTime: arrivalTime,
-                        departureTime: departureTime,
+                        arrivalTime: arrivalTime_Converted,
+                        departureTime: departTime_Converted,
                         stopLocationID: stopLocationID,
                     });
 
