@@ -1,20 +1,29 @@
-const DataCollector = require("../src/data-collector");
+const Database = require("./../src/database");
+const DataCollector = require("./../src/data-collector");
+
+const MONGODB_URL = "mongodb://localhost:27017/";
+const DATABASE_NAME = "miway-gtfs-static-data";
+
 const assert = require("assert");
 
 describe("ALL", () => {
     it("should store all data to db", async () => {
-        var collector = new DataCollector();
-
+        var database = null;
         try{
+            database = new Database();
+            await database.connectToDatabase(MONGODB_URL, DATABASE_NAME);
+
+            var collector = new DataCollector();
             await collector.clearFolder();
             await collector.downloadAndExtractGtfsData("https://www.miapp.ca/GTFS/google_transit.zip");
-            await collector.saveFilesToDatabase();
+            await collector.saveFilesToDatabase(database);
 
-            // This is a bug with asynchronous methods where you need 
-            // this to tell Mocha that the test is done.
-            assert.ok(true); 
+            database.closeDatabase();
+            assert.ok(true);
         }
         catch(error){
+            if (database)
+                database.closeDatabase();
             assert.fail(error);
         }
     }).timeout(500000);

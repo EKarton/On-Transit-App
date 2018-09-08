@@ -12,18 +12,12 @@ const Location = require("./location");
 const Path = require("./path");
 
 const DOWNLOADS_DIRECTORY = "tmp/extracted-gtfs-static-files";
-const MONGODB_URL = "mongodb://localhost:27017/";
-const DATABASE_NAME = "miway-gtfs-static-data";
 
 /**
  * This data collector will basically download the data and store them in Mongo DB as is
  * without any data compressions.
  */
 class DataCollector{
-
-    replaceAll(data, search, replacement){
-        
-    }
 
     /**
      * Clears any files in the DOWNLOADS_DIRECTORY.
@@ -97,6 +91,39 @@ class DataCollector{
         });
     }
 
+    _getPathLocationIndexClosestToStopLocation(stopLocationID, tripID, database){ 
+        return new Promise(async (resolve, reject) => {
+            try{      
+                var stopLocation = await database.getObject("stopLocations", { "_id": stopLocationID });
+                
+                var trip = await database.getObject("trips", { "_id": tripID });
+                var pathID = trip.pathID;
+                var path = await database.getObject("paths", { "_id": pathID });
+                var pathLocationIDs = path.points;
+    
+                var minDistance = 100000000;
+                var minPointIndex = -1;
+                for (let i = 0; i < pathLocationIDs.length; i++){
+                    let pathLocationID = pathLocationIDs[i];
+                    let pathLocation = await database.getObject("pathLocations", { "_id": pathLocationID });
+                    let distance = Math.pow(pathLocation.latitude - stopLocation.latitude, 2) + 
+                        Math.pow(pathLocation.longitude - stopLocation.longitude, 2);
+    
+                    if (distance < minDistance){
+                        minDistance = distance;
+                        minPointIndex = i;
+                    }
+                }
+    
+                resolve(minPointIndex);
+            }
+            catch(error){
+                console.log(error);
+                reject(error);
+            }
+        });
+    }
+
     _getStopLocations(){
         return new Promise((resolve, reject) => {
             var stopLocationIDToStopLocation = {};
@@ -137,7 +164,7 @@ class DataCollector{
         return numSecFromMin + (numMinFromHr * 60) + (numHrsFromNoon * 3600);
     }
 
-    _getStops(){
+    _getStops(database){
         return new Promise((resolve, reject) => {
 
             var tripIDToStops = {};
@@ -147,7 +174,7 @@ class DataCollector{
 
             var fileStream = fs.createReadStream("tmp/extracted-gtfs-static-files/stop_times.txt");
             CSV.fromStream(fileStream, { headers: true })
-                .on("data", rawStopTimeData => {
+                .on("data", async rawStopTimeData => {
                     var tripID = rawStopTimeData.trip_id;
                     var arrivalTime = rawStopTimeData.arrival_time;
                     var departureTime = rawStopTimeData.departure_time;
@@ -176,11 +203,15 @@ class DataCollector{
                         tripIDToStops[tripID].endTime = departTime_Converted;
                     }
 
+                    //var closestPathLocationID = await this._getPathLocationIndexClosestToStopLocation(stopLocationID, tripID, database);
+                    //console.log("closestPathLocationID", closestPathLocationID);
+
                     tripIDToStops[tripID].numStops ++;
                     tripIDToStops[tripID].stops.push({
                         arrivalTime: arrivalTime_Converted,
                         departureTime: departTime_Converted,
-                        stopLocationID: stopLocationID,
+                        stopLocationID: stopLocationID
+                        //closestPathLocationID: closestPathLocationID
                     });
 
                     var tripIDAndStopIDKey = tripID + "_" + stopLocationID;
@@ -417,13 +448,9 @@ class DataCollector{
         });
     }
 
-    saveFilesToDatabase(){
+    saveFilesToDatabase(database){
         return new Promise(async (resolve, reject) => {
-            var database = null;
             try{
-                database = new Database();
-                await database.connectToDatabase(MONGODB_URL, DATABASE_NAME);
-
                 // Create the collections
                 await database.createCollectionInDatabase("pathLocations");
                 await database.createCollectionInDatabase("paths");
@@ -448,11 +475,12 @@ class DataCollector{
 
                 // Get the stop and stop locations and save it to te database
                 var stopLocations = await this._getStopLocations();
-                var stops = await this._getStops();
                 await database.saveArrayToDatabase("stopLocations", stopLocations);
-                await database.saveArrayToDatabase("stops", stops);
+                console.log("Successfully saved stop locations to database");
 
-                console.log("Successfully saved stop and stop locations to database");
+                var stops = await this._getStops(database);
+                await database.saveArrayToDatabase("stops", stops);
+                console.log("Successfully saved trip stops to database");
 
                 await database.closeDatabase();
                 console.log("Successfully shut down database connection");

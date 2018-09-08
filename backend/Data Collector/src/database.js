@@ -49,6 +49,14 @@ class Database{
         });
     }
 
+    getObject(collectionName, query){
+        return this._dbo.collection(collectionName).findOne(query);
+    }
+
+    getObjects(collectionName, query){
+        return this._dbo.collection(collectionName).find(query);
+    }
+
     closeDatabase(){
         return new Promise((resolve, reject) => {
             this._db.close((error, result) => {
