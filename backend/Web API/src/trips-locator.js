@@ -8,7 +8,7 @@ class TripsLocator{
         this.database = database;
     }
 
-    async _getNeighbouringStopSchedules(stopSchedules){
+    async _getNeighbouringStopSchedules(stopSchedules, time){
     	var prevStopSchedule = null;
         var nextStopSchedule = null;
 
@@ -16,7 +16,7 @@ class TripsLocator{
         var left = 0;
         var right = stopSchedules.length - 2;
         while (left <= right){
-        	var mid = (left + right) / 2;
+        	var mid = Math.floor((left + right) / 2);
 
         	var leftStopSchedule = stopSchedules[mid];
         	var rightStopSchedule = stopSchedules[mid + 1];
@@ -24,7 +24,8 @@ class TripsLocator{
         	// When we found it
         	if (leftStopSchedule.arrivalTime <= time && time <= rightStopSchedule.departTime){
         		prevStopSchedule = leftStopSchedule;
-        		nextStopSchedule = rightStopSchedule;
+                nextStopSchedule = rightStopSchedule;
+                break;
         	}
 
         	else if (time > rightStopSchedule.departTime){
@@ -41,50 +42,53 @@ class TripsLocator{
         };
     }
 
-    async getTripIDsNearLocation(location, time){
-        var tripIDs = [];
+    getTripIDsNearLocation(location, time){
+        return new Promise(async (resolve, reject) => {
+            var tripIDs = [];
 
-        var cursor = this.database.getObjects("schedules", {
-            startTime: { $lte: time },
-            endTime: { $gte: time }
-        });
-        while (await cursor.hasNext()){
-            var schedule = await cursor.next();
-            var stopSchedules = schedule.stopSchedules;
-
-            // Get two stop schedules which is immediately before and after the current time.
-            var neighbouringStopSchedules = this._getNeighbouringStopSchedules(stopSchedules);
-            var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
-            var nextStopSchedule = neighbouringStopSchedules.nextStopSchedule;
-
-            var prevPathLocationSequence = prevStopSchedule.pathLocationIndex;
-            var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
-
-            // Find the trips associated with this schedule
-            var tripsCursor = this.database.getObjects("trips", {
-            	"stopID": schedule._id
+            var cursor = this.database.getObjects("schedules", {
+                startTime: { $lte: time },
+                endTime: { $gte: time }
             });
+            while (await cursor.hasNext()){
+                var schedule = await cursor.next();
+                var stopSchedules = schedule.stopSchedules;
 
-            var validTripIDs = [];
-            while (await tripsCursor.hasNext()){
-            	var trip = await tripsCursor.next();
-            	var tripID = trip._id;
-            	var pathID = trip.pathID;
+                // Get two stop schedules which is immediately before and after the current time.
+                var neighbouringStopSchedules = await this._getNeighbouringStopSchedules(stopSchedules, time);
+                var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
+                var nextStopSchedule = neighbouringStopSchedules.nextStopSchedule;
 
-            	var path = await this.database.getObject("path-trees", { "_id": pathID });
-            	var pathTree = new PathLocationsTree(path.tree);
-            	var closestPathLocation = pathTree.getNearestLocation(location);
+                var prevPathLocationSequence = prevStopSchedule.pathLocationIndex;
+                var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
 
-            	if (prevPathLocationSequence <= closestPathLocation.sequence){
-            		if (closestPathLocation.sequence <= nextPathLocationSequence){
-            			validTripIDs.push(tripID);
-            		}
-            	}
+                // Find the trips associated with this schedule
+                var tripsCursor = this.database.getObjects("trips", {
+                    "_id": schedule._id
+                });
+
+                var validTripIDs = [];
+                while (await tripsCursor.hasNext()){
+                    var trip = await tripsCursor.next();
+                    var tripID = trip._id;
+                    var pathID = trip.pathID;
+
+                    var path = await this.database.getObject("path-trees", { "_id": pathID });
+                    var pathTree = new PathLocationsTree(path.tree);
+                    var closestPathLocation = pathTree.getNearestLocation(location);
+
+                    if (prevPathLocationSequence <= closestPathLocation.sequence){
+                        if (closestPathLocation.sequence <= nextPathLocationSequence){
+                            validTripIDs.push(tripID);
+                        }
+                    }
+                }
+
+                tripIDs = tripIDs.concat(validTripIDs);
             }
-
-            tripIDs.push(validTripIDs);
-        }
-        return tripIDs;
+            resolve(tripIDs);
+        });
+        
     }
 }
 

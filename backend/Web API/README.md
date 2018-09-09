@@ -48,6 +48,7 @@ Once the server is up, you are able to make many HTTP requests to the server.
     lat=[double],
     long=[double], 
     radius=[double], 
+	time=[HH:mm:ss]
 
 **Sample Success Response:**
 ```
@@ -55,10 +56,19 @@ Once the server is up, you are able to make many HTTP requests to the server.
 	status: "success",
 	data: {
 		tripIDs: [
-			12131321231,
-			as132d1as1d,
-			87987889789
-			...
+			"17283431",
+            "17283646",
+            "17283709",
+            "17286532",
+            "17286953",
+            "17287436",
+            "17287800",
+            "17291264",
+            "17291977",
+            "17292609",
+            "17293460",
+            "17293698",
+            "17296966"
 		]
 	}
 }
@@ -74,7 +84,7 @@ Once the server is up, you are able to make many HTTP requests to the server.
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius=10
+$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius=10&time=11:50:00
 ```
 
 ##### Getting trip details:

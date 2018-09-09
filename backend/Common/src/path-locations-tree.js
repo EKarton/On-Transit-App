@@ -5,7 +5,7 @@ const Location = require("./location");
 
 class PathLocationBag{
     constructor(jsonTreeData){
-        if (jsonForm){
+        if (jsonTreeData){
             this._tree = rtree(16).fromJSON(jsonTreeData);
         }
         else{
@@ -46,18 +46,17 @@ class PathLocationBag{
     }
 
     _convertPayloadToLocation(payload){
-        var longitude = (pt.minX + pt.maxX) / 2;
-        var latitude = (pt.minY + pt.maxY) / 2;
+        var longitude = (payload.minX + payload.maxX) / 2;
+        var latitude = (payload.minY + payload.maxY) / 2;
         var location = new Location(latitude, longitude);
 
-        for(var key in pt) {
-            var value = pt[key];
+        for(var key in payload) {
+            var value = payload[key];
 
-            if (key != minX && key != maxX && key != minY && key != maxY){
-                location.key = value;
+            if (key != "minX" && key != "maxX" && key != "minY" && key != "maxY"){
+                location[key] = value;
             }
         }
-
         return location;
     }
 
@@ -99,7 +98,7 @@ class PathLocationBag{
     getNearestLocations(location, amount){
         var sLatitude = location.longitude * 1000000;
         var sLongitude = location.latitude * 1000000;
-        var nearestPts = knn(tree, sLongitude, sLatitude, amount);
+        var nearestPts = knn(this._tree, sLongitude, sLatitude, amount);
 
         var locations = [];
         nearestPts.forEach(pt => {

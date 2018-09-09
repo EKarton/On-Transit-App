@@ -1,9 +1,9 @@
 const request = require("request");
 const GtfsRealtimeBindings = require('gtfs-realtime-bindings');
 
-const Vector = require("./vector");
-const Circle = require("./circle");
-const Geography = require("./geography");
+const Vector = require("on-transit").Vector;
+const Circle = require("on-transit").Circle;
+const Geography = require("on-transit").Geography;
 
 class VehicleLocator{
 

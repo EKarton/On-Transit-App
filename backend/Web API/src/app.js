@@ -1,12 +1,14 @@
 const express = require("express");
 const app = express();
 const Database = require("on-transit").Database;
+const Location = require("on-transit").Location;
+
 const VehicleLocator = require("./vehicles-locator");
 const TripDataService = require("./trip-data-service");
 const TripsLocator = require("./trips-locator");
 
 var database = new Database();
-database.connectToDatabase("mongodb://localhost:27017/", "miway-gtfs-static-data");
+database.connectToDatabase("mongodb://localhost:27017/", "clean-transit-data");
 
 var tripDataService = new TripDataService(database);
 var vehicleLocator = new VehicleLocator("https://www.miapp.ca/GTFS_RT/Vehicle/VehiclePositions.pb");
@@ -29,7 +31,7 @@ app.get("/api/v1/trips", (request, response) => {
     var numMinFromHr = parseInt(timeSections[1]);
     var numSecFromMin = parseInt(timeSections[2]);
     var numSecondsFromMidnight = numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
-
+    
     var location = new Location(latitude, longitude);
     
     tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight)
