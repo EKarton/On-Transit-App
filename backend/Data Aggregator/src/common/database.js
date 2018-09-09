@@ -14,6 +14,8 @@ class Database{
                 } 
             };
 
+            this._cache = {};
+
             MongoClient.connect(mongoDbUrl, settings, (error, db) => {
                 if (error){
                     reject(error);
@@ -73,11 +75,61 @@ class Database{
     }
 
     getObject(collectionName, query){
+        // return new Promise(async (resolve, reject) => {
+        //     // var cacheID = JSON.stringify(query) + ",_collectionName=" + collectionName;
+        //     // var cacheResult = this._cache[cacheID];
+
+        //     // if (!cacheResult){
+        //     //     var result = await this._dbo.collection(collectionName).findOne(query);
+        //     //     this._cache[cacheID] = result;
+
+        //     //     resolve(result);
+        //     // }
+        //     // else{
+        //     //     resolve(cacheResult);
+        //     // }
+        // });
         return this._dbo.collection(collectionName).findOne(query);
     }
 
     getObjects(collectionName, query){
-        return this._dbo.collection(collectionName).find(query);
+        return this._dbo.collection(collectionName)
+                .find(query);
+        // return new Promise((resolve, reject) => {
+        //     var cursor = this._dbo.collection(collectionName)
+        //         .find(query);
+        //         //.addCursorFlag('noCursorTimeout', true)
+        //         //.batchSize(200);
+
+        //     var safeCursor = {
+        //         _cursor: cursor,
+        //         hasNext: async function(){
+        //             try{
+        //                 var result = await this._cursor.hasNext();
+        //                 if (!result && !this._cursor.isClosed()){
+        //                     await this._cursor.close();
+        //                 }
+        //                 return result;
+        //             }
+        //             catch(error){
+        //                 console.log("I AM HERERERERERER");
+        //                 await this._cursor.close();
+        //                 throw error;
+        //             }
+        //         },
+        //         next: async function(){
+        //             try{
+        //                 var result = await this._cursor.next();
+        //                 return result;
+        //             }
+        //             catch(error){
+        //                 await this._cursor.close();
+        //                 throw error;
+        //             }
+        //         }
+        //     };
+        //     resolve(safeCursor);
+        // });
     }
 
     closeDatabase(){

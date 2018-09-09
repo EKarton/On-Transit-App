@@ -1,8 +1,8 @@
 "use strict";
 
-const Database = require("./common/database");
+const Database = require("./../common/database");
 const LocationBag = require("./location-bag");
-const Location = require("./location");
+const Location = require("./../common/location");
 
 class PathAggregator{
 

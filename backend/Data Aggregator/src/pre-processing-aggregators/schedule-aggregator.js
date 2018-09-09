@@ -1,6 +1,6 @@
 "use strict";
 
-const Database = require("./common/database");
+const Database = require("./../common/database");
 
 class ScheduleAggregator{
     /**

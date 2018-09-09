@@ -1,7 +1,7 @@
 "use strict";
 
-const Location = require("./location");
-const Database = require("./common/database");
+const Location = require("./../common/location");
+const Database = require("./../common/database");
 
 class LocationBag{
     /**
