@@ -1,4 +1,4 @@
-const Database = require("./../common/database");
+const Database = require("on-transit").Database;
 
 class CopyDatabase{
 

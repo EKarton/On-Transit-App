@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const Database = require("./database");
+const Database = require("on-transit").Database;
 const VehicleLocator = require("./vehicles-locator");
 const TripDataService = require("./trip-data-service");
 const TripsLocator = require("./trips-locator");
@@ -29,8 +29,10 @@ app.get("/api/v1/trips", (request, response) => {
     var numMinFromHr = parseInt(timeSections[1]);
     var numSecFromMin = parseInt(timeSections[2]);
     var numSecondsFromMidnight = numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
+
+    var location = new Location(latitude, longitude);
     
-    tripsLocator.getTripIDsNearLocation(latitude, longitude, radius, numSecondsFromMidnight)
+    tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight)
         .then(tripIDs => {
             var jsonResponse = {
                 status: "success",

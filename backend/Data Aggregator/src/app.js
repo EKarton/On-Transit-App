@@ -3,7 +3,7 @@
 const Cluster = require("cluster");
 const OS = require("os");
 
-const Database = require("./common/database");
+const Database = require("on-transit").Database;
 const RawDataCollector = require("./raw-data-collectors/raw-data-collector");
 const TripDetailsAggregator = require("./pre-processing-aggregators/trip-details-aggregator");
 //const PathAggregator = require("./pre-processing-aggregators/path-aggregator");

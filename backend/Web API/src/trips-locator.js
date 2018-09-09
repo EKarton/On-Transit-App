@@ -1,33 +1,88 @@
-const PathsLocator = require("./paths-locator");
+"use strict";
+
+const Database = require("on-transit").Database;
+const PathLocationsTree = require("on-transit").PathLocationTree;
 
 class TripsLocator{
-
     constructor(database){
         this.database = database;
-        this.pathsLocator = new PathsLocator(database);
     }
 
-    async getTripIDsNearLocation(latitude, longitude, radius, time){
-        var pathIDs = await this.pathsLocator.getPathIDsNearLocation(latitude, longitude, radius);
-        console.log("Done getting path IDs!");
+    async _getNeighbouringStopSchedules(stopSchedules){
+    	var prevStopSchedule = null;
+        var nextStopSchedule = null;
 
+        // Since the stop schedules are in sorted order we can perform binary search
+        var left = 0;
+        var right = stopSchedules.length - 2;
+        while (left <= right){
+        	var mid = (left + right) / 2;
+
+        	var leftStopSchedule = stopSchedules[mid];
+        	var rightStopSchedule = stopSchedules[mid + 1];
+
+        	// When we found it
+        	if (leftStopSchedule.arrivalTime <= time && time <= rightStopSchedule.departTime){
+        		prevStopSchedule = leftStopSchedule;
+        		nextStopSchedule = rightStopSchedule;
+        	}
+
+        	else if (time > rightStopSchedule.departTime){
+        		left = mid + 1;
+        	}
+        	else{
+        		right = mid;
+        	}
+        }
+
+        return {
+        	previousStopSchedule: prevStopSchedule,
+        	nextStopSchedule: nextStopSchedule
+        };
+    }
+
+    async getTripIDsNearLocation(location, time){
         var tripIDs = [];
-        for (let i = 0; i < pathIDs.length; i++){ 
-            var pathID = pathIDs[i];
-            var cursor = this.database.getObjects("trips", { "pathID": pathID});
-            while (await cursor.hasNext()){
-                var data = await cursor.next();
-                var tripID = data._id;
 
-                // Check if it satisfies the time constraints
-                var tripStops = await this.database.getObject("stops", { "_id": tripID });
-                var startTime = tripStops.startTime;
-                var endTime = tripStops.endTime;
+        var cursor = this.database.getObjects("schedules", {
+            startTime: { $lte: time },
+            endTime: { $gte: time }
+        });
+        while (await cursor.hasNext()){
+            var schedule = await cursor.next();
+            var stopSchedules = schedule.stopSchedules;
 
-                if (startTime <= time && time <= endTime){
-                    tripIDs.push(tripID);
-                }
+            // Get two stop schedules which is immediately before and after the current time.
+            var neighbouringStopSchedules = this._getNeighbouringStopSchedules(stopSchedules);
+            var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
+            var nextStopSchedule = neighbouringStopSchedules.nextStopSchedule;
+
+            var prevPathLocationSequence = prevStopSchedule.pathLocationIndex;
+            var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
+
+            // Find the trips associated with this schedule
+            var tripsCursor = this.database.getObjects("trips", {
+            	"stopID": schedule._id
+            });
+
+            var validTripIDs = [];
+            while (await tripsCursor.hasNext()){
+            	var trip = await tripsCursor.next();
+            	var tripID = trip._id;
+            	var pathID = trip.pathID;
+
+            	var path = await this.database.getObject("path-trees", { "_id": pathID });
+            	var pathTree = new PathLocationsTree(path.tree);
+            	var closestPathLocation = pathTree.getNearestLocation(location);
+
+            	if (prevPathLocationSequence <= closestPathLocation.sequence){
+            		if (closestPathLocation.sequence <= nextPathLocationSequence){
+            			validTripIDs.push(tripID);
+            		}
+            	}
             }
+
+            tripIDs.push(validTripIDs);
         }
         return tripIDs;
     }

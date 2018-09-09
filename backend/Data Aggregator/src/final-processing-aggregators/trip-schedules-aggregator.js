@@ -1,8 +1,8 @@
 "use strict";
 
-const Location = require("./../common/location");
-const Database = require("../common/database");
-const PathLocationsTree = require("../common/path-locations-tree");
+const Location = require("on-transit").Location;
+const Database = require("on-transit").Database;
+const PathLocationsTree = require("on-transit").PathLocationTree;
 
 class TripSchedulesAggregator{
 
