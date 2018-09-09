@@ -6,13 +6,14 @@ const OS = require("os");
 const Database = require("./common/database");
 const RawDataCollector = require("./raw-data-collectors/raw-data-collector");
 const TripDetailsAggregator = require("./pre-processing-aggregators/trip-details-aggregator");
-const PathAggregator = require("./pre-processing-aggregators/path-aggregator");
+//const PathAggregator = require("./pre-processing-aggregators/path-aggregator");
 const ScheduleAggregator = require("./pre-processing-aggregators/schedule-aggregator");
 const StopLocationAggregator = require("./pre-processing-aggregators/stop-location-aggregator");
-const LocationBag = require("./pre-processing-aggregators/location-bag");
+//const LocationBag = require("./pre-processing-aggregators/location-bag");
 const PathsTreeBuilder = require("./pre-processing-aggregators/paths-tree-builder");
 
 const TripScheduleAggregator = require("./final-processing-aggregators/trip-schedules-aggregator");
+const DatabaseCopier = require("./final-processing-aggregators/database-copier");
 
 const RAW_DATABASE_NAME = "raw-transit-data";
 const PROCESSED_DATABASE_NAME = "processed-transit-data";
@@ -224,7 +225,7 @@ async function runParallel(){
             console.log("Worker #" + pid + ": Finished sending request to do more work");
         });
 
-        process.on("exit", () => {
+        process.on("exit", async () => {
             await dirtyDatabase.closeDatabase();
             await finalDatabase.closeDatabase();
         });
@@ -258,7 +259,46 @@ async function wasd(){
     }
 }
 
+async function copyData(){
+    var collectionsToCopy = [
+        "path-trees",
+        "stop-locations",
+        "trips"
+    ];
+
+    for(let i = 0; i < collectionsToCopy.length; i++){
+        var collection = collectionsToCopy[i];
+        var dirtyDatabase = null;
+        var finalDatabase = null;
+
+        try{
+            dirtyDatabase = new Database();
+            finalDatabase = new Database();
+
+            await dirtyDatabase.connectToDatabase(MONGODB_URL, PROCESSED_DATABASE_NAME);
+            await finalDatabase.connectToDatabase(MONGODB_URL, FINAL_DATABASE_NAME);
+
+            var copier = new DatabaseCopier(dirtyDatabase, finalDatabase);
+            await copier.copyData(collection);
+
+            if (dirtyDatabase)
+                await dirtyDatabase.closeDatabase();
+            if (finalDatabase)
+                await finalDatabase.closeDatabase();
+        }
+        catch(error){
+            if (dirtyDatabase)
+                await dirtyDatabase.closeDatabase();
+            if (finalDatabase)
+                await finalDatabase.closeDatabase();
+
+            throw error;
+        }
+    }
+}
+
 //mainSingle();
-runParallel();
+//runParallel();
 // saveRawData();
 //mainParallel();
+copyData();

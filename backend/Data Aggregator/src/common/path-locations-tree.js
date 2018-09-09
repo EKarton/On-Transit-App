@@ -1,6 +1,8 @@
 const rtree = require("rbush");
 const knn = require("rbush-knn");
 
+const Location = require("./location");
+
 class PathLocationBag{
     constructor(jsonTreeData){
         if (jsonForm){
@@ -33,8 +35,30 @@ class PathLocationBag{
             maxY: maxLatitude
         };
 
-        // TODO: Add additional properties to the payload from location
+        // Add additional properties to the payload from location
+        for (var key in location){
+            if (key != latitude && key != longitude){
+                payload[key] = location[value];
+            }
+        }
+
         return payload;
+    }
+
+    _convertPayloadToLocation(payload){
+        var longitude = (pt.minX + pt.maxX) / 2;
+        var latitude = (pt.minY + pt.maxY) / 2;
+        var location = new Location(latitude, longitude);
+
+        for(var key in pt) {
+            var value = pt[key];
+
+            if (key != minX && key != maxX && key != minY && key != maxY){
+                location.key = value;
+            }
+        }
+
+        return location;
     }
 
     addLocation(location){
@@ -69,15 +93,30 @@ class PathLocationBag{
     }
 
     getNearestLocation(location){
-        return this.getNearestLocations(location, 1);
+        return this.getNearestLocations(location, 1)[0];
     }
 
     getNearestLocations(location, amount){
+        var sLatitude = location.longitude * 1000000;
+        var sLongitude = location.latitude * 1000000;
+        var nearestPts = knn(tree, sLongitude, sLatitude, amount);
 
+        var locations = [];
+        nearestPts.forEach(pt => {
+            var location = this._convertPayloadToLocation(pt);
+            locations.push(location);
+        });
+        return locations;
     }
 
     getAllLocations(){
-        return this._tree.all();
+        var payloads = this._tree.all();
+        var locations = [];
+        payloads.forEach(payload => {
+            var location = this._convertPayloadToLocation(payload);
+            locations.push(location);
+        });
+        return locations;
     }
 
     getJson(){

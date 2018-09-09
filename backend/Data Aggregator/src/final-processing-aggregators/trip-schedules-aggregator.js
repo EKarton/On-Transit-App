@@ -2,10 +2,7 @@
 
 const Location = require("./../common/location");
 const Database = require("../common/database");
-const OS = require("os");
-const Cluster = require("cluster");
-const rtree = require("rbush");
-const knn = require('rbush-knn');
+const PathLocationsTree = require("../common/path-locations-tree");
 
 class TripSchedulesAggregator{
 
@@ -31,14 +28,10 @@ class TripSchedulesAggregator{
     }
 
     async _getClosestPathLocationIndex(stopLocation, pathID){
-
         var path = await this._oldDatabase.getObject("path-trees", { "_id": pathID });
         var pathTreeData = path.tree;
-
-        var tree = rtree(9).fromJSON(pathTreeData);
-        var nearestPts = knn(tree, stopLocation.longitude * 1000000, stopLocation.latitude * 1000000, 1);
-        var sequence = nearestPts[0].sequence;
-        return sequence;
+        var tree = new PathLocationsTree(pathTreeData);
+        return tree.getNearestLocation(stopLocation);
     }
 
     async processSchedule(schedule){
