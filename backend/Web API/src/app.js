@@ -128,6 +128,8 @@ app.get("/api/v1/vehicles", (request, response) => {
         });  
 });
 
-app.listen(3000, () => {
-    console.log("Server now listening on port 3000");
+var server_port = process.env.YOUR_PORT || process.env.PORT || 3000;
+var server_host = process.env.YOUR_HOST || '0.0.0.0';
+server.listen(server_port, server_host, function() {
+    console.log('Listening on port %d', server_port);
 });
