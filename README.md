@@ -34,9 +34,14 @@ The On Transit project is a full stack software development project. It is compr
 ##### Running the Web API locally
 1. In the terminal (under the project directory), navigate to "/backend/Web API"
 2. Then, type in `npm install` in the terminal. It will install all the dependent NPM packages.
-3. Run the app by typing in the terminal `npm start`. It will launch the Web API under port 3000.
-4. Open the port to your local network by running in the command `sudo ufw allow 3000`. After running it the first time, run it again the second time.
-5. Get your local network IP address by running the command `hostname -I`. Save this somewhere as we will need it for running the Android app.
+3. Under "/backend/Web API/src/res" make a copy of "config_template.js" under the same
+directory, rename it to "config.js", and change the following to these values:
+	- <URI_TO_MONGODB_DATABASE>		The url to your local Mongo DB database
+	- <NAME_TO_MONGODB_DATABASE>	The name of the database containing the data
+	- <URI_TO_GTFS_REALTIME_VEHICLES_RESOURCE>: The url to where the GTFS realtime vehicles resource is at.
+4. Run the app by typing in the terminal `npm start`. It will launch the Web API under port 3000.
+5. Open the port to your local network by running in the command `sudo ufw allow 3000`. After running it the first time, run it again the second time.
+6. Get your local network IP address by running the command `hostname -I`. Save this somewhere as we will need it for running the Android app.
 
 ##### Running the Android App
 1. First, open up the Android app project in Android Studio which is under the projct directory "/frontend/android-app"
