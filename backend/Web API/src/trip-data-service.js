@@ -1,21 +1,49 @@
+"use strict";
+
+const Database = require("on-transit").Database;
+const PathLocationTree = require("on-transit").PathLocationTree;
+
 class TripDataService{
     constructor(database){
         this.database = database;
     }
 
-    _getPathLocationData(pathLocationID){
+    _getPathLocations(pathID){
         return new Promise(async (resolve, reject) => {
             try{
-                var rawData = await this.database.getObject("pathLocations", { "_id": pathLocationID });
-                    
-                var latitude = rawData.latitude;
-                var longitude = rawData.longitude;
-                
-                var pathLocation = {
-                    lat: latitude,
-                    long: longitude
-                };
-                resolve(pathLocation);
+                var path = await this.database.getObject("path-trees", { "_id": pathID });
+                var pathTree = new PathLocationTree(path.tree);
+                var unorderedPathLocations = pathTree.getAllLocations();
+
+                // Sort the path locations by the sequence
+                var orderedPathLocations = unorderedPathLocations.sort((a, b) => {
+                    var sequenceA = a.sequence;
+                    var sequenceB = b.sequence;
+
+                    if (sequenceA < sequenceB){
+                        return -1;
+                    }
+                    else{
+                        return 1;
+                    }
+                });
+
+                // Remove any other properties from the unorderedPathLocations[] except 
+                // for latitude and longitude
+                var filteredPathLocations = [];
+                for (let i = 0; i < orderedPathLocations.length; i++){
+                    var pathLocation = orderedPathLocations[i];
+                    var latitude = pathLocation.latitude;
+                    var longitude = pathLocation.longitude;
+                    var filteredLocation = {
+                        lat: latitude,
+                        long: longitude
+                    };
+
+                    filteredPathLocations.push(filteredLocation);
+                }                
+
+                resolve(filteredPathLocations);
             }
             catch(error){
                 reject(error);
@@ -23,33 +51,11 @@ class TripDataService{
         });
     }
 
-    _getPathData(pathID){
-        return new Promise(async (resolve, reject) => {
-            try{
-                var paths = [];
-                var rawPathData = await this.database.getObject("paths", { "_id": pathID });
-                var pathLocationIDs = rawPathData.points;
-
-                for (let i = 0; i < pathLocationIDs.length; i++){
-                    let pathLocationID = pathLocationIDs[i];
-
-                    var pathLocation = await this._getPathLocationData(pathLocationID);
-                    paths.push(pathLocation);
-                }
-
-                resolve(paths);
-            }
-            catch(error){
-                reject(error);
-            }
-        });
-    }
-
-    _getStopLocationFromStopLocationID(stopLocationID){
+    _getStopLocation(stopLocationID){
         return new Promise(async (resolve, reject) => {
             try{
                 var rawData = await this.database
-                    .getObject("stopLocations", { "_id": stopLocationID });
+                    .getObject("stop-locations", { "_id": stopLocationID });
 
                 var stopLocation = {
                     lat: rawData.latitude,
@@ -64,24 +70,22 @@ class TripDataService{
         });
     }
 
-    _getStopsData(tripID){
+    _getSchedule(scheduleID){
         return new Promise(async (resolve, reject) => {
             try{
-                let stops = [];
+                var schedule = await this.database.getObject("schedules", { "_id": scheduleID });
+                var stopSchedules = schedule.stopSchedules;
 
-                let stopData = await this.database.getObject("stops", { "_id": tripID });
-                let rawStops = stopData.stops;
+                var stops = [];
+                for (let i = 0; i < stopSchedules.length; i++) {
+                    var stopSchedule = stopSchedules[i];
 
-                for (let i = 0; i < rawStops.length; i++) {
-                    let rawStop = rawStops[i];
-
-                    let stopLocationID = rawStop.stopLocationID;    
-                    let arrivalTime = rawStop.arrivalTime;
-                    let departTime = rawStop.departureTime;
+                    var stopLocationID = stopSchedule.stopLocationID;    
+                    var arrivalTime = stopSchedule.arrivalTime;
                     
-                    let stopLocation = await this._getStopLocationFromStopLocationID(stopLocationID);
+                    var stopLocation = await this._getStopLocation(stopLocationID);
                     if (stopLocation != null){
-                        let stop = {
+                        var stop = {
                             lat: stopLocation.lat,
                             long: stopLocation.long,
                             name: stopLocation.name,
@@ -101,22 +105,17 @@ class TripDataService{
 
     getTripData(tripID){
         return new Promise(async (resolve, reject) => {
-            try{
-                var trip = {
+            try{        
+                var trip = await this.database.getObject("trips", { "_id": tripID });
+
+                var tripDetails = {
                     id: tripID,
-                    shortName: "",
-                    longName: "",
-                    stops: [],
-                    path: []
+                    shortName: trip.shortName,
+                    longName: trip.longName,
+                    stops: await this._getSchedule(tripID),
+                    path: await this._getPathLocations(trip.pathID)
                 };
-        
-                var rawRouteData = await this.database.getObject("trips", { "_id": tripID });
-        
-                trip.shortName = rawRouteData.shortName;
-                trip.longName = rawRouteData.longName;
-                trip.stops = await this._getStopsData(tripID);
-                trip.path = await this._getPathData(rawRouteData.pathID);
-                resolve(trip);
+                resolve(tripDetails);
             }
             catch(error){
                 reject(error);

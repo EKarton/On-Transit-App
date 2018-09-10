@@ -46,8 +46,11 @@ class PathLocationBag{
     }
 
     _convertPayloadToLocation(payload){
-        var longitude = (payload.minX + payload.maxX) / 2;
-        var latitude = (payload.minY + payload.maxY) / 2;
+        var sLongitude = (payload.minX + payload.maxX) / 2;
+        var sLatitude = (payload.minY + payload.maxY) / 2;
+
+        var longitude = sLongitude / 1000000;
+        var latitude = sLatitude / 1000000;
         var location = new Location(latitude, longitude);
 
         for(var key in payload) {

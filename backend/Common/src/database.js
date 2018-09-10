@@ -94,7 +94,8 @@ class Database{
 
     getObjects(collectionName, query){
         return this._dbo.collection(collectionName)
-                .find(query);
+                .find(query)
+                .batchSize(200);
         // return new Promise((resolve, reject) => {
         //     var cursor = this._dbo.collection(collectionName)
         //         .find(query);

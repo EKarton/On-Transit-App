@@ -44,49 +44,52 @@ class TripsLocator{
 
     getTripIDsNearLocation(location, time){
         return new Promise(async (resolve, reject) => {
-            var tripIDs = [];
+            try{
+                var tripIDs = [];
 
-            var cursor = this.database.getObjects("schedules", {
-                startTime: { $lte: time },
-                endTime: { $gte: time }
-            });
-            while (await cursor.hasNext()){
-                var schedule = await cursor.next();
-                var stopSchedules = schedule.stopSchedules;
-
-                // Get two stop schedules which is immediately before and after the current time.
-                var neighbouringStopSchedules = await this._getNeighbouringStopSchedules(stopSchedules, time);
-                var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
-                var nextStopSchedule = neighbouringStopSchedules.nextStopSchedule;
-
-                var prevPathLocationSequence = prevStopSchedule.pathLocationIndex;
-                var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
-
-                // Find the trips associated with this schedule
-                var tripsCursor = this.database.getObjects("trips", {
-                    "_id": schedule._id
+                var cursor = this.database.getObjects("schedules", {
+                    startTime: { $lte: time },
+                    endTime: { $gte: time }
                 });
+                while (await cursor.hasNext()){
+                    var schedule = await cursor.next();
+                    var stopSchedules = schedule.stopSchedules;
 
-                var validTripIDs = [];
-                while (await tripsCursor.hasNext()){
-                    var trip = await tripsCursor.next();
-                    var tripID = trip._id;
-                    var pathID = trip.pathID;
+                    // Get two stop schedules which is immediately before and after the current time.
+                    var neighbouringStopSchedules = await this._getNeighbouringStopSchedules(stopSchedules, time);
+                    var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
+                    var nextStopSchedule = neighbouringStopSchedules.nextStopSchedule;
 
-                    var path = await this.database.getObject("path-trees", { "_id": pathID });
-                    var pathTree = new PathLocationsTree(path.tree);
-                    var closestPathLocation = pathTree.getNearestLocation(location);
+                    var prevPathLocationSequence = prevStopSchedule.pathLocationIndex;
+                    var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
 
-                    if (prevPathLocationSequence <= closestPathLocation.sequence){
-                        if (closestPathLocation.sequence <= nextPathLocationSequence){
-                            validTripIDs.push(tripID);
+                    // Find the trips associated with this schedule
+                    var tripsCursor = this.database.getObjects("trips", {
+                        "_id": schedule._id
+                    });
+
+                    while (await tripsCursor.hasNext()){
+                        var trip = await tripsCursor.next();
+                        var tripID = trip._id;
+                        var pathID = trip.pathID;
+
+                        var path = await this.database.getObject("path-trees", { "_id": pathID });
+                        var pathTree = new PathLocationsTree(path.tree);
+                        var closestPathLocation = pathTree.getNearestLocation(location);
+
+                        if (prevPathLocationSequence <= closestPathLocation.sequence){
+                            if (closestPathLocation.sequence <= nextPathLocationSequence){
+                                tripIDs.push(tripID);
+                            }
                         }
                     }
                 }
-
-                tripIDs = tripIDs.concat(validTripIDs);
+                console.log("done");
+                resolve(tripIDs);
             }
-            resolve(tripIDs);
+            catch(error){
+                reject(error);
+            }
         });
         
     }
