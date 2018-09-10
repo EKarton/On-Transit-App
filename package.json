@@ -1,0 +1,23 @@
+{
+  "name": "on-transit-app",
+  "version": "1.0.0",
+  "description": "This is needed to deploy the app to Heroku",
+  "main": "backend/Web\\ API/src/app.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "start": "node backend/Web\\ API/src/app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EKarton/On-Transit-App.git"
+  },
+  "author": "Emilio Kartono",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/EKarton/On-Transit-App/issues"
+  },
+  "homepage": "https://github.com/EKarton/On-Transit-App#readme"
+}
