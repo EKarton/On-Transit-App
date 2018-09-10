@@ -2,12 +2,44 @@
 
 const Database = require("on-transit").Database;
 const PathLocationsTree = require("on-transit").PathLocationTree;
+const Location = require("on-transit").Location;
 
+/**
+ * A class used to locate the trip IDs based on a user's 
+ * GPS location and time.
+ */
 class TripsLocator{
+
+    /**
+     * Initializes the TripsLocator
+     * @param {Database} database A database used to obtain transit data
+     */
     constructor(database){
         this.database = database;
     }
 
+    /**
+     * Calculates and determines the stop schedules that are in between the "time".
+     * Pre-condition:
+     * - "stopSchedules" must be an array of objects with each object in this format:
+     *   {
+     *      arrivalTime: <ARRIVAL_TIME_IN_SECONDS_FROM_12:00AM>,
+     *      departTime: <DEPART_TIME_IN_SECONDS_FROM_12:00AM>
+     *   }
+     * - "time" must be the number of seconds from 12:00 AM
+     * 
+     * Post-condition:
+     * - Returns an object in this format:
+     *   {
+     *       previousStopSchedule: <The stop schedule right before "time">,
+     *       nextStopSchedule: <<The stop schedule right after "time">>
+     *   }
+     * 
+     * @param {object[]} stopSchedules A list of stop schedules in a format as mentioned above.
+     * @param {int} time The time in seconds ellapsed since 12:00 AM
+     * @return {object} Returns two stop schedules from "stopSchedules" that are in between "time" 
+     *  in the format as mentioned above.
+     */
     async _getNeighbouringStopSchedules(stopSchedules, time){
     	var prevStopSchedule = null;
         var nextStopSchedule = null;
@@ -42,6 +74,15 @@ class TripsLocator{
         };
     }
 
+    /**
+     * Returns a list of trip IDs from the database that are near
+     * the current location and it is in between two times.
+     * 
+     * @param {Location} location The location
+     * @param {int} time The time, which is the number of seconds from 12:00AM
+     * @return {Promise} A promise, with the list of trip IDs passed to .then().
+     *  If an error were to occur, that error is passed to .catch().
+     */
     getTripIDsNearLocation(location, time){
         return new Promise(async (resolve, reject) => {
             try{

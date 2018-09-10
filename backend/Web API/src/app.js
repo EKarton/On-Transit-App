@@ -6,8 +6,11 @@ const VehicleLocator = require("./vehicles-locator");
 const TripDataService = require("./trip-data-service");
 const TripsLocator = require("./trips-locator");
 
-const DATABASE_URI = "mongodb+srv://admin:DF7ZkkEseUZubaIW@cluster0-knsk3.mongodb.net"; // /test?retryWrites=true";
-const DATABASE_NAME = "transit-data";
+const config = require("./res/config");
+
+const DATABASE_URI = config.DATABASE_URI;
+const DATABASE_NAME = config.DATABASE_NAME;
+const GTFS_VEHICLES_URI = config.GTFS_VEHICLES_URI;
 
 var app = express();
 
@@ -15,8 +18,11 @@ var database = new Database();
 database.connectToDatabase(DATABASE_URI, DATABASE_NAME);//"mongodb://localhost:27017/", "clean-transit-data");
 
 var tripDataService = new TripDataService(database);
-var vehicleLocator = new VehicleLocator("https://www.miapp.ca/GTFS_RT/Vehicle/VehiclePositions.pb");
+var vehicleLocator = new VehicleLocator(GTFS_VEHICLES_URI);
 var tripsLocator = new TripsLocator(database);
+
+var server_port = process.env.YOUR_PORT || process.env.PORT || config.DEFAULT_PORT;
+var server_host = process.env.YOUR_HOST || '0.0.0.0';
 
 /**
  * Returns a set of trip IDs that are close to a location by a certain radius
@@ -128,8 +134,6 @@ app.get("/api/v1/vehicles", (request, response) => {
         });  
 });
 
-var server_port = process.env.YOUR_PORT || process.env.PORT || 3000;
-var server_host = process.env.YOUR_HOST || '0.0.0.0';
 app.listen(server_port, server_host, function() {
     console.log('Listening on port %d', server_port);
 });
