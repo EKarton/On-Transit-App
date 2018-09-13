@@ -1,0 +1,6 @@
+"use strict";
+
+module.exports = {
+	DEFAULT_PORT: 3000,
+	GTFS_VEHICLES_URI: "<URI_TO_GTFS_REALTIME_VEHICLES_RESOURCE>"
+};

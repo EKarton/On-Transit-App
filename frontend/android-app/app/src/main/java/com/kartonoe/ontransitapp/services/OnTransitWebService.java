@@ -21,7 +21,7 @@ public class OnTransitWebService implements OnTransitService {
     // Basic server details
     private final String SERVER_PROTOCOL = "http";
     private final String SERVER_AUTH = null;
-    private final String SERVER_HOSTNAME = "192.168.100.169";
+    private final String SERVER_HOSTNAME = "100.64.173.59";
     private final int SERVER_PORT = 3000;
 
     // Routes

@@ -174,8 +174,8 @@ class TripDataService{
 
                 var tripDetails = {
                     id: tripID,
-                    shortName: trip.shortName,
-                    longName: trip.longName,
+                    shortName: trip.shortname,
+                    longName: trip.headsign,
                     stops: await this._getSchedule(tripID),
                     path: await this._getPathLocations(trip.pathID)
                 };
