@@ -1,7 +1,6 @@
 const process = require("process");
 const Database = require("on-transit").Database;
 const PathLocationsTree = require("on-transit").PathLocationTree;
-const Location = require("on-transit").Location;
 
 class TripsLocatorWorker{
     /**

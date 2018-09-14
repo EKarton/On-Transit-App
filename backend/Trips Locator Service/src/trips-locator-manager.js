@@ -9,7 +9,7 @@ const Location = require("on-transit").Location;
  * A class used to locate the trip IDs based on a user's 
  * GPS location and time.
  */
-class TripsLocator{
+class TripsLocatorManager{
 
     /**
      * Initializes the TripsLocator and the N processes
@@ -129,4 +129,4 @@ class TripsLocator{
     }
 }
 
-module.exports = TripsLocator;
+module.exports = TripsLocatorManager;

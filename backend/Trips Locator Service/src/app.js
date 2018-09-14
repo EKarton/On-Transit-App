@@ -3,7 +3,7 @@ const process = require("process");
 const Database = require("on-transit").Database;
 const Location = require("on-transit").Location;
 
-const TripsLocator = require("./trips-locator");
+const TripsLocator = require("./trips-locator-manager");
 
 const config = require("./res/config");
 const DATABASE_URI = config.DATABASE_URI;
