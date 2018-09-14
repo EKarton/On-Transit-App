@@ -1,7 +1,8 @@
 "use strict";
 
+const Processes = require("child_process");
+const OS = require("os");
 const Database = require("on-transit").Database;
-const PathLocationsTree = require("on-transit").PathLocationTree;
 const Location = require("on-transit").Location;
 
 /**
@@ -11,67 +12,54 @@ const Location = require("on-transit").Location;
 class TripsLocator{
 
     /**
-     * Initializes the TripsLocator
+     * Initializes the TripsLocator and the N processes
      * @param {Database} database A database used to obtain transit data
      */
     constructor(database){
         this.database = database;
+        this.workers = {};
+
+        this.numWorkers = OS.cpus().length;
+        for (let i = 0; i < this.numWorkers; i++){
+            this.createWorker();
+        }
     }
 
-    /**
-     * Calculates and determines the stop schedules that are in between the "time".
-     * Pre-condition:
-     * - "stopSchedules" must be an array of objects with each object in this format:
-     *   {
-     *      arrivalTime: <ARRIVAL_TIME_IN_SECONDS_FROM_12:00AM>,
-     *      departTime: <DEPART_TIME_IN_SECONDS_FROM_12:00AM>
-     *   }
-     * - "time" must be the number of seconds from 12:00 AM
-     * 
-     * Post-condition:
-     * - Returns an object in this format:
-     *   {
-     *       previousStopSchedule: <The stop schedule right before "time">,
-     *       nextStopSchedule: <<The stop schedule right after "time">>
-     *   }
-     * 
-     * @param {object[]} stopSchedules A list of stop schedules in a format as mentioned above.
-     * @param {int} time The time in seconds ellapsed since 12:00 AM
-     * @return {object} Returns two stop schedules from "stopSchedules" that are in between "time" 
-     *  in the format as mentioned above.
-     */
-    async _getNeighbouringStopSchedules(stopSchedules, time){
-    	var prevStopSchedule = null;
-        var nextStopSchedule = null;
+    createWorker(){
+        var databaseUrl = this.database.databaseUrl;
+        var databaseName = this.database.databaseName;
 
-        // Since the stop schedules are in sorted order we can perform binary search
-        var left = 0;
-        var right = stopSchedules.length - 2;
-        while (left <= right){
-        	var mid = Math.floor((left + right) / 2);
+        var newWorker = Processes.fork("src/trips-locator-worker.js", [databaseUrl, databaseName]);
+        var newWorkerPID = newWorker.pid;
+        console.log("Created new worker: " + newWorkerPID);
+        this.workers[newWorkerPID] = newWorker;
+    }
 
-        	var leftStopSchedule = stopSchedules[mid];
-        	var rightStopSchedule = stopSchedules[mid + 1];
+    async getJobs(location, time){
+        var jobs = [];
+        var cursor = this.database.getObjects("schedules", {
+            startTime: { $lte: time },
+            endTime: { $gte: time }
+        }).batchSize(2000);
 
-        	// When we found it
-        	if (leftStopSchedule.arrivalTime <= time && time <= rightStopSchedule.departTime){
-        		prevStopSchedule = leftStopSchedule;
-                nextStopSchedule = rightStopSchedule;
-                break;
-        	}
+        var jobIndex = 0;
+        while (await cursor.hasNext()){
+            var schedule = await cursor.next();
+            var stopSchedules = schedule.stopSchedules;
+            var scheduleID = schedule._id;    
+            
+            var newJob = {
+                jobID: jobIndex,
+                location: location,
+                time: time,
+                stopSchedules,
+                scheduleID: scheduleID
+            };
+            jobs.push(newJob);
 
-        	else if (time > rightStopSchedule.departTime){
-        		left = mid + 1;
-        	}
-        	else{
-        		right = mid;
-        	}
+            jobIndex ++;
         }
-
-        return {
-        	previousStopSchedule: prevStopSchedule,
-        	nextStopSchedule: nextStopSchedule
-        };
+        return jobs;
     }
 
     /**
@@ -86,47 +74,51 @@ class TripsLocator{
     getTripIDsNearLocation(location, time){
         return new Promise(async (resolve, reject) => {
             try{
-                var tripIDs = [];
+                var validTripIDs = [];
+                var unfinishedJobs = await this.getJobs(location, time);
+                console.log("Got jobs");
+                
+                var numInitJobs = Math.min(unfinishedJobs.length, this.numWorkers);
+                Object.keys(this.workers).forEach(pid => {
+                    if (numInitJobs > 0){
+                        var curJob = unfinishedJobs.pop();
 
-                var cursor = this.database.getObjects("schedules", {
-                    startTime: { $lte: time },
-                    endTime: { $gte: time }
+                        this.workers[pid].send(curJob);
+                        numInitJobs --;
+                    }
                 });
-                while (await cursor.hasNext()){
-                    var schedule = await cursor.next();
-                    var stopSchedules = schedule.stopSchedules;
 
-                    // Get two stop schedules which is immediately before and after the current time.
-                    var neighbouringStopSchedules = await this._getNeighbouringStopSchedules(stopSchedules, time);
-                    var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
-                    var nextStopSchedule = neighbouringStopSchedules.nextStopSchedule;
+                var areValidTripIDsSent = false;
 
-                    var prevPathLocationSequence = prevStopSchedule.pathLocationIndex;
-                    var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
+                // Set up the listener
+                Object.keys(this.workers).forEach(pid => {
+                    var worker = this.workers[pid];
+                    worker.on("message", (message) => {
+                        var workerPID = message.pid;
+                        var status = message.jobExitCode;
 
-                    // Find the trips associated with this schedule
-                    var tripsCursor = this.database.getObjects("trips", {
-                        "_id": schedule._id
-                    });
-
-                    while (await tripsCursor.hasNext()){
-                        var trip = await tripsCursor.next();
-                        var tripID = trip._id;
-                        var pathID = trip.pathID;
-
-                        var path = await this.database.getObject("path-trees", { "_id": pathID });
-                        var pathTree = new PathLocationsTree(path.tree);
-                        var closestPathLocation = pathTree.getNearestLocation(location);
-
-                        if (prevPathLocationSequence <= closestPathLocation.sequence){
-                            if (closestPathLocation.sequence <= nextPathLocationSequence){
-                                tripIDs.push(tripID);
+                        if (status == 0){
+                            // Save the results
+                            var tripIDs = message.tripIDs;
+                            validTripIDs = validTripIDs.concat(tripIDs);
+    
+                            // Put more jobs to this worker
+                            if (unfinishedJobs.length > 0){
+                                var newJob = unfinishedJobs.pop();
+                                this.workers[workerPID].send(newJob);
+                            }
+                            else{
+                                // This is needed so that not all N workers call the resolve()
+                                // ** it is only called once
+                                if (!areValidTripIDsSent){
+                                    console.log("FINISHED!!");
+                                    areValidTripIDsSent = true;
+                                    resolve(validTripIDs);
+                                }
                             }
                         }
-                    }
-                }
-                console.log("done");
-                resolve(tripIDs);
+                    });
+                });
             }
             catch(error){
                 console.log(error);

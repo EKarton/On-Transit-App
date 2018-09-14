@@ -28,21 +28,21 @@ class App{
         /**
          * Returns a set of trip IDs that are close to a location by a certain radius
          * Example of HTTP GET request:
-         * https://localhost:3000/api/v1/trips?lat=43&long=-73.6&time=17:50:00
+         * https://localhost:3000/api/v1/master/trips?lat=43&long=-73.6&time=17:50:00
          */
         app.get("/api/v1/trips", (request, response) => {
             var latitude = request.query.lat;
             var longitude = request.query.long;
             var rawTime = request.query.time;
 
-            console.log("Request to get nearby trips received by process ", process.pid);
-
-            // Convert raw time to the number of seconds after midnight
+             // Convert raw time to the number of seconds after midnight
             var timeSections = rawTime.split(":");
             var numHrsFromMidnight = parseInt(timeSections[0]);
             var numMinFromHr = parseInt(timeSections[1]);
             var numSecFromMin = parseInt(timeSections[2]);
             var numSecondsFromMidnight = numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
+
+            console.log("Request to get nearby trips received by process ", process.pid);
 
             var location = new Location(latitude, longitude);
             

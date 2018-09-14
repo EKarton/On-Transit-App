@@ -4,7 +4,22 @@ const MongoClient = require('mongodb').MongoClient;
 
 class Database{
 
+    constructor(){
+        this._databaseUrl = "";
+        this._databaseName = "";
+    }
+
+    get databaseUrl(){
+        return this._databaseUrl;
+    }
+
+    get databaseName(){
+        return this._databaseName;
+    }
+
     connectToDatabase(mongoDbUrl, databaseName){
+        this._databaseUrl = mongoDbUrl;
+        this._databaseName = databaseName;
         return new Promise((resolve, reject) => {
             var settings = { server: { 
                 // sets how many times to try reconnecting
@@ -95,7 +110,7 @@ class Database{
     getObjects(collectionName, query){
         return this._dbo.collection(collectionName)
                 .find(query)
-                .batchSize(200);
+                .batchSize(500);
         // return new Promise((resolve, reject) => {
         //     var cursor = this._dbo.collection(collectionName)
         //         .find(query);
