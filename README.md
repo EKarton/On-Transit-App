@@ -18,7 +18,7 @@ The On Transit project is a full stack software development project. It is compr
 This project is comprised of several components that work together to make the project very scalable while maintaining high performance.
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/System%20Architecture%20Image.png" width="600px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/System%20Architecture%20Image.png" width="100%"/>
     </p>
 </div>
 
@@ -76,7 +76,7 @@ Swiping up will list the next stops.
 
 ##### Step 7: Installing and running the Android App
 1. Get your local network IP address by running the command `hostname -I`. Save this as it is needed to allow the Android app to connect to the API Gateway Microservice.
-2. Please refer to the README file in the folder "Frontend/android-app" to see how to install and run the Android app on your local phone with the IP address you saved from the previous step.
+2. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Frontend/Android%20App/README.md) to install and run the Android app on your local phone with the IP address you saved from the previous step.
 
 ### Usage
 Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
