@@ -62,7 +62,7 @@ Swiping up will list the next stops.
 1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to get the latest transit data locally.
 
 ##### Step 3: Running the Trips Locator Microservice
-1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the Trips Locator microservice locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/Trips%20Locator%20Service/README.md) to see how to install and run the Trips Locator microservice locally.
 
 ##### Step 4: Running the Trip Details Microservice
 1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/Trip%20Details%20Service/README.md) to see how to install and run the Trip Details Microservice locally.
