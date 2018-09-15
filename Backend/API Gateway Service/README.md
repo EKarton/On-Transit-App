@@ -39,10 +39,146 @@ On startup, it will launch N clusters (with N being the number of CPUs on the cu
 2. It is done!
 
 ### Usage
-Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
+Once the server is up, you are able to make many HTTP requests to the server.
+
+##### Getting trips based on GPS location:
+* **URL**:    
+    api/v1/trips
+* **Method**: 
+    GET
+* **URL Query Params:**
+    lat=[double],
+    long=[double], 
+    radius=[double], 
+	time=[HH:mm:ss]
+
+**Sample Success Response:**
+```
+{
+	status: "success",
+	data: {
+		tripIDs: [
+			"17283431",
+            "17283646",
+            "17283709",
+            "17286532",
+            "17286953",
+            "17287436",
+            "17287800",
+            "17291264",
+            "17291977",
+            "17292609",
+            "17293460",
+            "17293698",
+            "17296966"
+		]
+	}
+}
+```
+
+**Sample Failure Response:**
+```
+{
+	status: "failure",
+	data: {	}
+	message: "<REASON_FOR_FAILURE>"
+}
+```
+**Sample Call:**
+```
+$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius=10&time=11:50:00
+```
+
+##### Getting trip details:
+* **URL**:    
+    api/v1/trip/:tripID
+* **Method**: 
+    GET
+* **URL Params:**
+    tripID=[string]
+
+**Sample Success Response:**
+```
+{
+	status: "success",
+	data: {
+		id: 12131321231,
+		shortName: "109",
+		longName: "Meadowvale Express",
+		stops: [
+			{ lat: , long: , name: , time: },
+			...
+		],
+		path: [
+			{ lat: , long: },
+			...
+		]
+	}
+}
+```
+
+**Sample Failure Response:**
+```
+{
+	status: "failure",
+	data: {	}
+	message: "<REASON_FOR_FAILURE>"
+}
+```
+**Sample Call:**
+```
+$ curl http://localhost:3000/api/v1/trips/12131321231
+```
+
+##### Getting vehicles based on GPS location:
+* **URL**:    
+    api/v1/vehicles
+* **Method**: 
+    GET
+* **URL Query Params:**
+    lat=[double]
+    long=[double]
+    radius=[double]
+    
+
+**Sample Success Response:**
+```
+{
+	status: "success",
+	data: {
+		vehicles: [
+			{ 
+				id: 105454545, 
+				tripID: 46456456,
+				type: 3
+			},
+			...
+			{ 
+				id: 123123165, 
+				tripID: 98789787,
+				type: 3
+			}
+		]
+	}
+}
+```
+
+**Sample Failure Response:**
+```
+{
+	status: "failure",
+	data: {	}
+	message: "<REASON_FOR_FAILURE>"
+}
+```
+**Sample Call:**
+```
+$ curl http://localhost:3000/api/v1/vehicles?lat=43.5540929&long=-79.7220238&radius=10
+```
 
 ### Credits
 Emilio Kartono, the sole creator of this project.
 
 ### Licence
+Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
 This project is protected under the GNU Licence. Please refer to LICENCE.txt for further details.
