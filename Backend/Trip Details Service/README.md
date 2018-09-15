@@ -69,7 +69,7 @@ $ curl http://localhost:3003/api/v1/trips/12131321231
 - Node JS v8.0+ with NPM
 
 ##### Step 1: Install the packages
-1. Open up the terminal and change the directory to the folder "Backend/Vehicles Locator Service" relative to the project directory.
+1. Open up the terminal and change the directory to the folder "Backend/Trip Details Service" relative to the project directory.
 2. Type the command `npm install`
 
 ##### Step 2: Set up the config file
