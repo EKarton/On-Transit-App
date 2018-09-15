@@ -22,15 +22,12 @@ On startup, it will launch N clusters (with N being the number of CPUs on the cu
 
 ##### Getting vehicles based on GPS location:
 Clients needs to make HTTP requests to the application in order to get the vehicles based on their GPS location.
-* **URL**:    
-    api/v1/vehicles
-* **Method**: 
-    GET
-* **URL Query Params:**
-    lat=[double]
-    long=[double]
-    radius=[double]
-    
+
+**URL**: api/v1/vehicles
+
+**Method**: GET
+
+**URL Query Params**: lat=[double],long=[double], radius=[double]   
 
 **Sample Success Response:**
 ```
