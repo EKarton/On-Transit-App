@@ -113,6 +113,9 @@ class TripsLocatorWorker{
     }
 }
 
+/**
+ * The main method for this file.
+ */
 (() => {
     var curDatabase = null;
     process.on("message", async (message) => {

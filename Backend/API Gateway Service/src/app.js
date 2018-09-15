@@ -10,6 +10,35 @@ const config = require("./res/config");
  */
 class App{
 
+    /**
+     * Obtains the resource from a microservice through its url and 
+     * sends the microservice's response to the client.
+     * @param {express.Request} req The client's request object
+     * @param {express.Response} res The client's response object
+     * @param {string} uri The url to get the resource via microservices
+     */
+    _handleRequest(req, res, uri){
+        request(uri)
+            .then(message => {
+                res.setHeader('Content-Type', 'application/json');
+                res.send(message);  
+            })
+            .catch(error => {
+                console.log(error);
+                var responseBody = {
+                    status: "failure",
+                    data: {},
+                    message: JSON.stringify(error)
+                };
+
+                response.setHeader('Content-Type', 'application/json');
+                response.send(JSON.stringify(responseBody));    
+            });
+    }
+
+    /**
+     * Runs the application
+     */
     run(){
         var app = express();
 
@@ -26,15 +55,10 @@ class App{
             var longitude = req.query.long;
             var rawTime = req.query.time;
 
+            console.log("API Gateway Service: Request for finding nearby trips received on process #", process.pid);
+
             var uri = `http://localhost:3002/api/v1/trips?lat=${latitude}&long=${longitude}&time=${rawTime}`;
-            request(uri)
-                .then(message => {
-                    res.json(message);
-                    res.setHeader('Content-Type', 'application/json');
-                })
-                .catch(error => {
-                    console.log(error);
-                });
+            this._handleRequest(req, res, uri);
         });
 
         /**
@@ -43,17 +67,12 @@ class App{
         * http://localhost:3000/api/v1/trips/123456
         */
         app.get("/api/v1/trips/:tripID", (req, res) => {
-            var tripID = request.params.tripID;
+            var tripID = req.params.tripID;
+
+            console.log("API Gateway Service: Request for getting trip details received on process #", process.pid);
 
             var uri = `http://localhost:3003/api/v1/trips/${tripID}`;
-            request(uri)
-                .then(message => {
-                    res.json(message);
-                    res.setHeader('Content-Type', 'application/json');
-                })
-                .catch(error => {
-                    console.log(error);
-                });
+            this._handleRequest(req, res, uri);
         });
 
         /**
@@ -66,17 +85,10 @@ class App{
             var longitude = req.query.long;
             var radius = req.query.radius;
 
-            var uri = `http://localhost:3001/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;
+            console.log("API Gateway Service: Request for finding vehicle received on process #", process.pid);
 
-            console.log("Request for finding vehicle recieved on process #", process.pid);
-            request(uri)
-                .then(message => {
-                    res.json(message);
-                    res.setHeader('Content-Type', 'application/json');
-                })
-                .catch(error => {
-                    console.log(error);
-                });
+            var uri = `http://localhost:3001/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
+            this._handleRequest(req, res, uri);
         });
 
         app.listen(server_port, server_host, function() {

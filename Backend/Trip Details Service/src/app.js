@@ -39,8 +39,8 @@ class App{
                         data: tripData
                     };
 
-                    response.setHeader("Content-Type", "application/json");
-                    response.send(JSON.stringify(jsonResponse));
+                    response.setHeader('Content-Type', 'application/json');
+                    response.send(JSON.stringify(jsonResponse));  
                 })
                 .catch(error => {
                     var responseBody = {

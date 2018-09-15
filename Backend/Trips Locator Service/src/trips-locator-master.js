@@ -118,7 +118,7 @@ class TripsLocatorMaster{
             worker.send(nextJobObject);
         }
         else{
-            this.idleWorkersPid.push(worker);
+            this.idleWorkersPid.push(workerPID);
         }
     }
 
