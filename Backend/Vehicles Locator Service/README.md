@@ -20,6 +20,53 @@ This microservice is comprised of several clusters that work together to make it
 
 On startup, it will launch N clusters (with N being the number of CPUs on the current machine). Each cluster will be running an Express app that will handle client requests. More information can be found on https://nodejs.org/api/cluster.html.
 
+##### Getting vehicles based on GPS location:
+Clients needs to make HTTP requests to the application in order to get the vehicles based on their GPS location.
+* **URL**:    
+    api/v1/vehicles
+* **Method**: 
+    GET
+* **URL Query Params:**
+    lat=[double]
+    long=[double]
+    radius=[double]
+    
+
+**Sample Success Response:**
+```
+{
+	status: "success",
+	data: {
+		vehicles: [
+			{ 
+				id: 105454545, 
+				tripID: 46456456,
+				type: 3
+			},
+			...
+			{ 
+				id: 123123165, 
+				tripID: 98789787,
+				type: 3
+			}
+		]
+	}
+}
+```
+
+**Sample Failure Response:**
+```
+{
+	status: "failure",
+	data: {	}
+	message: "<REASON_FOR_FAILURE>"
+}
+```
+**Sample Call:**
+```
+$ curl http://localhost:3001/api/v1/vehicles?lat=43.5540929&long=-79.7220238&radius=10
+```
+
 ### Installation
 
 ##### Required Programs and Tools:
