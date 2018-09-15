@@ -68,7 +68,7 @@ Swiping up will list the next stops.
 1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the Trip Details Microservice locally.
 
 ##### Step 5: Running the Vehicles Locator Microservice
-1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the Vehicles Locator Microservice locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/Vehicles%20Locator%20Service/README.md) to see how to install and run the Vehicles Locator Microservice locally.
 
 ##### Step 6: Running the API Gateway Microservice
 1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the API Gateway Microservice locally.
