@@ -71,7 +71,7 @@ Swiping up will list the next stops.
 1. Please follow the README file in the folder "Backend/Vehicles Locator Service" to see how to install and run the Vehicles Locator Microservice locally.
 
 ##### Step 6: Running the API Gateway Microservice
-1. Please follow the README file in https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md to see how to install and run the API Gateway Microservice locally.
+1. Please follow the [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) file to see how to install and run the API Gateway Microservice locally.
 2. Open the port to your local network by running the comnmand `sudo ufw allow 3000`. After running the command for the first time, run it again for the second time to confirm.
 
 ##### Step 7: Installing and running the Android App
