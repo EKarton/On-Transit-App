@@ -59,19 +59,19 @@ Swiping up will list the next stops.
 3. Start Mongo DB by typing on the terminal `sudo service mongod start`
 
 ##### Step 2: Run the Data Aggregator service to get the latest transit data
-1. Please follow the Data Aggregator Service's README file in the folder "Backend/Data Aggregator Service" to see how to get the latest transit data locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to get the latest transit data locally.
 
 ##### Step 3: Running the Trips Locator Microservice
-1. Please follow the README file in the folder "Backend/Trips Locator Service" to see how to install and run the Trips Locator microservice locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the Trips Locator microservice locally.
 
 ##### Step 4: Running the Trip Details Microservice
-1. Please follow the README file in the folder "Backend/Trip Details Service" to see how to install and run the Trip Details Microservice locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the Trip Details Microservice locally.
 
 ##### Step 5: Running the Vehicles Locator Microservice
-1. Please follow the README file in the folder "Backend/Vehicles Locator Service" to see how to install and run the Vehicles Locator Microservice locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the Vehicles Locator Microservice locally.
 
 ##### Step 6: Running the API Gateway Microservice
-1. Please follow the [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) file to see how to install and run the API Gateway Microservice locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to install and run the API Gateway Microservice locally.
 2. Open the port to your local network by running the comnmand `sudo ufw allow 3000`. After running the command for the first time, run it again for the second time to confirm.
 
 ##### Step 7: Installing and running the Android App
