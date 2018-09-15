@@ -67,6 +67,20 @@ class TripsLocatorWorker{
         };
     }
 
+    /**
+     * Return a list of trip IDs from a location at a certain time
+     * from a list of possible stop schedules and schedule ID.
+     * 
+     * Pre-condition:
+     *  - stopSchedules must follow the schema in the database
+     *  - scheduleID must exist in the database.
+     * 
+     * @param {Location} location The current location
+     * @param {int} time Time ellapsed from midnight
+     * @param {Object} stopSchedules Stop schedules
+     * @param {string} scheduleID The schedule ID
+     * @return {string[]} A list of trip IDs.
+     */
     async getTripIDs(location, time, stopSchedules, scheduleID){
 
         // Get two stop schedules which is immediately before and after the current time.
@@ -99,32 +113,42 @@ class TripsLocatorWorker{
     }
 }
 
-var curDatabase = null;
+(() => {
+    var curDatabase = null;
+    process.on("message", async (message) => {
 
-process.on("message", async (message) => {
+        if (curDatabase == null){
+            var databaseUrl = process.argv[2];
+            var databaseName = process.argv[3];
+            console.log("Name: " + databaseName + "URL: " + databaseUrl);
 
-    if (curDatabase == null){
-        var databaseUrl = process.argv[2];
-        var databaseName = process.argv[3];
-        console.log("Name: " + databaseName + "URL: " + databaseUrl);
+            curDatabase = new Database();
+            await curDatabase.connectToDatabase(databaseUrl, databaseName);
+        }
 
-        curDatabase = new Database();
-        await curDatabase.connectToDatabase(databaseUrl, databaseName);
-    }
+        var jobID = message.jobID;
+        var jobBatchID = message.jobBatchID;
+        var location = message.location;
+        var time = message.time;
+        var stopSchedules = message.stopSchedules;
+        var scheduleID = message.scheduleID;
 
-    var jobID = message.jobID;
-    var location = message.location;
-    var time = message.time;
-    var stopSchedules = message.stopSchedules;
-    var scheduleID = message.scheduleID;
+        console.log("Process " + process.pid + " has recieved new job #" + jobID + " on batch #" + jobBatchID);
 
-    console.log("Process " + process.pid + " has recieved new job #" + jobID);
+        var worker = new TripsLocatorWorker(curDatabase);
+        var tripIDs = await worker.getTripIDs(location, time, stopSchedules, scheduleID);
 
-    var worker = new TripsLocatorWorker(curDatabase);
-    var tripIDs = await worker.getTripIDs(location, time, stopSchedules, scheduleID);
-    process.send({
-        pid: process.pid,
-        jobExitCode: 0,
-        tripIDs: tripIDs
+        var payload = {
+            jobID: jobID,
+            jobBatchID: jobBatchID,
+            tripIDs: tripIDs
+        };
+
+        process.send({
+            pid: process.pid,
+            jobExitCode: 0,
+            payload: payload
+        });
     });
-});
+})();
+

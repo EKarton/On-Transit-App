@@ -1,9 +1,9 @@
 const express = require("express");
 const process = require("process");
-const Database = require("on-transit").Database;
 const Location = require("on-transit").Location;
+const Database = require("on-transit").Database;
 
-const TripsLocator = require("./trips-locator-manager");
+const TripsLocator = require("./trips-locator-master");
 
 const config = require("./res/config");
 const DATABASE_URI = config.DATABASE_URI;
@@ -21,8 +21,7 @@ class App{
         var server_host = process.env.YOUR_HOST || '0.0.0.0';
 
         var database = new Database();
-        await database.connectToDatabase(DATABASE_URI, DATABASE_NAME);//"mongodb://localhost:27017/", "clean-transit-data");
-
+        await database.connectToDatabase(DATABASE_URI, DATABASE_NAME);
         var tripsLocator = new TripsLocator(database);
 
         /**
