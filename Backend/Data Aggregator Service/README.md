@@ -33,6 +33,10 @@ Data moves from the source to production in order from left to right in the diag
 - Node JS v8.0+ with NPM
 - Local MongoDB
 
+##### Step 0: Start the Local MongoDB Database
+1. Skip this step if your Local MongoDB Database is running on your local machine already.
+2. Type in the commands `sudo service mongod start` in the terminal to start MongoDB on your local machine.
+
 ##### Step 1: Install the packages
 1. Open up the terminal and change the directory to the folder "Backend/Data Aggregator Service" relative to the project directory.
 2. Type the command `npm install`
