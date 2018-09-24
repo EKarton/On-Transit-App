@@ -14,7 +14,7 @@ This application is used to download, parse, and aggregate large GTFS data into 
 Below is a high level architecture of the Data Aggregation Service
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/High%20Level%20Architecture.png" width="600px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/High%20Level%20Architecture.png" width="100%"/>
     </p>
 </div>
 
@@ -22,7 +22,7 @@ Below is a more detailed architecture of how data gets processed from the source
 Data moves from the source to production in order from left to right in the diagram below.
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/Detailed%20Architecture.png" width="600px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/Detailed%20Architecture.png" width="100%"/>
     </p>
 </div>
 
