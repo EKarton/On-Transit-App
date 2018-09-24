@@ -59,7 +59,7 @@ Swiping up will list the next stops.
 3. Start Mongo DB by typing on the terminal `sudo service mongod start`
 
 ##### Step 2: Run the Data Aggregator service to get the latest transit data
-1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/API%20Gateway%20Service/README.md) to see how to get the latest transit data locally.
+1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/tree/master/Backend/Data%20Aggregator%20Service/README.md) to see how to get the latest transit data locally.
 
 ##### Step 3: Running the Trips Locator Microservice
 1. Please follow the installation section of [README file](https://github.com/EKarton/On-Transit-App/blob/master/Backend/Trips%20Locator%20Service/README.md) to see how to install and run the Trips Locator microservice locally.
