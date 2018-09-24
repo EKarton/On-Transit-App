@@ -16,46 +16,43 @@ class TripSchedulesAggregator{
         this._newDatabase = newDatabase;
     }
 
-    /**
-     * 
-     * @param {Location} location1 
-     * @param {Location} location2 
-     */
-    _getDistanceSquared(location1, location2){
-        var dLatitude = location1.latitude - location2.latitude;
-        var dLongitude = location1.longitude - location2.longitude;
-        return (dLatitude * dLatitude) + (dLongitude * dLongitude);
-    }
-
     async _getClosestPathLocationIndex(stopLocation, pathID){
         var path = await this._oldDatabase.getObject("path-trees", { "_id": pathID });
         var pathTreeData = path.tree;
         var tree = new PathLocationsTree(pathTreeData);
-        return tree.getNearestLocation(stopLocation);
+        return tree.getNearestLocation(stopLocation).sequence;
     }
 
     async processSchedule(schedule){
-        var tripID = schedule._id;
-        var scheduleID = schedule._id;
+
+        // Information stored in a schedule
+        var tripID = schedule._id.trim();
+        var scheduleID = schedule._id.trim();
         var stopSchedules = schedule.stopSchedules;
         var newStopSchedules = [];
+
+        // Get the path locations tree for fast querying
+        var trip = await this._oldDatabase.getObject("trips", { "_id": tripID });
+        var pathID = trip.pathID.trim();
+        var path = await this._oldDatabase.getObject("path-trees", { "_id": pathID });
+        var pathTreeData = path.tree;
+        var tree = new PathLocationsTree(pathTreeData);
 
         for (let i = 0; i < stopSchedules.length; i++){
             var stopSchedule = stopSchedules[i];
             var stopLocationID = stopSchedule.stopLocationID;
-            var stopLocation = await this._oldDatabase
+            var rawStopLocation = await this._oldDatabase
                 .getObject("stop-locations", { "_id": stopLocationID });   
+
+            var stopLocation = new Location(rawStopLocation.latitude, rawStopLocation.longitude);
                 
-            var trip = await this._oldDatabase.getObject("trips", { "_id": tripID });
-            var pathID = trip.pathID;
-            var closestPathLocationIndex = await this._getClosestPathLocationIndex(stopLocation, pathID);
-            
+            var closestPathLocation = tree.getNearestLocation(stopLocation);  
 
             var newStopSchedule = {
                 arrivalTime: stopSchedule.arrivalTime,
                 departTime: stopSchedule.departTime,
                 stopLocationID: stopSchedule.stopLocationID,
-                pathLocationIndex: closestPathLocationIndex
+                pathLocationIndex: closestPathLocation.sequence
             };
             newStopSchedules.push(newStopSchedule);
         };
@@ -74,17 +71,12 @@ class TripSchedulesAggregator{
         return new Promise(async (resolve, reject) => {
             try{
                 var cursor = await this._oldDatabase.getObjects("schedules", {});
-                var newSchedules = [];
-                var numFinished = 0;
                 while (await cursor.hasNext()){
                     var schedule = await cursor.next();
                     var newSchedule = await this.processSchedule(schedule);                    
-                    newSchedules.push(newSchedule);
 
-                    numFinished ++;
-                    console.log("Done " + numFinished);
-                }
-                await this._newDatabase.saveArrayToDatabase("schedules", newSchedules);
+                    await this._newDatabase.saveObjectToDatabase("schedules", newSchedule);
+                }               
 
                 resolve();
             }

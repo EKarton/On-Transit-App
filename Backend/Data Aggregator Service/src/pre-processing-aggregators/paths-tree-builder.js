@@ -1,4 +1,5 @@
 const rtree = require("rbush");
+const Database = require("on-transit").Database;
 
 class PathsTreeBuilder{
 
@@ -56,6 +57,7 @@ class PathsTreeBuilder{
                         await this._processedDatabase.saveObjectToDatabase("path-trees", dbObject);
                     }
                 }
+                console.log("Finished aggregating path data");
                 resolve();
             }
             catch(error){

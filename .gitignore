@@ -103,6 +103,6 @@ local.properties
 ehthumbs.db
 Thumbs.db
 
-backend/src/miway-gfts-files/
-
+Backend/Data Aggregator Service/tmp
 config.js
+tmp

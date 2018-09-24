@@ -22,6 +22,7 @@ class StopLocationAggregator{
                     var rawLocationData = await cursor.next();
                     await this._processedDatabase.saveObjectToDatabase("stop-locations", rawLocationData);
                 }
+                console.log("Finished migrating stop locations from old to new database");
                 resolve();
             }
             catch(error){

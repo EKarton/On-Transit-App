@@ -1,6 +1,6 @@
 "use strict";
 
-const Database = require("./../common/database");
+const Database = require("on-transit").Database;
 
 class ScheduleAggregator{
     /**
@@ -12,77 +12,6 @@ class ScheduleAggregator{
         this._rawDatabase = rawDatabase;
         this._cleanDatabase = cleanDatabase;
     }
-
-    /**
-     * What I need:
-     * 1. Given the current time and a set of GPS location give me a set of path IDs that are 
-     *    within that time.
-     *    How to do this?
-     *    - Well, given the current time we can determine which two stops, A and B that it lies on.
-     *      Results for A and B can be alot. 
-     *      
-     *      Let S[] be an array of tuples (A, B) s.t. 
-     *      A.departTime < time < B.startTime and there exists a tripID s.t. A.tripID == B.tripID
-     * 
-     *      Now for all A and B in S[] we know which path locations are the closest to A and B.
-     *      Let A.pathLocationID and B.pathLocationID be the closest path points to those s.t. A.pathLocationID is inside A.tripID
-     *      and B.pathLocationID is inside B.tripID.
-     * 
-     *      So if a path location in the list of path locations in that trip ID is the closest to the GPS location AND
-     *      that path location is between A and B, we can add that trip ID to the list of possible trip IDs.
-     * 
-     *      The algorithm:
-     * 
-     *      This class represents the results for searching for two stops within the current time that shares the same tripID.
-     *      class StopScheduleResults{
-     *          this.firstStop;
-     *          this.secondStop;
-     *          this.tripID;
-     *      }
-     * 
-     *      def getSchedulesWithin(curTime):
-     *          var length = schedules.length;
-     *          var left = 0;
-     *          var right = length - 1;
-     * 
-     *          while left <= right:
-     *              var mid = (left + right) / 2;
-     *              var schedule = schedules[mid];
-     *              
-     *              if (schedule.startTime < curTime && curTime < schedule.endTime){
-     *                  break;
-     *              }
-     *              
-     *          
-     * 
-     *      def getStopsWithin(curTime):
-     *          for schedule in schedules:
-     *              if schedule.startTime > curTime:
-     *                  continue;
-     * 
-     *              if schedule.endTime < curTime:
-     *                  continue;
-     * 
-     *              
-     * 
-     *              
-     * 
-     * 
-     *      var stopScheduleResults = getStopsWithin(curTime);
-     *      var tripIDs = []
-     *      for stopScheduleResult in stopScheduleResults:
-     *           var stopA = stopScheduleResult.firstStop();
-     *           var stopB = stopScheduleResult.lastStop();
-     *           var closestPathLocationToStopA_Index = getClosestPathLocation(stopA.tripID, stopA.location);
-     *           var closestPathLocationToStopB_Index = getClosestPathLocation(stopB.tripID, stopB.location);
-     *           var closestPathLocationIndex = getClosestPathLocation(stopA.tripID, curGPSLocation);
-     * 
-     *           if (closestPathLocationToStopA_Index <= closestPathLocationIndex){
-     *                if (closestPathLocationIndex <= closestPathLocationToStopB_Index)
-     *                    tripIDs.push(A.tripID);
-     *           }
-     *           
-     */
 
     sortStopSchedulesByStopSequence(stopSchedules){
         stopSchedules.sort((a, b) => {
@@ -99,7 +28,7 @@ class ScheduleAggregator{
     }
 
     async sortStopSchedules(){
-        var cursor = await this._cleanDatabase.getObjects("schedules", {});
+        var cursor = await this._cleanDatabase.getObjects("schedules", {}).batchSize(2000);
         while (await cursor.hasNext()){
             var rawScheduleData = await cursor.next();
             var scheduleID = rawScheduleData._id;
@@ -116,65 +45,73 @@ class ScheduleAggregator{
         }
     }
 
-    async combineStopSchedules(){
-        var cursor = await this._rawDatabase.getObjects("raw-stop-times", {});
-        while (await cursor.hasNext()){
-            var rawStopTimesData = await cursor.next();
-            var tripID = rawStopTimesData.tripID;
-            var stopLocationID = rawStopTimesData.stopLocationID;
-            var arrivalTime = rawStopTimesData.arrivalTime;
-            var departTime = rawStopTimesData.departTime;
-            var sequence = rawStopTimesData.sequence;
-            var headsign = rawStopTimesData.headsign;
+    saveStopSchedules(tripID){
+        return new Promise(async (resolve, reject) => {
+            try{
+                //console.log("Processing ", tripID);
+                var minStartTime = 1000000000000;
+                var maxEndTime = -100000000000;
+                var headsign = "";
+                var stopSchedules = [];
 
-            // Define the stop schedule to be added to the list
-            var stopSchedule = {
-                arrivalTime: arrivalTime,
-                departTime: departTime,
-                sequence: sequence,
-                stopLocationID: stopLocationID
-            };
+                var cursor = await this._rawDatabase.getObjects("raw-stop-times", { "tripID": tripID }).batchSize(80000);
+                while (await cursor.hasNext()){
+                    var rawStopTimesData = await cursor.next();
 
-            // See if there is any existing data
-            var existingSchedule = await this._cleanDatabase.getObject("schedules", { "_id": tripID });
+                    var stopLocationID = rawStopTimesData.stopLocationID;
+                    var arrivalTime = rawStopTimesData.arrivalTime;
+                    var departTime = rawStopTimesData.departTime;
+                    var sequence = rawStopTimesData.sequence;
+                    headsign = rawStopTimesData.headsign;
 
-            // If there is no existing data, make one
-            if (existingSchedule == null){
+                    minStartTime = Math.min(arrivalTime, departTime, minStartTime);
+                    maxEndTime = Math.max(arrivalTime, departTime, maxEndTime);
+
+                    // Define the stop schedule to be added to the list
+                    var stopSchedule = {
+                        arrivalTime: arrivalTime,
+                        departTime: departTime,
+                        sequence: sequence,
+                        stopLocationID: stopLocationID
+                    };
+                    stopSchedules.push(stopSchedule);
+                }
+                //console.log("Saving Processed Data ", tripID);
+
+                // Save the stop schedules into the database
                 var newDbObject = {
                     _id: tripID,
-                    startTime: arrivalTime,
-                    endTime: departTime,
+                    startTime: minStartTime,
+                    endTime: maxEndTime,
                     headsign: headsign,
-                    stopSchedules: [stopSchedule]
+                    stopSchedules: stopSchedules
                 };
                 await this._cleanDatabase.saveObjectToDatabase("schedules", newDbObject);
+                //console.log("Finished Processing ", tripID);
+                resolve();
             }
-
-            // If there is, simply add the stopLocationID to the list of stopLocations[]
-            else{
-                var minStartTime = Math.min(departTime, existingSchedule.startTime);
-                var maxEndTime = Math.max(departTime, existingSchedule.endTime);
-
-                var stopSchedules = existingSchedule.stopSchedules;
-                stopSchedules.push(stopSchedule);
-
-                var newValues = {
-                    $set: {
-                        startTime: minStartTime,
-                        endTime: maxEndTime,
-                        stopSchedules: stopSchedules
-                    } 
-                };                    
-                await this._cleanDatabase.updateObject("schedules", { "_id": tripID }, newValues);
+            catch(error){
+                reject(error);
             }
+        });
+    }
+
+    async combineStopSchedules(){
+        var cursor = await this._rawDatabase.getObjects("raw-trips", {}).batchSize(80000);
+        while (await cursor.hasNext()){
+            var rawTripObj = await cursor.next();
+            var tripID = rawTripObj._id;
+
+            await this.saveStopSchedules(tripID);
         }
     }
 
     processData(){
         return new Promise(async (resolve, reject) => {
             try{
-                //await this.combineStopSchedules();
+                await this.combineStopSchedules();
                 await this.sortStopSchedules();
+                console.log("Finished aggregating stop schedules");
                 resolve();
             }
             catch(error){
