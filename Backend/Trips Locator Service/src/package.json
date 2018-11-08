@@ -1,13 +1,13 @@
 {
-  "name": "trip-details-service",
+  "name": "trips-locator-service",
   "version": "1.0.0",
-  "description": "A microservice used to aggregate complete details about a trip",
-  "main": "src/server.js",
+  "description": "",
+  "main": "server.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "start": "node src/server.js",
+    "start": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Emilio Kartono",
