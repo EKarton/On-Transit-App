@@ -101,6 +101,23 @@
     padding-bottom: 4px;
 }
 
-.stop-notification-button {
+.stop-interaction-button {
+    border-radius: 2px;
+    border-width: thin;
+    border-color: black;
+    border-style: solid;
+    padding: 2px 4px 2px 4px;
+}
 
+.stop-interaction-button {
+    border-radius: 3px;
+    border-width: thin;
+    border-color: #dddddd;
+    border-style: solid;
+    padding: 2px 4px 2px 4px;
+    background-color: #FBC02D;
+}
+
+.stop-interaction-button-selected {
+    background-color: #FFF176;
 }

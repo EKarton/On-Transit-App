@@ -17,7 +17,8 @@ class OnTransitService {
             let options = {
                 params: urlParams
             }
-            return await Axios.get(TRIPS_LOCATOR_URL, options);
+            let rawData = await Axios.get(TRIPS_LOCATOR_URL, options);
+            return rawData.data.data;
         }
         catch(error){
             throw error;
@@ -27,7 +28,8 @@ class OnTransitService {
     async getTripDetails(tripID){
         try{
             let url = TRIP_DETAILS_URL + "/" + tripID;
-            return await Axios.get(url);
+            let rawData = await Axios.get(url);
+            return rawData.data.data;
         }
         catch(error){
             throw error;
@@ -44,7 +46,8 @@ class OnTransitService {
             let options = {
                 params: urlParams
             };
-            return await Axios.get(VEHICLES_LOCATOR_URL, options);
+            let rawData = await Axios.get(VEHICLES_LOCATOR_URL, options);
+            return rawData.data.data;
         }
         catch(error){
             throw error;

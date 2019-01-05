@@ -10,7 +10,6 @@ import OlGeoJSON from "ol/format/GeoJSON.js";
 import OlStroke from "ol/style/Stroke";
 import OlStyle from "ol/style/Style";
 import OlCircleStyle from "ol/style/Circle";
-import OlFill from "ol/style/Fill";
 
 import "ol/ol.css";
 import Stroke from "ol/style/Stroke";
@@ -125,7 +124,7 @@ class Map extends React.Component {
     }
 
     componentDidMount(){
-        console.log("I AM HERE ON componentDidMount(): " + this.olMap);
+        // console.log("I AM HERE ON componentDidMount(): " + this.olMap);
         
         // Create the view for the map
         this.olView = new OlView({
@@ -152,7 +151,7 @@ class Map extends React.Component {
     }
 
     shouldComponentUpdate(nextProps, nextState){
-        console.log("I AM HERE ON shouldComponentUpdate(): " + this.olMap);
+        // console.log("I AM HERE ON shouldComponentUpdate(): " + this.olMap);
         if (this.olMap !== null){
             var latitude = nextProps.latitude;
             var longitude = nextProps.longitude;
@@ -163,7 +162,7 @@ class Map extends React.Component {
                 duration: 2000
             });
 
-            console.log("Finished moving center point");
+            // console.log("Finished moving center point");
 
             this.updatePathLayer();
             this.updateStopsLayer();

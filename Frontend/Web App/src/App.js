@@ -2,9 +2,7 @@ import React from 'react';
 import Map from "./Map.js";
 import RouteDetailsView from './RouteDetailsView.js';
 
-import OnTransitService from "./OnTransitService";
-
-import MockedTripDetails from "./MockedTripDetails";
+import MockedOnTransitService from './MockedOnTransitService.js';
 
 class App extends React.Component {
 	state = {
@@ -13,98 +11,255 @@ class App extends React.Component {
 			latitude: 43.5890,
 			longitude: 79.6441
 		},
+		tripDetailsID: null,
 		tripDetails: {
 			shortName: null,
 			longName: null,
 			path: [],
 			stops: []
-		}
+		},
+		alarms: {}
 	}
 
 	constructor(props){
 		super(props);
 
-		this.onTransitService = new OnTransitService();		
+		this.onTransitService = new MockedOnTransitService();	
+		
+		
+		if (!("Notification" in window)){
+			alert("Notifications are not supported in this browser!");
+		}
+
+		Notification.requestPermission();
 	}
 
 	componentDidMount(){
 		// Initialize and watch the location
 		let geolocationOptions = {
 			enableHighAccuracy: true,
-			timeout: 5000,
-			maximumAge:600000
+			timeout: Infinity,
+			maximumAge: 0
 		};
 
         if (navigator.geolocation){
             this.geolocationWatch = navigator.geolocation.watchPosition(
 				this.onLocationChangedSuccess, this.onLocationChangedError, geolocationOptions);
-        }
+		}
+		
+		// Create an watch for our alarms
+		this.alarmWatch = setInterval(() => {
+			var curTimeInSeconds = this.getCurTimeInSeconds();
+
+			Object.keys(this.state.alarms).forEach(stopID => {
+				// Get the stop detail for that stopID
+				let stopDetails = this.state.tripDetails.stops.find(stop => {
+					return stop.ID == stopID;
+				});
+
+				if (stopDetails !== undefined){
+					let alarmDetails = this.state.alarms[stopID];
+					let remainingTimeLeft = stopDetails.time - curTimeInSeconds;
+
+					if (remainingTimeLeft < alarmDetails.minRemainingTimeLeft){
+						console.log("RING RING RING!!!");
+					}
+				}
+				else{
+					throw new Error("Inconsistency with stop ID " + stopID + " and trip details!");
+				}
+			});
+		});
 	}
 
 	componentWillUnmount(){
 		navigator.geolocation.clearWatch(this.geolocationWatch);
+
+		if (this.alarmWatch){
+			clearInterval(this.alarmWatch);
+		}
 	}
 
 	onLocationChangedSuccess = (position) => {
-		console.log("Location changed!");
-		console.log(position);
         let latitude = position.coords.latitude;
         let longitude = position.coords.longitude;
         let radius = position.coords.accuracy;
 		let time = new Date().toLocaleTimeString();
 
-        // // // Get the nearby trips and vehicles
-        // let nearbyTripsPromise = this.onTransitService.getNearbyTrips(latitude, longitude, time, radius);
-        // let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
-        // Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
-        //     .then(values => {
-        //         let nearbyTripIDs = values[0].data.data.tripIDs;
-		// 		let selectedTripID = nearbyTripIDs[0];
-
-		// 		this.onTransitService.getTripDetails(selectedTripID)
-		// 			.then(results => {
-		// 				console.log(results);
-		// 				console.log(results.data.data);
-						
-		// 				this.setState((prevState, props) => {
-		// 					return {
-		// 						displayRouteDetails: true,
-		// 						tripDetails: results.data.data,
-		// 					};
-		// 				});
-		// 			})
-		// 			.catch(error => {
-		// 				console.log(error);
-		// 			});
-		// 	})
-        //     .catch(errors => {
-		// 		console.log(errors);
-		// 		this.setState((prevState, props) => {
-		// 			return {
-		// 				displayRouteDetails: false,
-		// 				tripDetails: null,
-		// 			};
-		// 		});
-		//     });
+        // Get the nearby trips and vehicles
+        let nearbyTripsPromise = this.onTransitService.getNearbyTrips(latitude, longitude, time, radius);
+		let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
 		
-		// TODO: Remove this!
-		this.setState((prevState, props) => {
-			return {
-				displayRouteDetails: true,
-				curLocation: {
-					latitude: latitude,
-					longitude: longitude
-				},
-				tripDetails: MockedTripDetails.data,
-			};
-		});
+        Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
+            .then(values => {
+                let nearbyTripIDs = values[0].tripIDs;
+				let selectedTripID = nearbyTripIDs[0];
+
+				this.setState((prevState, props) => {
+					return {
+						...prevState,
+						curLocation: {
+							latitude: latitude,
+							longitude: longitude
+						}
+					};
+				});
+
+				if (this.state.tripDetailsID !== selectedTripID){
+					this.onTransitService.getTripDetails(selectedTripID)
+						.then(results => {
+
+							// Set the ID of results to their index
+							results.stops = results.stops.map((item, index) => {
+								return {
+									...item,
+									ID: index
+								};
+							});
+							
+							this.setState((prevState, props) => {
+								return {
+									...prevState,
+									tripDetailsID: selectedTripID,
+									displayRouteDetails: true,
+									tripDetails: results,
+									alarms: {}
+								};
+							});
+						})
+						.catch(error => {
+							console.log(error);
+						});
+					}
+			})
+            .catch(errors => {
+				console.log(errors);
+		    });
     }
 
     onLocationChangedError = (error) => {
 		console.log("ERROR!");
 		console.log(error);
-    }
+	}
 
+	getCurTimeInSeconds = () => {
+		let numHrsFromMidnight = new Date().getHours();
+		let numMinFromHr = new Date().getMinutes();
+		let numSecFromMin = new Date().getSeconds();
+		return numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
+	}
+
+	formatRemainingTime = (numSecondsRemaining) => {
+        let numHrsRemaining = Math.trunc(numSecondsRemaining / 3600);
+		numSecondsRemaining = numSecondsRemaining % 3600;
+		
+		let numMinRemaining = Math.trunc(numSecondsRemaining / 60);
+		numSecondsRemaining = numSecondsRemaining % 60;
+
+		let remainingTimeValue = "";
+		let remainingTimeUnit = "hours";
+		if (numHrsRemaining >= 1){
+			if (numHrsRemaining === 1 && numMinRemaining === 0){
+				remainingTimeValue = "1";
+				remainingTimeUnit = "hour";
+			}
+			else{
+				remainingTimeValue = numHrsRemaining + ":" + Math.trunc(numMinRemaining);
+				remainingTimeUnit = "hours";
+			}
+		}
+		else if (numMinRemaining >= 1){
+			if (numMinRemaining === 1 && numSecondsRemaining === 0){
+				remainingTimeValue = "1";
+				remainingTimeUnit = "minute";
+			}
+			else{
+				remainingTimeValue = numMinRemaining + ":" + Math.trunc(numSecondsRemaining);
+				remainingTimeUnit = "minutes";
+			}
+		}
+		else {
+			if (numSecondsRemaining === 1){
+				remainingTimeValue = "1";
+				remainingTimeUnit = "second";
+			}
+			else{
+				remainingTimeValue = numSecondsRemaining.toString();
+				remainingTimeUnit = "seconds";
+			}
+		}
+
+		return {
+			value: remainingTimeValue,
+			unit: remainingTimeUnit
+		};
+	}
+
+	addNewAlarm = (stopID) => {
+		this.setState((prevState, props) => {
+			let newAlarms = prevState.alarms;
+			newAlarms[stopID] = { 
+				minRemainingTimeLeft: 300 //<- 300 seconds is 5 minutes
+			}; 
+
+			return {
+				...prevState,
+				alarms: newAlarms
+			};
+		});
+
+		console.log("Stop Notification Created: " + stopID);
+		console.log("You will be notified 5 minutes before reaching the stop");
+	}
+
+	removeAlarm = (stopID) => {
+
+		this.setState((prevState, props) => {
+			delete prevState.alarms[stopID.toString()];
+
+			return {
+				...prevState
+			};
+		});
+		
+		console.log("Removed alarm " + stopID);
+	}
+
+	dispatchNotification = (message, timeBeforeClosingNotification) => {
+		// Notify the user via Web Notifications
+		Notification.requestPermission()
+			.then((permission) => {
+				if (permission !== "granted"){
+					throw new Error("No access!");
+				}
+			})
+			.then(() => {
+				console.log("We have access here!");
+				let notification = new Notification(message);
+
+				// Close the notification after 10 seconds
+				setTimeout(() => {
+					notification.close();
+				}, timeBeforeClosingNotification);
+			})
+			.catch(error => {
+				console.log("We have no access here!");
+			});
+	}
+
+	dispatchAlarm = (stopDetails) => {
+		let curTimeInSeconds = this.getCurTimeInSeconds();
+		let numSecondsRemaining = stopDetails.time - curTimeInSeconds;
+		let formattedTimeRemaining = this.formatRemainingTime(numSecondsRemaining);
+
+		let notificationContent = "You are " +  
+			formattedTimeRemaining.value + " " + 
+			formattedTimeRemaining.unit + " away from " + 
+			stopDetails.name;
+
+		this.dispatchNotification(notificationContent, 10000);
+	}
+ 
 	render() {
 		const leftSidePanelStyles = {
 			float: "left",
@@ -124,7 +279,10 @@ class App extends React.Component {
 						? <RouteDetailsView 
 							tripShortName={this.state.tripDetails.shortName}
 							tripLongName={this.state.tripDetails.longName}
-							stops={this.state.tripDetails.stops}/> 
+							stops={this.state.tripDetails.stops}
+							alarms={this.state.alarms}
+							addNewAlarmHandler={this.addNewAlarm}
+							removeAlarmHandler={this.removeAlarm}/> 
 						: null
 				}</div>
 				<div style={rightSidePanelStyles}>

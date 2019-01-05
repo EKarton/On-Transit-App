@@ -15,15 +15,13 @@ class RouteDetailsView extends React.Component {
         this.timer = setInterval(() => {
 
             // Get the current time in seconds
-            let numHrsFromMidnight = new Date().getHours();
-            let numMinFromHr = new Date().getMinutes();
-            let numSecFromMin = new Date().getSeconds();
+            // let numHrsFromMidnight = new Date().getHours();
+            // let numMinFromHr = new Date().getMinutes();
+            // let numSecFromMin = new Date().getSeconds();
             // var numSecAfterMidnight = numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
 
             // TODO: Remove this!
-            var numSecAfterMidnight = 72000;
-
-            console.log("numSecAfterMidnight: " + numSecAfterMidnight);
+            var numSecAfterMidnight = 72250;
 
             // Update only if the time has changed.
             if (numSecAfterMidnight > prevTime){
@@ -60,10 +58,6 @@ class RouteDetailsView extends React.Component {
 		
 		let numMinRemaining = Math.trunc(numSecondsRemaining / 60);
 		numSecondsRemaining = numSecondsRemaining % 60;
-
-		console.log("numHrsRemaining: " + numHrsRemaining);
-		console.log("numMinRemaining: " + numMinRemaining);
-		console.log("numSecondsRemaining: " + numSecondsRemaining);
 
 		let remainingTimeValue = "";
 		let remainingTimeUnit = "hours";
@@ -105,24 +99,36 @@ class RouteDetailsView extends React.Component {
 	}
 
     render(){
-        console.log("Updating view!");
-        console.log(this.state.stops);
         let stopContainers = this.state.stops.map(item => {
             let formattedRemainingTime = this.formatRemainingTime(item.remainingTimeInSeconds);
 
-            return (
-                <div class="stop-container">
-                    <div class="stop-info-container">
-                        <div class="stop-name">{item.name}</div>
+            // Get the class for whether it is selected or not
+            let alarmClassName = "stop-interaction-button";
+            if (this.props.alarms[item.ID] !== undefined){
+                alarmClassName += " stop-interaction-button-selected";
+            }
 
-                        <div class="remaining-time">
-                            <div class="remaining-time-value">{formattedRemainingTime.value}</div>
-                            <div class="remaining-time-unit">{formattedRemainingTime.unit}</div>
+            return (
+                <div key={item.ID} className="stop-container">
+                    <div className="stop-info-container">
+                        <div className="stop-name">{item.name}</div>
+
+                        <div className="remaining-time">
+                            <div className="remaining-time-value">{formattedRemainingTime.value}</div>
+                            <div className="remaining-time-unit">{formattedRemainingTime.unit}</div>
                         </div>
                     </div>
-                    <div class="stop-interactions-container">
-                        <div class="stop-interactions">
-                            <div class="stop-notification-button">
+                    <div className="stop-interactions-container">
+                        <div className="stop-interactions">
+                            <div className={alarmClassName}
+                                 onClick={e => {
+                                     if (this.props.alarms[item.ID] === undefined){
+                                        this.props.addNewAlarmHandler(item.ID);
+                                     }
+                                     else{
+                                        this.props.removeAlarmHandler(item.ID);
+                                     }
+                                 }}>
                                 Notify me
                             </div>				
                         </div>
@@ -143,22 +149,6 @@ class RouteDetailsView extends React.Component {
                 </div>
             </div>
         );
-    }
-
-    myRender(){
-        let stopDivs = this.state.stops.map(item => {
-            let formattedRemainingTime = this.formatRemainingTime(item.remainingTimeInSeconds);
-            return (
-                <div>
-                    <div>
-
-                    </div>
-                    <div>
-                        <div></div>
-                    </div>
-                </div>
-            )
-        })
     }
 }
 
