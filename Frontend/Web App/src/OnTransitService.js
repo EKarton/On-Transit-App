@@ -1,0 +1,55 @@
+import Axios from "axios";
+
+const TRIPS_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/trips";
+const TRIP_DETAILS_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/trips";
+const VEHICLES_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/vehicles";
+
+class OnTransitService {
+
+    async getNearbyTrips(latitude, longitude, time, radius){
+        try{
+            let urlParams = {
+                lat: latitude,
+                long: longitude,
+                time: time,
+                radius: radius
+            };
+            let options = {
+                params: urlParams
+            }
+            return await Axios.get(TRIPS_LOCATOR_URL, options);
+        }
+        catch(error){
+            throw error;
+        }
+    }
+
+    async getTripDetails(tripID){
+        try{
+            let url = TRIP_DETAILS_URL + "/" + tripID;
+            return await Axios.get(url);
+        }
+        catch(error){
+            throw error;
+        }
+    }
+
+    async getNearbyVehicles(latitude, longitude, radius){
+        try{
+            let urlParams = {
+                lat: latitude,
+                long: longitude,
+                radius: radius
+            };
+            let options = {
+                params: urlParams
+            };
+            return await Axios.get(VEHICLES_LOCATOR_URL, options);
+        }
+        catch(error){
+            throw error;
+        }
+    }
+}
+
+export default OnTransitService;

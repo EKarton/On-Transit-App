@@ -1,0 +1,106 @@
+.sidebar {
+    height: 100%;
+    width: 30%;
+    position: fixed;
+    z-index: 1;
+    background-color: white;
+    border-width: 1px;
+    border-color: gray;
+    border-style: solid;
+}
+.main-panel {
+    width: 70%;
+    margin-left: 30%;
+    padding: 5px;
+    background-color: red;
+}
+
+.trip-header-details-container{
+    padding: 0px;
+    height: 100px;
+}
+
+.trip-header-details{
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.short-name {
+    font-size: 1.6em;
+    padding-top: 20px;
+    margin: 0;
+}
+
+.long-name {
+    margin: 0px;
+    font-size: 1.2em;
+}
+
+.stop-containers-list {
+    max-height: calc(100vh - 100px);
+    overflow-y: auto;
+}
+
+.stop-info-container {
+    padding-left: 10px;
+    padding-right: 10px;
+    border-top-width: thin;
+    border-top-style: solid;
+    border-top-color: #b6b6b6;
+    overflow: hidden;
+}
+
+.stop-name {
+    font-size: 1.1em;
+    width: 70%;
+    /* float: left; */
+    display: inline-block;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.remaining-time {
+    width: 30%;
+    float: right;
+    text-align: right;
+    /* height: 100%; */
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.remaining-time-value {
+    font-size: 1.2em;
+}
+
+.remaining-time-unit {
+    font-size: 0.9em;
+}
+
+.stop-interactions-container {
+    overflow: hidden;
+    max-height: 0px;
+    -webkit-transition: max-height 1s; 
+    -moz-transition: max-height 1s; 
+    -ms-transition: max-height 1s; 
+    -o-transition: max-height 1s; 
+    transition: max-height 1s;  
+    /*display: none; */
+}
+
+.stop-container:hover .stop-interactions-container {
+    /*display: block;*/
+    max-height: 50px;
+}
+
+.stop-interactions {
+    padding-left: 10px;
+    padding-right: 10px;
+    background-color: #ffd752;
+    padding-top: 4px;
+    padding-bottom: 4px;
+}
+
+.stop-notification-button {
+
+}
