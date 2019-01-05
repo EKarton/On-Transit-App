@@ -3,14 +3,13 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "private": true,
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Emilio Kartono",
   "license": "ISC",
   "dependencies": {
-    "mongodb": "^3.1.4",
+    "mongodb": "^3.1.10",
     "rbush": "^2.0.2",
     "rbush-knn": "^2.1.0"
   }

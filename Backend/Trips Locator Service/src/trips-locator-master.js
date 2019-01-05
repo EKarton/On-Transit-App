@@ -39,7 +39,7 @@ class TripsLocatorMaster{
         var databaseUrl = this.database.databaseUrl;
         var databaseName = this.database.databaseName;
         var newWorker = Processes.fork(
-            "src/trips-locator-worker.js", 
+            "trips-locator-worker.js", 
             [databaseUrl, databaseName]
         );
 

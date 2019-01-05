@@ -31,14 +31,17 @@ class Database{
 
             this._cache = {};
 
-            MongoClient.connect(mongoDbUrl, settings, (error, db) => {
+            MongoClient.connect(mongoDbUrl, (error, db) => {
                 if (error){
+                    console.log("Failed to connect to database!");
+                    console.log(error);
                     reject(error);
                     return;
                 }
 
                 this._db = db;
                 this._dbo = db.db(databaseName);
+                console.log("Connected to database!");
 
                 resolve();
             });
