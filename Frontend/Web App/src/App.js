@@ -1,4 +1,7 @@
 import React from 'react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
 import Map from "./Map.js";
 import RouteDetailsView from './RouteDetailsView.js';
 
@@ -196,20 +199,29 @@ class App extends React.Component {
 	}
 
 	addNewAlarm = (stopID) => {
-		this.setState((prevState, props) => {
-			let newAlarms = prevState.alarms;
-			newAlarms[stopID] = { 
-				minRemainingTimeLeft: 300 //<- 300 seconds is 5 minutes
-			}; 
 
-			return {
-				...prevState,
-				alarms: newAlarms
-			};
-		});
+		if (this.state.tripDetails.stops[stopID.toString()]){
+			this.setState((prevState, props) => {
+				let newAlarms = prevState.alarms;
+				newAlarms[stopID] = { 
+					minRemainingTimeLeft: 300 //<- 300 seconds is 5 minutes
+				}; 
 
-		console.log("Stop Notification Created: " + stopID);
-		console.log("You will be notified 5 minutes before reaching the stop");
+				return {
+					...prevState,
+					alarms: newAlarms
+				};
+			});
+
+			let stopDetails = this.state.tripDetails.stops[stopID.toString()];
+
+			let toastMessage = "You will be notified 5 minutes before reaching " + stopDetails.name;
+			toast(toastMessage);
+			console.log(toastMessage);
+		}
+		else{
+			throw new Error("Inconsistencies with stopID " + stopID + " and this.state.tripDetails.stops");
+		}
 	}
 
 	removeAlarm = (stopID) => {
@@ -290,7 +302,8 @@ class App extends React.Component {
 						 longitude={this.state.curLocation.longitude}
 						 path={this.state.tripDetails.path}
 						 stops={this.state.tripDetails.stops} />
-				</div>				
+				</div>		
+				<ToastContainer />		
   			</div>
 		);
 	}
