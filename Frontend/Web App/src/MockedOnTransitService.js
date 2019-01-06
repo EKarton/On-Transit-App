@@ -1,12 +1,12 @@
 import MockedTripDetails from "./MockedTripDetails";
 import MockedNearbyVehicles from "./MockedNearbyVehicles";
-import MockedNearbyTrips from "./MockedNearbyTrips";
+import MockedNearbyTripsWithInfo from "./MockedNearbyTripsWithInfo";
 
 
 class MockedOnTransitService {
     getNearbyTrips(latitude, longitude, time, radius){
         return new Promise((resolve, reject) => {
-            let data = MockedNearbyTrips.data;
+            let data = MockedNearbyTripsWithInfo.data;
             resolve(data);
         });
     }

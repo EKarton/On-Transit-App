@@ -8,6 +8,11 @@ import { getFormattedTime, getTimeInSeconds } from "./TimeFormatter";
 
 import MockedOnTransitService from './MockedOnTransitService.js';
 
+// Remove this!
+import MockedNearbyTrips from "./MockedNearbyTrips";
+import Axios from "axios";
+import OnTransitService from './OnTransitService.js';
+
 class App extends React.Component {
 	state = {
 		displayRouteDetails: false,
@@ -38,9 +43,23 @@ class App extends React.Component {
 		Notification.requestPermission();
 	}
 
-	componentDidMount(){
+	async componentDidMount(){
 		this.startGeolocationWatch();
 		this.startAlarmWatch();
+
+		let wasd = new OnTransitService();
+
+		// TODO: Remove this!
+		// let finalResults = {};
+		// for (let i = 0; i < MockedNearbyTrips.data.tripIDs.length; i++){
+		// 	let tripID = MockedNearbyTrips.data.tripIDs[i];
+		// 	let data = await wasd.getTripDetails(tripID);
+		// 	finalResults[tripID] = {
+		// 		shortName: data.shortName,
+		// 		longName: data.longName
+		// 	};
+		// }
+		// console.log(finalResults);
 	}
 
 	startGeolocationWatch = () => {
@@ -106,9 +125,7 @@ class App extends React.Component {
 		let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
 		
         Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
-            .then(values => {
-                let nearbyTripIDs = values[0].tripIDs;
-				let selectedTripID = nearbyTripIDs[0];
+            .then(values => {               
 
 				this.setState((prevState, props) => {
 					return {
@@ -119,6 +136,9 @@ class App extends React.Component {
 						}
 					};
 				});
+
+				let nearbyTripIDs = values[0].tripIDs[Object.keys(values[0].tripIDs)[0]];
+				let selectedTripID = nearbyTripIDs[0];
 
 				if (this.state.tripDetailsID !== selectedTripID){
 					this.onTransitService.getTripDetails(selectedTripID)
@@ -255,19 +275,22 @@ class App extends React.Component {
 	}
  
 	render() {
+		const parentStyles = {
+			display: "flex"
+		};
 		const leftSidePanelStyles = {
 			float: "left",
 			maxWidth: "20%",
 			height: "100%"
 		};
 		const rightSidePanelStyles = {
-			float: "right",
-			width: "80%",
-			height: "100%"
+			width: "auto",
+			height: "100%",
+			display: "inline-block"
 		};
 
 		return (
-	  		<div>
+	  		<div style={parentStyles}>
 				<div style={leftSidePanelStyles}>{
 					this.state.displayRouteDetails 
 						? <RouteDetailsView 

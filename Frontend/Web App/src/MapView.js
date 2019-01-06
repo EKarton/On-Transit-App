@@ -172,6 +172,10 @@ class MapView extends React.Component {
         return true;
     }
 
+    handleResize = () => {
+        this.olMap.updateSize();
+    }
+
     render(){
         const mapStyle = {
             width: "100%",
