@@ -3,12 +3,12 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 import "./App.css";
-import Map from "./MapView.js";
-import RouteDetailsView from './RouteDetailsView.js';
-import RouteChooserPopup from "./RouteChooserPopup";
-import { getFormattedTime, getTimeInSeconds } from "./TimeFormatter";
+import Map from "../map-view/MapView";
+import RouteDetailsView from '../route-details-view/RouteDetailsView.js';
+import RouteChooserPopup from "../route-chooser-popup/RouteChooserPopup";
+import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 
-import MockedOnTransitService from './MockedOnTransitService.js';
+import MockedOnTransitService from '../../services/MockedOnTransitService.js';
 
 class App extends React.Component {
     state = {

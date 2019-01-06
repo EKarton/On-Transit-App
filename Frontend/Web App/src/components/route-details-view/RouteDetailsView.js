@@ -1,6 +1,6 @@
 import React from "react";
 
-import { getFormattedTime, getTimeInSeconds } from "./TimeFormatter";
+import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 import "./RouteDetailsView.css";
 
 class RouteDetailsView extends React.Component {

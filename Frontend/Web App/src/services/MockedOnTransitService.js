@@ -1,6 +1,6 @@
-import MockedTripDetails from "./MockedTripDetails";
-import MockedNearbyVehicles from "./MockedNearbyVehicles";
-import MockedNearbyTripsWithInfo from "./MockedNearbyTripsWithInfo";
+import MockedTripDetails from "./mocked-data/MockedTripDetails";
+import MockedNearbyVehicles from "./mocked-data/MockedNearbyVehicles";
+import MockedNearbyTripsWithInfo from "./mocked-data/MockedNearbyTripsWithInfo";
 
 
 class MockedOnTransitService {
