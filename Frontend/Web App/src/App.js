@@ -207,17 +207,19 @@ class App extends React.Component {
 					minRemainingTimeLeft: 300 //<- 300 seconds is 5 minutes
 				}; 
 
+				// Display a toast message to the user that an alarm is added.
+				let stopDetails = this.state.tripDetails.stops[stopID.toString()];
+				let toastMessage = "You will be notified 5 minutes before reaching " + stopDetails.name;
+				toast(toastMessage, {
+					position: toast.POSITION.BOTTOM_CENTER
+				});
+				console.log(toastMessage);
+
 				return {
 					...prevState,
 					alarms: newAlarms
 				};
-			});
-
-			let stopDetails = this.state.tripDetails.stops[stopID.toString()];
-
-			let toastMessage = "You will be notified 5 minutes before reaching " + stopDetails.name;
-			toast(toastMessage);
-			console.log(toastMessage);
+			});			
 		}
 		else{
 			throw new Error("Inconsistencies with stopID " + stopID + " and this.state.tripDetails.stops");
@@ -229,9 +231,16 @@ class App extends React.Component {
 		this.setState((prevState, props) => {
 			delete prevState.alarms[stopID.toString()];
 
-			return {
-				...prevState
-			};
+			// Display a toast message to the user that the notification is removed
+			let stopDetails = this.state.tripDetails.stops[stopID.toString()];
+			let toastMessage = "Removed notification for stop " + stopDetails.name;
+			toast(toastMessage, {
+				position: toast.POSITION.BOTTOM_CENTER
+			});
+
+			console.log(toastMessage);
+
+			return prevState;
 		});
 		
 		console.log("Removed alarm " + stopID);
