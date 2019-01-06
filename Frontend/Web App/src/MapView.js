@@ -1,4 +1,8 @@
 import React from "react";
+import "./MapView.css";
+
+// Imports for the map
+import "ol/ol.css";
 import {fromLonLat} from "ol/proj.js";
 import {Map as OlMap, View as OlView} from "ol";
 import {Tile as OlTileLayer, Vector as OlVectorLayer} from "ol/layer.js";
@@ -10,18 +14,30 @@ import OlGeoJSON from "ol/format/GeoJSON.js";
 import OlStroke from "ol/style/Stroke";
 import OlStyle from "ol/style/Style";
 import OlCircleStyle from "ol/style/Circle";
-
-import "ol/ol.css";
 import Stroke from "ol/style/Stroke";
 
+/**
+ * A component which displays the map to the user
+ * It uses OpenLayers as the map
+ */
 class MapView extends React.Component {
 
+    /**
+     * Constructs the component with initial properties
+     * @param {Object} props Initial properties
+     */
     constructor(props){
         super(props);
         this.olMap = null;
         this.olPathLayer = null;
+        this.olStopsLayer = null;
     }
 
+    /**
+     * Creates and returns a new OpenLayers layer
+     * which will display the stops
+     * @returns {OlVectorLayer} Returns a Vector Layer that will display the stops.
+     */
     createStopsLayer = () => {
         var stopsStyle = new OlStyle({
             image: new OlCircleStyle({
@@ -46,8 +62,17 @@ class MapView extends React.Component {
         return stopsLayer;
     }
 
-    updateStopsLayer = () => {
-        let stopsGeoJsonObjects = this.props.stops.map(item => {
+    /**
+     * Updates the stops layer with new stops.
+     * It will clear the existing stops and render the new stops.
+     * 
+     * If this.olStopsLayer is not set, it will not render the new stops.
+     * It will render the path on this.olStopsLayer.
+     * 
+     * @param {Object} newStops The new stops
+     */
+    updateStopsLayer = (newStops) => {
+        let stopsGeoJsonObjects = newStops.map(item => {
             return {
                 "type": "Feature",
                 "geometry": {
@@ -79,6 +104,11 @@ class MapView extends React.Component {
         }
     }
 
+    /**
+     * Creates and returns a new OpenLayers layer
+     * which will display the path of the trip
+     * @returns {OlVectorLayer} Returns a Vector Layer that will display the path of the trip.
+     */
     createPathLayer = () => {
         var pathStyle = new OlStyle({
             stroke: new OlStroke({
@@ -99,8 +129,17 @@ class MapView extends React.Component {
         return pathLayer;
     }
 
-    updatePathLayer = () => {
-        let pathCoordinates = this.props.path.map(item => {
+    /**
+     * Updates the path layer with a new path.
+     * It will clear the existing path and render the new path.
+     * 
+     * If this.olPathLayer is not set, it will not render the new path.
+     * It will render the path on this.olPathLayer.
+     * 
+     * @param {Object} newPath The new path
+     */
+    updatePathLayer = (newPath) => {
+        let pathCoordinates = newPath.map(item => {
             return fromLonLat([item.long, item.lat]);
         });
 
@@ -123,13 +162,20 @@ class MapView extends React.Component {
         }
     }
 
+    /**
+     * This method gets called whenever the HTML elements in this component is already 
+     * in the DOM.
+     * 
+     * It will create an initial view of the OpenLayers map as well as setting up
+     * the required layers.
+     */
     componentDidMount(){
         // console.log("I AM HERE ON componentDidMount(): " + this.olMap);
         
         // Create the view for the map
         this.olView = new OlView({
             center: fromLonLat([this.props.longitude, this.props.latitude]),
-            zoom: 2
+            zoom: 3
         });
 
         this.olPathLayer = this.createPathLayer();
@@ -150,9 +196,20 @@ class MapView extends React.Component {
         });
     }
 
+    /**
+     * This method gets called whenever the component updates.
+     * This method will prevent the OpenLayers map from being
+     * deconstructed and re-instantiated and instead update the 
+     * stops and the path displayed on the map.
+     * 
+     * @param {Object} nextProps The new set of properties
+     * @param {Object} nextState The new set of states
+     */
     shouldComponentUpdate(nextProps, nextState){
-        // console.log("I AM HERE ON shouldComponentUpdate(): " + this.olMap);
+        console.log("I AM HERE ON shouldComponentUpdate(): " + this.olMap);
         if (this.olMap !== null){
+            this.updateDimensions();
+
             var latitude = nextProps.latitude;
             var longitude = nextProps.longitude;
 
@@ -162,27 +219,32 @@ class MapView extends React.Component {
                 duration: 2000
             });
 
-            // console.log("Finished moving center point");
-
-            this.updatePathLayer();
-            this.updateStopsLayer();
+            this.updatePathLayer(nextProps.path);
+            this.updateStopsLayer(nextProps.stops);
 
             return false;
         }
         return true;
     }
 
-    handleResize = () => {
-        this.olMap.updateSize();
+    /**
+     * This method is called whenever the component's dimensions changes.
+     * This method will re-compute the size for the OpenLayers map.
+     */
+    updateDimensions() {
+
+        // Reason for creating a timeout was described at:
+        // https://gis.stackexchange.com/questions/31409/openlayers-redrawing-map-after-container-resize
+        setTimeout(() => { 
+            this.olMap.updateSize();
+        }, 200);
     }
 
+    /**
+     * This method gets called whenever React wants to re-render the component.
+     */
     render(){
-        const mapStyle = {
-            width: "100%",
-            height: "100%",
-            position: "fixed"
-        };
-        return (<div id="map" style={mapStyle}></div>);
+        return (<div id="map" className="map"></div>);
     }
 }
 
