@@ -8,15 +8,25 @@ import RouteDetailsView from '../route-details-view/RouteDetailsView.js';
 import RouteChooserPopup from "../route-chooser-popup/RouteChooserPopup";
 import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 
+import {getCurrentTime} from "../../services/MockedTimeService";
+
 import MockedOnTransitService from '../../services/MockedOnTransitService.js';
+
+
+
+import {GetLocationOnPath} from "../../services/LocationTracker";
 
 class App extends React.Component {
     state = {
         displayRouteChoices: false,
         displayRouteDetails: false,
         curLocation: {
-            latitude: 43.5890,
-            longitude: 79.6441
+            latitude: 43.554028,
+            longitude: -79.722099
+        },
+        initLocation: {
+            latitude: 0,
+            longitude: 0
         },
         possibleRoutes: [],
         tripDetailsID: null,
@@ -61,12 +71,31 @@ class App extends React.Component {
         }
     };
 
+    startPredictedLocationWatch = () => {
+        if (this.state.tripDetails.stops.length > 1){
+            this.liveLocationWatch = setInterval(() => {
+                let stops = this.state.tripDetails.stops;
+                let path = this.state.tripDetails.path;
+                let currentTimeInSeconds = getTimeInSeconds(getCurrentTime());
+
+                let predictedLocation = GetLocationOnPath(stops, path, currentTimeInSeconds);
+
+                this.setState((prevState, props) => {
+                    return {
+                        ...prevState,
+                        curLocation: {
+                            latitude: predictedLocation.lat,
+                            longitude: predictedLocation.long
+                        }
+                    };
+                });
+            });
+        }
+    }
+
     startAlarmWatch = () => {
         this.alarmInterval = setInterval(() => {
-            //var curTimeInSeconds = getTimeInSeconds(new Date());
-
-            // TODO: Remove this!!
-            var curTimeInSeconds = 72250;
+            var curTimeInSeconds = getTimeInSeconds(getCurrentTime());
 
             Object.keys(this.state.alarms).forEach(stopID => {
                 // Get the stop detail for that stopID
@@ -96,6 +125,10 @@ class App extends React.Component {
 
         if (this.alarmInterval){
             clearInterval(this.alarmInterval);
+        }
+
+        if (this.liveLocationWatch){
+            clearInterval(this.liveLocationWatch);
         }
     }
 
@@ -154,17 +187,28 @@ class App extends React.Component {
                             ID: index
                         };
                     });
-                    
+
+                    // Get the midpoint between all the path locations
+                    let sumOfAllPathLatitudes = results.path.reduce((curSum, item) => curSum + item.lat, 0);
+                    let sumOfAllPathLongitudes = results.path.reduce((curSum, item) => curSum + item.long, 0);
+                    let midPathLatitude = sumOfAllPathLatitudes / results.path.length;
+                    let midPathLongitude = sumOfAllPathLongitudes / results.path.length;
+
                     this.setState((prevState, props) => {
-                        console.log("Changing state");
                         return {
                             ...prevState,
+                            initLocation: {
+                                latitude: midPathLatitude,
+                                longitude: midPathLongitude
+                            },
                             tripDetailsID: selectedTripID,
                             displayRouteDetails: true,
                             displayRouteChoices: false,
                             tripDetails: results,
                             alarms: {}
                         };
+                    }, () => {
+                        this.startPredictedLocationWatch();
                     });
                 })
                 .catch(error => {
@@ -287,8 +331,8 @@ class App extends React.Component {
                         : null
                 }
                 <div className="right-panel">
-                    <Map latitude={this.state.curLocation.latitude}
-                         longitude={this.state.curLocation.longitude}
+                    <Map initialLocation={this.state.initLocation}
+                         currentLocation={this.state.curLocation}
                          path={this.state.tripDetails.path}
                          stops={this.state.tripDetails.stops} />
                 </div>				

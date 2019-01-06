@@ -2,6 +2,7 @@ import React from "react";
 
 import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 import "./RouteDetailsView.css";
+import {getCurrentTime} from "../../services/MockedTimeService";
 
 class RouteDetailsView extends React.Component {
 
@@ -15,10 +16,7 @@ class RouteDetailsView extends React.Component {
 
         this.timer = setInterval(() => {
 
-            // TODO: Remove this!
-            var numSecAfterMidnight = 72250;
-
-            // var numSecAfterMidnight = getTimeInSeconds(new Date());
+            var numSecAfterMidnight = getTimeInSeconds(getCurrentTime());
 
             // Update only if the time has changed.
             if (numSecAfterMidnight > prevTime){
@@ -36,6 +34,7 @@ class RouteDetailsView extends React.Component {
                 // Set the current time in seconds to the state
                 this.setState((prevState, props) => {
                     return {
+                        ...prevState, 
                         stops: updatedStops
                     };
                 });  

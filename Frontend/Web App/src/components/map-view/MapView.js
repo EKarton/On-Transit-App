@@ -16,6 +16,8 @@ import OlStyle from "ol/style/Style";
 import OlCircleStyle from "ol/style/Circle";
 import Stroke from "ol/style/Stroke";
 
+import {GetLocationOnPath} from "../../services/LocationTracker";
+
 /**
  * A component which displays the map to the user
  * It uses OpenLayers as the map
@@ -162,6 +164,49 @@ class MapView extends React.Component {
         }
     }
 
+    createLiveLocationLayer = () => {
+        var liveLocationStyle = new OlStyle({
+            image: new OlCircleStyle({
+                radius: 10,
+                fill: null,
+                stroke: new Stroke({
+                    color: "blue",
+                    width: 2
+                })
+            })
+        });
+        var liveLocationStyleFunction = function(feature) {
+            return liveLocationStyle;
+        };
+
+        var liveLocationLayer = new OlVectorLayer({
+            source: new OlVectorSource(),
+            style: liveLocationStyleFunction
+        });
+
+        return liveLocationLayer;
+    }
+
+    updateLiveLocationLayer = (newLatitude, newLongitude) => {
+        let geoJsonObject = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Point",
+                "coordinates": fromLonLat([newLongitude, newLatitude])
+            }
+        };
+
+        if (this.olLiveLocationLayer){
+            let source = this.olLiveLocationLayer.getSource();
+
+            if (source){
+                source.clear();
+                source.addFeature((new OlGeoJSON()).readFeature(geoJsonObject));
+                source.refresh();
+            }
+        }
+    }
+
     /**
      * This method gets called whenever the HTML elements in this component is already 
      * in the DOM.
@@ -169,17 +214,19 @@ class MapView extends React.Component {
      * It will create an initial view of the OpenLayers map as well as setting up
      * the required layers.
      */
-    componentDidMount(){
-        // console.log("I AM HERE ON componentDidMount(): " + this.olMap);
-        
+    componentDidMount(){        
         // Create the view for the map
+        let initialLatitude = this.props.initialLocation.latitude;
+        let initialLongitude = this.props.initialLocation.longitude;
         this.olView = new OlView({
-            center: fromLonLat([this.props.longitude, this.props.latitude]),
+            center: fromLonLat([initialLongitude, initialLatitude]),
             zoom: 3
         });
+        console.log("initialLatitude: " + initialLatitude + " | initialLongitude: " + initialLongitude);
 
         this.olPathLayer = this.createPathLayer();
         this.olStopsLayer = this.createStopsLayer();
+        this.olLiveLocationLayer = this.createLiveLocationLayer();
 
         // Initialize the map
         this.olMap = new OlMap({
@@ -189,13 +236,14 @@ class MapView extends React.Component {
                     source: new OlOSM()
                 }),
                 this.olPathLayer,
-                this.olStopsLayer
+                this.olStopsLayer,
+                this.olLiveLocationLayer
             ],
             loadTilesWhileAnimating: true,
             view: this.olView
         });
     }
-
+    
     /**
      * This method gets called whenever the component updates.
      * This method will prevent the OpenLayers map from being
@@ -206,23 +254,28 @@ class MapView extends React.Component {
      * @param {Object} nextState The new set of states
      */
     shouldComponentUpdate(nextProps, nextState){
-        console.log("I AM HERE ON shouldComponentUpdate(): " + this.olMap);
         if (this.olMap !== null){
             this.updateDimensions();
 
-            var latitude = nextProps.latitude;
-            var longitude = nextProps.longitude;
+            if (this.props.initialLocation !== nextProps.initialLocation){
+                let initialLatitude = nextProps.initialLocation.latitude;
+                let initialLongitude = nextProps.initialLocation.longitude;
 
-            this.olView.animate({
-                center: fromLonLat([longitude, latitude]),
-                zoom: 15,
-                duration: 2000
-            });
+                this.olView.animate({
+                    center: fromLonLat([initialLongitude, initialLatitude]),
+                    zoom: 13,
+                    duration: 2000
+                });
+
+                console.log("initialLatitude: " + initialLatitude + " | initialLongitude: " + initialLongitude);
+            }
 
             this.updatePathLayer(nextProps.path);
             this.updateStopsLayer(nextProps.stops);
 
-            return false;
+            let curLatitude = nextProps.currentLocation.latitude;
+            let curLongitude = nextProps.currentLocation.longitude;
+            this.updateLiveLocationLayer(curLatitude, curLongitude);
         }
         return true;
     }

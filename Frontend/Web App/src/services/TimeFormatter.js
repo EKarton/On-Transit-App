@@ -18,7 +18,7 @@ export function getFormattedTime(numSeconds) {
             remainingTimeUnit = "hour";
         }
         else{
-            remainingTimeValue = numHrsRemaining + ":" + Math.trunc(numMinRemaining);
+            remainingTimeValue = numHrsRemaining + ":" + Math.trunc(numMinRemaining).toString().padStart(2, "0");
             remainingTimeUnit = "hours";
         }
     }
@@ -28,7 +28,7 @@ export function getFormattedTime(numSeconds) {
             remainingTimeUnit = "minute";
         }
         else{
-            remainingTimeValue = numMinRemaining + ":" + Math.trunc(numSeconds);
+            remainingTimeValue = numMinRemaining + ":" + Math.trunc(numSeconds).toString().padStart(2, "0");
             remainingTimeUnit = "minutes";
         }
     }
