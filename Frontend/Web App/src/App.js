@@ -2,8 +2,9 @@ import React from 'react';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-import Map from "./Map.js";
+import Map from "./MapView.js";
 import RouteDetailsView from './RouteDetailsView.js';
+import { getFormattedTime, getTimeInSeconds } from "./TimeFormatter";
 
 import MockedOnTransitService from './MockedOnTransitService.js';
 
@@ -38,6 +39,11 @@ class App extends React.Component {
 	}
 
 	componentDidMount(){
+		this.startGeolocationWatch();
+		this.startAlarmWatch();
+	}
+
+	startGeolocationWatch = () => {
 		// Initialize and watch the location
 		let geolocationOptions = {
 			enableHighAccuracy: true,
@@ -49,10 +55,14 @@ class App extends React.Component {
             this.geolocationWatch = navigator.geolocation.watchPosition(
 				this.onLocationChangedSuccess, this.onLocationChangedError, geolocationOptions);
 		}
-		
-		// Create an watch for our alarms
-		this.alarmWatch = setInterval(() => {
-			var curTimeInSeconds = this.getCurTimeInSeconds();
+	};
+
+	startAlarmWatch = () => {
+		this.alarmInterval = setInterval(() => {
+			//var curTimeInSeconds = getTimeInSeconds(new Date());
+
+			// TODO: Remove this!!
+			var curTimeInSeconds = 72250;
 
 			Object.keys(this.state.alarms).forEach(stopID => {
 				// Get the stop detail for that stopID
@@ -64,8 +74,10 @@ class App extends React.Component {
 					let alarmDetails = this.state.alarms[stopID];
 					let remainingTimeLeft = stopDetails.time - curTimeInSeconds;
 
-					if (remainingTimeLeft < alarmDetails.minRemainingTimeLeft){
+					if (remainingTimeLeft < alarmDetails.minRemainingTimeLeft && !alarmDetails.isDispatched){
 						console.log("RING RING RING!!!");
+						this.dispatchAlarm(stopDetails);
+						this.removeAlarm(stopID);
 					}
 				}
 				else{
@@ -78,8 +90,8 @@ class App extends React.Component {
 	componentWillUnmount(){
 		navigator.geolocation.clearWatch(this.geolocationWatch);
 
-		if (this.alarmWatch){
-			clearInterval(this.alarmWatch);
+		if (this.alarmInterval){
+			clearInterval(this.alarmInterval);
 		}
 	}
 
@@ -145,66 +157,14 @@ class App extends React.Component {
 		console.log(error);
 	}
 
-	getCurTimeInSeconds = () => {
-		let numHrsFromMidnight = new Date().getHours();
-		let numMinFromHr = new Date().getMinutes();
-		let numSecFromMin = new Date().getSeconds();
-		return numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
-	}
-
-	formatRemainingTime = (numSecondsRemaining) => {
-        let numHrsRemaining = Math.trunc(numSecondsRemaining / 3600);
-		numSecondsRemaining = numSecondsRemaining % 3600;
-		
-		let numMinRemaining = Math.trunc(numSecondsRemaining / 60);
-		numSecondsRemaining = numSecondsRemaining % 60;
-
-		let remainingTimeValue = "";
-		let remainingTimeUnit = "hours";
-		if (numHrsRemaining >= 1){
-			if (numHrsRemaining === 1 && numMinRemaining === 0){
-				remainingTimeValue = "1";
-				remainingTimeUnit = "hour";
-			}
-			else{
-				remainingTimeValue = numHrsRemaining + ":" + Math.trunc(numMinRemaining);
-				remainingTimeUnit = "hours";
-			}
-		}
-		else if (numMinRemaining >= 1){
-			if (numMinRemaining === 1 && numSecondsRemaining === 0){
-				remainingTimeValue = "1";
-				remainingTimeUnit = "minute";
-			}
-			else{
-				remainingTimeValue = numMinRemaining + ":" + Math.trunc(numSecondsRemaining);
-				remainingTimeUnit = "minutes";
-			}
-		}
-		else {
-			if (numSecondsRemaining === 1){
-				remainingTimeValue = "1";
-				remainingTimeUnit = "second";
-			}
-			else{
-				remainingTimeValue = numSecondsRemaining.toString();
-				remainingTimeUnit = "seconds";
-			}
-		}
-
-		return {
-			value: remainingTimeValue,
-			unit: remainingTimeUnit
-		};
-	}
-
 	addNewAlarm = (stopID) => {
 
 		if (this.state.tripDetails.stops[stopID.toString()]){
 			this.setState((prevState, props) => {
 				let newAlarms = prevState.alarms;
 				newAlarms[stopID] = { 
-					minRemainingTimeLeft: 300 //<- 300 seconds is 5 minutes
+					minRemainingTimeLeft: 300, //<- 300 seconds is 5 minutes
+					isDispatched: false
 				}; 
 
 				// Display a toast message to the user that an alarm is added.
@@ -269,9 +229,12 @@ class App extends React.Component {
 	}
 
 	dispatchAlarm = (stopDetails) => {
-		let curTimeInSeconds = this.getCurTimeInSeconds();
+		// let curTimeInSeconds = getTimeInSeconds(new Date());
+		let curTimeInSeconds = 72250;
+
 		let numSecondsRemaining = stopDetails.time - curTimeInSeconds;
-		let formattedTimeRemaining = this.formatRemainingTime(numSecondsRemaining);
+		let formattedTimeRemaining = getFormattedTime(numSecondsRemaining);
+		let stopID = stopDetails.ID;
 
 		let notificationContent = "You are " +  
 			formattedTimeRemaining.value + " " + 
@@ -279,6 +242,16 @@ class App extends React.Component {
 			stopDetails.name;
 
 		this.dispatchNotification(notificationContent, 10000);
+
+		this.setState((prevState, props) => {
+			let newAlarms = prevState.alarms;
+			newAlarms[stopID.toString()].isDispatched = true;
+
+			return {
+				...prevState,
+				alarms: newAlarms
+			};
+		});
 	}
  
 	render() {

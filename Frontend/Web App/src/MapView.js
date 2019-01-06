@@ -14,7 +14,7 @@ import OlCircleStyle from "ol/style/Circle";
 import "ol/ol.css";
 import Stroke from "ol/style/Stroke";
 
-class Map extends React.Component {
+class MapView extends React.Component {
 
     constructor(props){
         super(props);
@@ -182,4 +182,4 @@ class Map extends React.Component {
     }
 }
 
-export default Map;
+export default MapView;

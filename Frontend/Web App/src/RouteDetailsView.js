@@ -1,5 +1,6 @@
 import React from "react";
 
+import { getFormattedTime, getTimeInSeconds } from "./TimeFormatter";
 import "./RouteDetailsView.css";
 
 class RouteDetailsView extends React.Component {
@@ -14,14 +15,10 @@ class RouteDetailsView extends React.Component {
 
         this.timer = setInterval(() => {
 
-            // Get the current time in seconds
-            // let numHrsFromMidnight = new Date().getHours();
-            // let numMinFromHr = new Date().getMinutes();
-            // let numSecFromMin = new Date().getSeconds();
-            // var numSecAfterMidnight = numSecFromMin + (60 * numMinFromHr) + (3600 * numHrsFromMidnight);
-
             // TODO: Remove this!
             var numSecAfterMidnight = 72250;
+
+            // var numSecAfterMidnight = getTimeInSeconds(new Date());
 
             // Update only if the time has changed.
             if (numSecAfterMidnight > prevTime){
@@ -52,55 +49,9 @@ class RouteDetailsView extends React.Component {
         clearInterval(this.timer);
     }
 
-    formatRemainingTime = (numSecondsRemaining) => {
-        let numHrsRemaining = Math.trunc(numSecondsRemaining / 3600);
-		numSecondsRemaining = numSecondsRemaining % 3600;
-		
-		let numMinRemaining = Math.trunc(numSecondsRemaining / 60);
-		numSecondsRemaining = numSecondsRemaining % 60;
-
-		let remainingTimeValue = "";
-		let remainingTimeUnit = "hours";
-		if (numHrsRemaining >= 1){
-			if (numHrsRemaining === 1 && numMinRemaining === 0){
-				remainingTimeValue = "1";
-				remainingTimeUnit = "hour";
-			}
-			else{
-				remainingTimeValue = numHrsRemaining + ":" + Math.trunc(numMinRemaining);
-				remainingTimeUnit = "hours";
-			}
-		}
-		else if (numMinRemaining >= 1){
-			if (numMinRemaining === 1 && numSecondsRemaining === 0){
-				remainingTimeValue = "1";
-				remainingTimeUnit = "minute";
-			}
-			else{
-				remainingTimeValue = numMinRemaining + ":" + Math.trunc(numSecondsRemaining);
-				remainingTimeUnit = "minutes";
-			}
-		}
-		else {
-			if (numSecondsRemaining === 1){
-				remainingTimeValue = "1";
-				remainingTimeUnit = "second";
-			}
-			else{
-				remainingTimeValue = numSecondsRemaining.toString();
-				remainingTimeUnit = "seconds";
-			}
-		}
-
-		return {
-			value: remainingTimeValue,
-			unit: remainingTimeUnit
-		};
-	}
-
     render(){
         let stopContainers = this.state.stops.map(item => {
-            let formattedRemainingTime = this.formatRemainingTime(item.remainingTimeInSeconds);
+            let formattedRemainingTime = getFormattedTime(item.remainingTimeInSeconds);
 
             // Get the class for whether it is selected or not
             let alarmClassName = "stop-interaction-button";
