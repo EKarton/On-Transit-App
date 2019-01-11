@@ -216,8 +216,8 @@ class MapView extends React.Component {
      */
     componentDidMount(){        
         // Create the view for the map
-        let initialLatitude = this.props.initialLocation.latitude;
-        let initialLongitude = this.props.initialLocation.longitude;
+        let initialLatitude = this.props.viewLocation.latitude;
+        let initialLongitude = this.props.viewLocation.longitude;
         this.olView = new OlView({
             center: fromLonLat([initialLongitude, initialLatitude]),
             zoom: 3
@@ -257,9 +257,9 @@ class MapView extends React.Component {
         if (this.olMap !== null){
             this.updateDimensions();
 
-            if (this.props.initialLocation !== nextProps.initialLocation){
-                let initialLatitude = nextProps.initialLocation.latitude;
-                let initialLongitude = nextProps.initialLocation.longitude;
+            if (this.props.viewLocation !== nextProps.viewLocation){
+                let initialLatitude = nextProps.viewLocation.latitude;
+                let initialLongitude = nextProps.viewLocation.longitude;
 
                 this.olView.animate({
                     center: fromLonLat([initialLongitude, initialLatitude]),

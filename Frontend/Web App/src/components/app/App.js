@@ -20,6 +20,7 @@ class App extends React.Component {
         displayRouteChoices: false,
         displayRouteDetails: false,
         displayEndOfRouteMessage: false,
+        mapZoom: 3,
         curLocation: {
             latitude: 43.554028,
             longitude: -79.722099
@@ -378,7 +379,7 @@ class App extends React.Component {
                         : null
                 }
                 <div className="right-panel">
-                    <Map initialLocation={this.state.initLocation}
+                    <Map viewLocation={this.state.initLocation}
                          currentLocation={this.state.curLocation}
                          path={this.state.tripDetails.path}
                          stops={this.state.tripDetails.stops} />
