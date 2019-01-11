@@ -62,14 +62,34 @@
     text-align: right;
     padding-right: 14px;
     padding-left: 14px;
+    padding-top: 14px;
 }
 
 .popup-action-button {
+    display: inline-block;
     padding-right: 10px;
     padding-left: 10px;
-    padding-top: 10px;
-    padding-bottom: 10px;
+    padding-top: 8px;
+    padding-bottom: 8px;
     display: inline-block;
+    background: none;
+    border-radius: 5px;
+    border-width: 1px;
+    border-color: gray;
+    border-style: solid;
+    cursor: pointer;
+
+    -webkit-transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    -webkit-transform: background-color;
+    -ms-transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    -ms-transform: background-color;
+    -moz-transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+    -moz-transform: background-color;
+    transition: all 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.popup-action-button:hover {
+    background-color: rgba(111, 111, 111, 0.51);
 }
 
 .tripInfo {

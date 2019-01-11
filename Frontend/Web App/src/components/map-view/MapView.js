@@ -218,9 +218,10 @@ class MapView extends React.Component {
         // Create the view for the map
         let initialLatitude = this.props.viewLocation.latitude;
         let initialLongitude = this.props.viewLocation.longitude;
+        let mapZoom = this.props.zoom;
         this.olView = new OlView({
             center: fromLonLat([initialLongitude, initialLatitude]),
-            zoom: 3
+            zoom: mapZoom
         });
         console.log("initialLatitude: " + initialLatitude + " | initialLongitude: " + initialLongitude);
 
@@ -257,17 +258,25 @@ class MapView extends React.Component {
         if (this.olMap !== null){
             this.updateDimensions();
 
+            let newViewOptions = {};
+
             if (this.props.viewLocation !== nextProps.viewLocation){
                 let initialLatitude = nextProps.viewLocation.latitude;
                 let initialLongitude = nextProps.viewLocation.longitude;
 
-                this.olView.animate({
-                    center: fromLonLat([initialLongitude, initialLatitude]),
-                    zoom: 13,
-                    duration: 2000
-                });
+                newViewOptions.center = fromLonLat([initialLongitude, initialLatitude]);
+                newViewOptions.duration = 2000;
 
                 console.log("initialLatitude: " + initialLatitude + " | initialLongitude: " + initialLongitude);
+            }
+
+            if (this.props.zoom !== nextProps.zoom){
+                newViewOptions.zoom = nextProps.zoom;
+                newViewOptions.duration = 2000;
+            }
+
+            if (newViewOptions !== {}){
+                this.olView.animate(newViewOptions);
             }
 
             this.updatePathLayer(nextProps.path);
