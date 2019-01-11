@@ -1,4 +1,4 @@
-import MockedTripDetails from "./mocked-data/MockedTripDetails";
+import MockedTripDetails from "./mocked-data/MockedTripDetails-1";
 import MockedNearbyVehicles from "./mocked-data/MockedNearbyVehicles";
 import MockedNearbyTripsWithInfo from "./mocked-data/MockedNearbyTripsWithInfo";
 

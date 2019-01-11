@@ -1,22 +1,18 @@
-const EARTH_RADIUS = 6371000; // in meters
+const GIS = require("../utils/Gis");
 
-function convertDegreesToRadians(degrees){
-    return degrees * Math.PI / 180;
-}
-
-function convertRadiansToDegrees(radians){
-    return (radians * 180) / Math.PI;
-}
-
-function computeBearings(lat1, long1, lat2, long2){
-    let y = Math.sin(long2 - long1) * Math.cos(lat2);
-    let x = (Math.cos(lat1) * Math.sin(lat2)) - 
-            (Math.sin(lat1) * Math.cos(lat2) * Math.cos(long2 - long1));
-    let bearingInRadans = Math.atan2(y, x);
-    let bearingInDegrees = convertRadiansToDegrees(bearingInRadans);
-    return (bearingInDegrees + 180) % 360;
-}
-
+/**
+ * Returns two indexes, i and i + 1 where stops[i].time <= time && time <= stops[i + 1].time.
+ * Pre-condition: stops must contain the following structure:
+ *  [{
+ *      lat: <latitude of stop in radians>
+ *      long: <longitude of stop in radians>
+ *      time: <expected time of bus / train to arrive at in seconds after midnight>
+ *   }, 
+ *   ...
+ *  ]
+ * @param {Object[]} stops A list of stops sorted by time in ascending order
+ * @param {Integer} time The time in seconds after midnight
+ */
 function findBoundaryBetweenTwoStops(stops, time){
     let left = 0;
     let right = stops.length;
@@ -41,44 +37,14 @@ function findBoundaryBetweenTwoStops(stops, time){
     throw new Error("Cannot find boundary between two stops!");
 }
 
-function calculateDestinationPoint(lat, long, bearing, distance){
-    let latInRads = convertDegreesToRadians(lat);
-    let longInRads = convertDegreesToRadians(long);
-
-    let angularDistance = distance / EARTH_RADIUS;
-    let bearingInRads = convertDegreesToRadians(bearing);
-
-    let lat2InRads = Math.asin(Math.sin(latInRads) * Math.cos(angularDistance) + 
-                     Math.cos(latInRads) * Math.sin(angularDistance) * Math.cos(bearingInRads));
-    let lat2InDegrees = convertRadiansToDegrees(lat2InRads);
-
-    let y = Math.sin(bearingInRads) * Math.sin(angularDistance) * Math.cos(latInRads);
-    let x = Math.cos(angularDistance) - Math.sin(latInRads) * Math.sin(lat2InRads);
-    let long2InRads = longInRads + Math.atan2(y, x);
-    
-    
-    let long2InDegrees = convertRadiansToDegrees(long2InRads);
-    let normalizedLong2InDegrees = (long2InDegrees + 540) % 360 - 180;
-    
-    return {
-        lat: lat2InDegrees,
-        long: normalizedLong2InDegrees
-    };
-}
-
-function calculateDistance(lat1, long1, lat2, long2){
-    var dLat = convertDegreesToRadians(lat2 - lat1);
-    var dLong = convertDegreesToRadians(long2 - long1);
-    var lat1_rads = convertDegreesToRadians(lat1);
-    var lat2_rads = convertDegreesToRadians(lat2);
-
-    var a = Math.pow(Math.sin(dLat / 2), 2) +
-            Math.pow(Math.sin(dLong / 2), 2) * 
-            Math.cos(lat1_rads) * Math.cos(lat2_rads); 
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
-    return EARTH_RADIUS * c;
-}
-
+/**
+ * Computes the total distance of a path segment from path[startIndex] 
+ * to path[endIndex] not including path[endIndex]
+ * @param {Object[]} path A list of path locations in order
+ * @param {*} startIndex The index to the start of a path segment
+ * @param {*} endIndex The index to the end of a path segment
+ * @returns {Float} The total distance of a path segment
+ */
 function computeTotalDistanceBetweenPath(path, startIndex, endIndex){
     let totalDistance = 0;
     for (let i = startIndex; i < endIndex; i++){
@@ -89,13 +55,21 @@ function computeTotalDistanceBetweenPath(path, startIndex, endIndex){
         let long1 = curPathLocation.long;
         let lat2 = nextPathLocation.lat;
         let long2 = nextPathLocation.long;
-        let curDistance = calculateDistance(lat1, long1, lat2, long2);
+        let curDistance = GIS.calculateDistance(lat1, long1, lat2, long2);
 
         totalDistance += curDistance;
     }
     return totalDistance;
 }
 
+/**
+ * Predicts the location in a path segment given the amount already travelled in the path segment.
+ * @param {Object[]} path A set of coordinates in sorted form which outlines the path.
+ * @param {Integer} startPathIndex The index to the start of a path segment in path[]
+ * @param {Integer} endPathIndex The index to the end of a path segment in path[]
+ * @param {Float} ratio The current amount of distance already travelled from the start 
+ *      of the path to the end of the path segment.
+ */
 function predictLocation(path, startPathIndex, endPathIndex, ratio){
     let totalDistanceOfPath = computeTotalDistanceBetweenPath(path, startPathIndex, endPathIndex);
     let distanceToTravel = totalDistanceOfPath * ratio;
@@ -113,7 +87,7 @@ function predictLocation(path, startPathIndex, endPathIndex, ratio){
         let long1 = curPathLocation.long;
         let lat2 = nextPathLocation.lat;
         let long2 = nextPathLocation.long;
-        let curDistance = calculateDistance(lat1, long1, lat2, long2);
+        let curDistance = GIS.calculateDistance(lat1, long1, lat2, long2);
 
         if (distanceToTravel - curDistance < 0){
             break;
@@ -133,8 +107,8 @@ function predictLocation(path, startPathIndex, endPathIndex, ratio){
         let closestPath = path[closestPathIndex];
         let nextPath = path[closestPathIndex + 1];
 
-        let bearing = computeBearings(nextPath.lat, nextPath.long, closestPath.lat, closestPath.long);
-        return calculateDestinationPoint(closestPath.lat, closestPath.long, bearing, distanceToTravel);
+        let bearing = GIS.computeBearings(nextPath.lat, nextPath.long, closestPath.lat, closestPath.long);
+        return GIS.calculateDestinationPoint(closestPath.lat, closestPath.long, bearing, distanceToTravel);
     }
 }
 
@@ -145,7 +119,7 @@ function getNearestPathLocation(location, path){
     let minDistance = Infinity;
     while (curIndex < path.length){
         let curPathLocation = path[curIndex];
-        let curDistance = calculateDistance(location.lat, location.long, curPathLocation.lat, curPathLocation.long);
+        let curDistance = GIS.calculateDistance(location.lat, location.long, curPathLocation.lat, curPathLocation.long);
 
         if (curDistance < minDistance){
             minDistance = curDistance;

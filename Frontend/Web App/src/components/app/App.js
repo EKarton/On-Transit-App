@@ -12,14 +12,14 @@ import {getCurrentTime} from "../../services/MockedTimeService";
 
 import MockedOnTransitService from '../../services/MockedOnTransitService.js';
 
-
-
 import {GetLocationOnPath} from "../../services/LocationTracker";
+import EndOfRoutePopup from '../end-of-route-popup/end-of-route-popup';
 
 class App extends React.Component {
     state = {
         displayRouteChoices: false,
         displayRouteDetails: false,
+        displayEndOfRouteMessage: false,
         curLocation: {
             latitude: 43.554028,
             longitude: -79.722099
@@ -39,9 +39,7 @@ class App extends React.Component {
         alarms: {}
     }
 
-    constructor(props){
-        super(props);
-
+    async componentDidMount(){
         this.onTransitService = new MockedOnTransitService();	
         
         
@@ -50,11 +48,38 @@ class App extends React.Component {
         }
 
         Notification.requestPermission();
-    }
 
-    async componentDidMount(){
         this.startGeolocationWatch();
         this.startAlarmWatch();
+    }
+
+    restartApp = () => {
+        this.componentWillUnmount();
+        this.setState((prevState, props) => {
+            return {
+                displayRouteChoices: false,
+                displayRouteDetails: false,
+                displayEndOfRouteMessage: false,
+                curLocation: {
+                    latitude: 43.554028,
+                    longitude: -79.722099
+                },
+                initLocation: {
+                    latitude: 0,
+                    longitude: 0
+                },
+                possibleRoutes: [],
+                tripDetailsID: null,
+                tripDetails: {
+                    shortName: null,
+                    longName: null,
+                    path: [],
+                    stops: []
+                },
+                alarms: {}
+            };
+        });
+        this.componentDidMount();
     }
 
     startGeolocationWatch = () => {
@@ -77,18 +102,30 @@ class App extends React.Component {
                 let stops = this.state.tripDetails.stops;
                 let path = this.state.tripDetails.path;
                 let currentTimeInSeconds = getTimeInSeconds(getCurrentTime());
+                let lastStop = stops[stops.length - 1];
 
-                let predictedLocation = GetLocationOnPath(stops, path, currentTimeInSeconds);
+                if (currentTimeInSeconds >= lastStop.time){
+                    this.setState((prevState, props) => {
+                        return {
+                            ...prevState,
+                            displayEndOfRouteMessage: true,
+                            displayRouteDetails: false
+                        };
+                    });
+                }
+                else{
+                    let predictedLocation = GetLocationOnPath(stops, path, currentTimeInSeconds);
 
-                this.setState((prevState, props) => {
-                    return {
-                        ...prevState,
-                        curLocation: {
-                            latitude: predictedLocation.lat,
-                            longitude: predictedLocation.long
-                        }
-                    };
-                });
+                    this.setState((prevState, props) => {
+                        return {
+                            ...prevState,
+                            curLocation: {
+                                latitude: predictedLocation.lat,
+                                longitude: predictedLocation.long
+                            }
+                        };
+                    });
+                }
             });
         }
     }
@@ -120,16 +157,26 @@ class App extends React.Component {
         });
     }
 
-    componentWillUnmount(){
-        navigator.geolocation.clearWatch(this.geolocationWatch);
-
+    stopAlarmWatch = () => {
         if (this.alarmInterval){
             clearInterval(this.alarmInterval);
         }
+    }
 
+    stopLiveLocationWatch = () => {
         if (this.liveLocationWatch){
             clearInterval(this.liveLocationWatch);
         }
+    }
+
+    stopGeolocationWatch = () => {
+        navigator.geolocation.clearWatch(this.geolocationWatch);
+    }
+
+    componentWillUnmount(){
+        this.stopAlarmWatch();
+        this.stopLiveLocationWatch();
+        this.stopGeolocationWatch();       
     }
 
     onLocationChangedSuccess = (position) => {
@@ -214,7 +261,7 @@ class App extends React.Component {
                 .catch(error => {
                     console.log(error);
                 });
-            }
+        }
     }
 
     addNewAlarm = (stopID) => {
@@ -290,7 +337,7 @@ class App extends React.Component {
 
     dispatchAlarm = (stopDetails) => {
         // let curTimeInSeconds = getTimeInSeconds(new Date());
-        let curTimeInSeconds = 72250;
+        let curTimeInSeconds = getTimeInSeconds(getCurrentTime());
 
         let numSecondsRemaining = stopDetails.time - curTimeInSeconds;
         let formattedTimeRemaining = getFormattedTime(numSecondsRemaining);
@@ -343,6 +390,11 @@ class App extends React.Component {
                             onSelectRoute={this.selectRoute}/> 
                         : null 
                 }	
+                {
+                    this.state.displayEndOfRouteMessage
+                        ? <EndOfRoutePopup restartApp={this.restartApp}/>
+                        : null
+                }
                 <ToastContainer />		
             </div>
         );
