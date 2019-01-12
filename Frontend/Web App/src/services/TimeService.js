@@ -1,4 +1,4 @@
-export function getCurrentTimeInSeconds(){
+export function getCurrentTime(){
     return new Date();
 }
 

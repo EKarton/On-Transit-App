@@ -1,61 +1,273 @@
 module.exports = {
     "status": "success",
     "data": {
-        "tripIDs": [
-            {tripID: "17284587", shortName: "19", longName: "Northbound"},
-            {tripID: "17285944", shortName: "109", longName: "Southbound"},
-            {tripID: "17286234", shortName: "36", longName: "Southbound"},
-            {tripID: "17288065", shortName: "110", longName: "Northbound"},
-            {tripID: "17288141", shortName: "110", longName: "Southbound"},
-            {tripID: "17288499", shortName: "101", longName: "Eastbound"},
-            {tripID: "17289687", shortName: "13", longName: "Northbound"},
-            {tripID: "17289967", shortName: "26", longName: "Eastbound"},
-            {tripID: "17290596", shortName: "101", longName: "Eastbound"},
-            {tripID: "17291035", shortName: "103", longName: "Northbound"},
-            {tripID: "17291225", shortName: "110", longName: "Northbound"},
-            {tripID: "17291272", shortName: "109", longName: "Southbound"},
-            {tripID: "17291343", shortName: "107", longName: "Northbound"},
-            {tripID: "17291447", shortName: "36", longName: "Southbound"},
-            {tripID: "17291622", shortName: "34", longName: "Westbound"},
-            {tripID: "17293181", shortName: "48", longName: "Northbound"},
-            {tripID: "17293304", shortName: "10", longName: "Southbound"},
-            {tripID: "17293628", shortName: "110", longName: "Northbound"},
-            {tripID: "17293706", shortName: "109", longName: "Southbound"},
-            {tripID: "17293776", shortName: "107", longName: "Northbound"},
-            {tripID: "17294005", shortName: "1", longName: "Westbound"},
-            {tripID: "17296881", shortName: "51", longName: "Northbound"},
-            {tripID: "17296976", shortName: "42", longName: "Eastbound"},
-            {tripID: "17475211", shortName: "19", longName: "Northbound"},
-            {tripID: "17476568", shortName: "109", longName: "Southbound"},
-            {tripID: "17476858", shortName: "36", longName: "Southbound"},
-            {tripID: "17487031", shortName: "51", longName: "Northbound"},
-            {tripID: "17489430", shortName: "13", longName: "Northbound"},
-            {tripID: "17489710", shortName: "26", longName: "Eastbound"},
-            {tripID: "17490339", shortName: "101", longName: "Eastbound"},
-            {tripID: "17490778", shortName: "103", longName: "Northbound"},
-            {tripID: "17490968", shortName: "110", longName: "Northbound"},
-            {tripID: "17491015", shortName: "109", longName: "Southbound"},
-            {tripID: "17491086", shortName: "107", longName: "Northbound"},
-            {tripID: "17491190", shortName: "36", longName: "Southbound"},
-            {tripID: "17491365", shortName: "34", longName: "Westbound"},
-            {tripID: "17497330", shortName: "48", longName: "Northbound"},
-            {tripID: "17497453", shortName: "10", longName: "Southbound"},
-            {tripID: "17497777", shortName: "110", longName: "Northbound"},
-            {tripID: "17497855", shortName: "109", longName: "Southbound"},
-            {tripID: "17497925", shortName: "107", longName: "Northbound"},
-            {tripID: "17498154", shortName: "1", longName: "Westbound"},
-            {tripID: "17502128", shortName: "48", longName: "Northbound"},
-            {tripID: "17502251", shortName: "10", longName: "Southbound"},
-            {tripID: "17502575", shortName: "110", longName: "Northbound"},
-            {tripID: "17502653", shortName: "109", longName: "Southbound"},
-            {tripID: "17502723", shortName: "107", longName: "Northbound"},
-            {tripID: "17502952", shortName: "1", longName: "Westbound"},
-            {tripID: "17503956", shortName: "101", longName: "Eastbound"},
-            {tripID: "17504057", shortName: "101", longName: "Eastbound"},
-            {tripID: "17504277", shortName: "110", longName: "Northbound"},
-            {tripID: "17504380", shortName: "110", longName: "Southbound"},
-            {tripID: "17504617", shortName: "107", longName: "Southbound"},
-            {tripID: "17504767", shortName: "61", longName: "Northbound"}
-        ]
+        "tripIDs": {
+            "17286467": {
+                "shortName": "34",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42360,
+                "endTime": 44760
+            },
+            "17286897": {
+                "shortName": "10",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 42000,
+                "endTime": 45120
+            },
+            "17287096": {
+                "shortName": "35",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42420,
+                "endTime": 42660
+            },
+            "17287508": {
+                "shortName": "103",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41700,
+                "endTime": 44400
+            },
+            "17287929": {
+                "shortName": "66",
+                "longName": null,
+                "headsign": "Northbound",
+                "startTime": 41880,
+                "endTime": 43500
+            },
+            "17288308": {
+                "shortName": "107",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 40380,
+                "endTime": 42600
+            },
+            "17290526": {
+                "shortName": "101",
+                "longName": null,
+                "headsign": "Westbound",
+                "startTime": 39480,
+                "endTime": 42720
+            },
+            "17292594": {
+                "shortName": "1",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42540,
+                "endTime": 46020
+            },
+            "17292765": {
+                "shortName": "26",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42600,
+                "endTime": 45840
+            },
+            "17297375": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41820,
+                "endTime": 43560
+            },
+            "17298081": {
+                "shortName": "7",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 39540,
+                "endTime": 42780
+            },
+            "17298139": {
+                "shortName": "51",
+                "longName": null,
+                "headsign": "Northbound",
+                "startTime": 41580,
+                "endTime": 43320
+            },
+            "17298166": {
+                "shortName": "42",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42600,
+                "endTime": 45540
+            },
+            "17298424": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41640,
+                "endTime": 43680
+            },
+            "17298572": {
+                "shortName": "5",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 42060,
+                "endTime": 44820
+            },
+            "17298899": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Northbound",
+                "startTime": 42120,
+                "endTime": 43620
+            },
+            "17298946": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41400,
+                "endTime": 43140
+            },
+            "17477091": {
+                "shortName": "34",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42360,
+                "endTime": 44760
+            },
+            "17477521": {
+                "shortName": "10",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 42000,
+                "endTime": 45120
+            },
+            "17477720": {
+                "shortName": "35",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42420,
+                "endTime": 42660
+            },
+            "17478132": {
+                "shortName": "103",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41700,
+                "endTime": 44400
+            },
+            "17487525": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41820,
+                "endTime": 43560
+            },
+            "17490269": {
+                "shortName": "101",
+                "longName": null,
+                "headsign": "Westbound",
+                "startTime": 39480,
+                "endTime": 42720
+            },
+            "17495439": {
+                "shortName": "7",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 39540,
+                "endTime": 42780
+            },
+            "17495497": {
+                "shortName": "51",
+                "longName": null,
+                "headsign": "Northbound",
+                "startTime": 41580,
+                "endTime": 43320
+            },
+            "17495524": {
+                "shortName": "42",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42600,
+                "endTime": 45540
+            },
+            "17495782": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41640,
+                "endTime": 43680
+            },
+            "17496743": {
+                "shortName": "1",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42540,
+                "endTime": 46020
+            },
+            "17496914": {
+                "shortName": "26",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42600,
+                "endTime": 45840
+            },
+            "17500570": {
+                "shortName": "5",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 42060,
+                "endTime": 44820
+            },
+            "17500897": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Northbound",
+                "startTime": 42120,
+                "endTime": 43620
+            },
+            "17500944": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41400,
+                "endTime": 43140
+            },
+            "17501541": {
+                "shortName": "1",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42540,
+                "endTime": 46020
+            },
+            "17501712": {
+                "shortName": "26",
+                "longName": null,
+                "headsign": "Eastbound",
+                "startTime": 42600,
+                "endTime": 45840
+            },
+            "17503421": {
+                "shortName": "5",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 42060,
+                "endTime": 44820
+            },
+            "17503748": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Northbound",
+                "startTime": 42120,
+                "endTime": 43620
+            },
+            "17503795": {
+                "shortName": "11",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 41400,
+                "endTime": 43140
+            },
+            "17504566": {
+                "shortName": "107",
+                "longName": null,
+                "headsign": "Southbound",
+                "startTime": 39900,
+                "endTime": 42600
+            }
+        }
     }
 };

@@ -19,6 +19,7 @@ class NearbyTripsChooserPopup extends React.Component {
     }
 
     render() {
+        let areThereRoutes = this.props.routes.length > 0;
         let rows = this.props.routes.map((item, index) => {
             let tripID = item.tripID;
             let shortName = item.shortName;
@@ -35,22 +36,33 @@ class NearbyTripsChooserPopup extends React.Component {
             <div className="popup-background">
                 <div className="popup-container">
                     <div className="popup">
-                        <div className="popup-header">
-                            <h3>Which bus / train are you on?</h3>
-                            <p>
-                                There are multiple bus / train routes near your area. 
-                                Please select which route you are currently on.
-                            </p>
-                        </div>
+                        <div className="popup-header">{
+                            areThereRoutes
+                                ? <div>
+                                    <h3>Which bus / train are you on?</h3>
+                                    <p>
+                                        There are multiple bus / train routes near your area. 
+                                        Please select which route you are currently on.
+                                    </p>
+                                  </div>
+                                : <div>
+                                    <h3>There are no busses / trains near you!</h3>
+                                    <p>Are you on a bus / train? If not, this explains why we cannot find your bus / train!</p>
+                                  </div>
+                        }</div>
                         <form onSubmit={this.handleSubmit}>
-                            <div className="popup-contents">
-                                {rows}
-                            </div>
-                            <div className="popup-actions-container">
-                                <button className="popup-action-button" type="submit">
-                                    OK
-                                </button>
-                            </div>
+                            <div className="popup-contents">{
+                                areThereRoutes
+                                    ? {rows}
+                                    : <p>Please wait while we try to determine the busses / trains around you.</p>
+                            }</div>
+                            <div className="popup-actions-container">{
+                                areThereRoutes
+                                    ?  <button className="popup-action-button" type="submit">
+                                        OK
+                                      </button>
+                                    : null
+                            }</div>
                         </form>
                     </div>
                 </div>

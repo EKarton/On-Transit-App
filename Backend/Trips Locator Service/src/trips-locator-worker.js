@@ -39,7 +39,7 @@ class TripsLocatorWorker{
 
         // Since the stop schedules are in sorted order we can perform binary search
         var left = 0;
-        var right = stopSchedules.length - 2;
+        var right = stopSchedules.length - 1;
         while (left <= right){
         	var mid = Math.floor((left + right) / 2);
 
@@ -57,7 +57,7 @@ class TripsLocatorWorker{
         		left = mid + 1;
         	}
         	else{
-        		right = mid;
+        		right = mid - 1;
         	}
         }
 

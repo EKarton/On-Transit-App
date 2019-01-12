@@ -8,9 +8,9 @@ import RouteDetailsView from '../route-details-view/RouteDetailsView.js';
 import RouteChooserPopup from "../route-chooser-popup/RouteChooserPopup";
 import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 
-import {getCurrentTime} from "../../services/MockedTimeService";
+import {getCurrentTime} from "../../services/TimeService";
 
-import MockedOnTransitService from '../../services/MockedOnTransitService.js';
+import MockedOnTransitService from '../../services/OnTransitService.js';
 
 import {GetLocationOnPath} from "../../services/LocationTracker";
 import EndOfRoutePopup from '../end-of-route-popup/end-of-route-popup';
@@ -195,8 +195,20 @@ class App extends React.Component {
             
             Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
                 .then(values => {     
+
+                    console.log(Object.keys(values[0].tripIDs));
                     
-                    let nearbyTrips = values[0].tripIDs;
+                    let nearbyTrips = Object.keys(values[0].tripIDs).map(key => {
+                        let tripID = key;
+                        let tripDetails = values[0].tripIDs[tripID];
+                        return {
+                            ...tripDetails, 
+                            tripID: tripID
+                        };
+                    });
+
+                    console.log(nearbyTrips);
+
                     this.setState((prevState, props) => {
                         return {
                             ...prevState,
