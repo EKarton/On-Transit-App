@@ -15,6 +15,6 @@
   "dependencies": {
     "express": "^4.16.3",
     "mongodb": "^3.1.10",
-    "on-transit": "file:../../Common"
+    "on-transit": "^1.0.0"
   }
 }
