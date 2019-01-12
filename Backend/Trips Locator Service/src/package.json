@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "express": "^4.16.3",
+    "mongodb": "^3.1.10",
     "on-transit": "file:../../Common"
   }
 }

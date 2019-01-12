@@ -92,7 +92,10 @@ class TripsLocatorMaster{
 
             // Save the results
             var jobBatch = this.jobsBatchIDToInstance[jobBatchID];
-            jobBatch.tripIDs = jobBatch.tripIDs.concat(tripIDs);
+            jobBatch.tripIDs = {
+                ...jobBatch.tripIDs,
+                ...tripIDs
+            };
             jobBatch.numJobsCompleted = jobBatch.numJobsCompleted + 1;
 
             console.log("Master: Num jobs vs num jobs completed: " + jobBatch.numJobs + " " + jobBatch.numJobsCompleted);
@@ -188,7 +191,7 @@ class TripsLocatorMaster{
         
         // If there were no jobs, call back to the client
         if (jobsBatch.numJobs == 0){
-            jobsBatch.resolve([]);
+            jobsBatch.resolve({});
         }
     }
 

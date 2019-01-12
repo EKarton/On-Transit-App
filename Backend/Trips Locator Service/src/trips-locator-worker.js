@@ -68,7 +68,7 @@ class TripsLocatorWorker{
     }
 
     /**
-     * Return a list of trip IDs from a location at a certain time
+     * Return a set of trip IDs with their trip details from a location at a certain time
      * from a list of possible stop schedules and schedule ID.
      * 
      * Pre-condition:
@@ -79,7 +79,7 @@ class TripsLocatorWorker{
      * @param {int} time Time ellapsed from midnight
      * @param {Object} stopSchedules Stop schedules
      * @param {string} scheduleID The schedule ID
-     * @return {string[]} A list of trip IDs.
+     * @return {Object} A map of trip IDs to their trip details.
      */
     async getTripIDs(location, time, stopSchedules, scheduleID){
 
@@ -92,12 +92,15 @@ class TripsLocatorWorker{
         var nextPathLocationSequence = nextStopSchedule.pathLocationIndex;
 
         // Find the trips associated with this schedule
-        var tripIDs = [];
+        var tripIDs = {};
         var tripsCursor = this.database.getObjects("trips", {"_id": scheduleID});
         while (await tripsCursor.hasNext()){
             var trip = await tripsCursor.next();
             var tripID = trip._id;
             var pathID = trip.pathID;
+            var shortName = trip.shortname;
+            var longName = trip.longname;
+            var headsign = trip.headsign;
 
             var path = await this.database.getObject("path-trees", { "_id": pathID });
             var pathTree = new PathLocationsTree(path.tree);
@@ -105,7 +108,14 @@ class TripsLocatorWorker{
 
             if (prevPathLocationSequence <= closestPathLocation.sequence){
                 if (closestPathLocation.sequence <= nextPathLocationSequence){
-                    tripIDs.push(tripID);
+                    var tripDetails = {
+                        shortName: shortName,
+                        longName: longName,
+                        headsign: headsign,
+                        startTime: stopSchedules[0].arrivalTime,
+                        endTime: stopSchedules[stopSchedules.length - 1].departTime
+                    };
+                    tripIDs[tripID] = tripDetails;
                 }
             }
         }
