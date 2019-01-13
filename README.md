@@ -51,7 +51,7 @@ Users are also able to get notified when their transit route is coming to a stop
 
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/route-picker.png" width="300px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/route-picker.png"/>
     </p>
 </div>
 
@@ -59,7 +59,7 @@ Once a route is selected, the route's path and its next schedules are presented 
 
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-made-notification.png" width="300px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-made-notification.png"/>
     </p>
 </div>
 
@@ -67,7 +67,7 @@ When the time comes, the OS' notification is dispatched.
 
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-dispatch-notification.png" width="300px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-dispatch-notification.png"/>
     </p>
 </div>
 
