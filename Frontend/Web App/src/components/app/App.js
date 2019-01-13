@@ -187,14 +187,21 @@ class App extends React.Component {
         let radius = position.coords.accuracy;
         let time = new Date().toLocaleTimeString();
 
+        console.log(this.state);
+
         if (this.state.tripDetailsID === null){
+            console.log("heee");
 
             // Get the nearby trips and vehicles
             let nearbyTripsPromise = this.onTransitService.getNearbyTrips(latitude, longitude, time, radius);
             let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
             
             Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
-                .then(values => {     
+                .then(values => {    
+                    
+                    if (this.state.tripDetailsID !== null){
+                        return;
+                    }
 
                     console.log(Object.keys(values[0].tripIDs));
                     
@@ -235,10 +242,9 @@ class App extends React.Component {
     }
 
     selectRoute = (tripID) => {
-        let selectedTripID = this.state.possibleRoutes.find(trip => trip.tripID === tripID);
-        console.log("Selected Trip ID: " + selectedTripID);
-        if (this.state.tripDetailsID !== selectedTripID){
-            this.onTransitService.getTripDetails(selectedTripID)
+        console.log("Selected Trip ID: " + tripID);
+        if (this.state.tripDetailsID !== tripID){
+            this.onTransitService.getTripDetails(tripID)
                 .then(results => {
 
                     // Set the ID of results to their index
@@ -262,7 +268,7 @@ class App extends React.Component {
                                 latitude: midPathLatitude,
                                 longitude: midPathLongitude
                             },
-                            tripDetailsID: selectedTripID,
+                            tripDetailsID: tripID,
                             displayRouteDetails: true,
                             displayRouteChoices: false,
                             tripDetails: results,

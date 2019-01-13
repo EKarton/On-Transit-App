@@ -2,7 +2,7 @@ import React from "react";
 
 import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 import "./RouteDetailsView.css";
-import {getCurrentTime} from "../../services/MockedTimeService";
+import {getCurrentTime} from "../../services/TimeService";
 
 class RouteDetailsView extends React.Component {
 

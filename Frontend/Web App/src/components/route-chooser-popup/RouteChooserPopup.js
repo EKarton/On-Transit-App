@@ -1,6 +1,8 @@
 import React from "react";
 import "./RouteChooserPopup.css";
 
+import {getCurrentTime} from "../../services/TimeService";
+
 class NearbyTripsChooserPopup extends React.Component {
 
     handleSubmit = (event) => {
@@ -21,17 +23,43 @@ class NearbyTripsChooserPopup extends React.Component {
     render() {
         let areThereRoutes = this.props.routes.length > 0;
         let rows = this.props.routes.map((item, index) => {
-            let tripID = item.tripID;
             let shortName = item.shortName;
             let longName = item.longName;
+            let headsign = item.headsign;
 
+            let display = "";
+            if (shortName){
+                display += shortName + " ";
+            }
+            if (headsign){
+                display += headsign + " ";
+            }
+            if (longName){
+                display += "(" + longName + ")";
+            }
+            display.trim();
+
+            return {
+                ...item,
+                display: display
+            };
+        }).sort((tripA, tripB) => {
+            return tripA.display < tripB.display;
+        }).filter(trip => {
+            return trip.startTime <= getCurrentTime() <= trip.endTime;
+        }).map(item => {
+            let tripID = item.tripID;
+            let display = item.display;
+            
             return (
                 <div key={tripID}>
                     <input type="radio" name="route" value={tripID}/>
-                    <div className="tripInfo">{shortName + " " + longName}</div>
+                    <div className="tripInfo">{display}</div>
                 </div>
             );
+
         });
+
         return (
             <div className="popup-background">
                 <div className="popup-container">
@@ -53,7 +81,7 @@ class NearbyTripsChooserPopup extends React.Component {
                         <form onSubmit={this.handleSubmit}>
                             <div className="popup-contents">{
                                 areThereRoutes
-                                    ? {rows}
+                                    ? rows
                                     : <p>Please wait while we try to determine the busses / trains around you.</p>
                             }</div>
                             <div className="popup-actions-container">{

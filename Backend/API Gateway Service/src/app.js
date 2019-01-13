@@ -41,9 +41,15 @@ class App{
      */
     run(){
         var app = express();
-
         var server_port = process.env.YOUR_PORT || process.env.PORT || config.DEFAULT_PORT;
         var server_host = process.env.YOUR_HOST || '0.0.0.0';
+
+        // Enable cors from anywhere
+        app.use(function(req, res, next) {
+            res.header('Access-Control-Allow-Origin', '*');
+            res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+            next();
+        });
 
         /**
          * Returns a set of trip IDs that are close to a location by a certain radius
@@ -57,7 +63,7 @@ class App{
 
             console.log("API Gateway Service: Request for finding nearby trips received on process #", process.pid);
 
-            var uri = `http://localhost:3002/api/v1/trips?lat=${latitude}&long=${longitude}&time=${rawTime}`;
+            var uri = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${rawTime}`;
             this._handleRequest(req, res, uri);
         });
 
@@ -71,7 +77,7 @@ class App{
 
             console.log("API Gateway Service: Request for getting trip details received on process #", process.pid);
 
-            var uri = `http://localhost:3003/api/v1/trips/${tripID}`;
+            var uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/trips/${tripID}`;
             this._handleRequest(req, res, uri);
         });
 
@@ -87,7 +93,7 @@ class App{
 
             console.log("API Gateway Service: Request for finding vehicle received on process #", process.pid);
 
-            var uri = `http://localhost:3001/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
+            var uri = `${config.VEHICLES_LOCATOR_URL}/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
             this._handleRequest(req, res, uri);
         });
 
