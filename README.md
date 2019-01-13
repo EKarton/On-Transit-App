@@ -14,7 +14,7 @@ The On Transit project is a full stack software development project. It is compr
 - Credits
 - License
 
-### Overview
+### System Architecture
 This project is comprised of several components that work together to make the project very scalable while maintaining high performance.
 <div width="100%">
     <p align="center">
@@ -29,6 +29,7 @@ This project is comprised of several components that work together to make the p
 - Vehicles Locator Microservice: Predicts the possible vehicles the user may be on given the user's GPS location and time.
 - Data Aggregator Service: Publishes clean data to the database for the microservices to efficiently use by obtaining raw data from the World Wide Web and passing it through a series of data filters / data aggregations.
 
+### Overview of Android App
 Users will be using the Android app to get their possible transit routes and transit stops. In the app's homepage, they do not need to type in their transit route - it will already be present to them.
 
 <div width="100%">
@@ -42,6 +43,31 @@ Swiping up will list the next stops.
 <div width="100%">
     <p align="center">
 <img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/App%20Scroll%20Up.jpg" width="300px"/>
+    </p>
+</div>
+
+### Overview of Web App
+Users are also able to get notified when their transit route is coming to a stop. Like the Android app, in the app's homepage, they do not need to type in their transit route - it will be determined based on their GPS location and time. Since there might be multiple transit routes, it gives users an option to select which transit route they are on.
+
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/route-picker.png" width="300px"/>
+    </p>
+</div>
+
+Once a route is selected, the route's path and its next schedules are presented on the webpage. It will also predict and display the vehicle's location. Furthermore, users can create a notification for a particular stop.
+
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-made-notification.png" width="300px"/>
+    </p>
+</div>
+
+When the time comes, the OS' notification is dispatched.
+
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-dispatch-notification.png" width="300px"/>
     </p>
 </div>
 
