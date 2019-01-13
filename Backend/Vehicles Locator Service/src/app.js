@@ -57,6 +57,10 @@ class App{
                 });  
         });
 
+        app.get("/api/v1/health", (req, res) => {
+            res.status(200).send("OK");
+        });
+
         app.listen(server_port, server_host, function() {
             console.log('Listening on port %d', server_port);
         });

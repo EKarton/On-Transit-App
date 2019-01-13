@@ -36,6 +36,15 @@ class App{
             });
     }
 
+    _obtainServiceHealth(uri){
+        let options = {
+            method: "GET",
+            uri: uri,
+            resolveWithFullResponse: true
+        };
+        return request(options);
+    }
+
     /**
      * Runs the application
      */
@@ -95,6 +104,32 @@ class App{
 
             var uri = `${config.VEHICLES_LOCATOR_URL}/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
             this._handleRequest(req, res, uri);
+        });
+
+        app.get("/api/v1/health", (req, res) => {
+            let tripsLocatorUrl = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/health`;
+            let tripDetailsUrl = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/health`;
+            let vehiclesLocatorUrl = `${config.VEHICLES_LOCATOR_URL}/api/v1/health`;
+
+            let tripsLocatorRequest = this._obtainServiceHealth(tripsLocatorUrl);
+            let tripDetailsRequest = this._obtainServiceHealth(tripDetailsUrl);
+            let vehiclesLocatorRequest = this._obtainServiceHealth(vehiclesLocatorUrl);
+            Promise.all([tripsLocatorRequest, tripDetailsRequest, vehiclesLocatorRequest])
+                .then(results => {                    
+                    let isTripsLocatorOk = results[0].statusCode == 200;
+                    let isTripDetailsOk = results[1].statusCode == 200;
+                    let isVehiclesLocatorOk = results[2].statusCode == 200;
+
+                    if (isTripsLocatorOk && isTripDetailsOk && isVehiclesLocatorOk){
+                        res.status(200).send("OK");
+                    }
+                    else{
+                        res.status(501).send("FAILURE");
+                    }
+                })
+                .catch(error => {
+                    res.status(501).send("FAILURE");
+                });
         });
 
         app.listen(server_port, server_host, function() {
