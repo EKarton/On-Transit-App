@@ -1,5 +1,6 @@
 import React from "react";
 import "./RouteChooserPopup.css";
+import "./../popup/Popup.css"
 
 import {getCurrentTime} from "../../services/TimeService";
 

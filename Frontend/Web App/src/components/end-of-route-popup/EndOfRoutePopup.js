@@ -1,7 +1,5 @@
-"use strict";
-
 import React from "react";
-import "./end-of-route-popup.css";
+import "./../popup/Popup.css";
 
 class EndOfRoutePopup extends React.Component {
     state = {

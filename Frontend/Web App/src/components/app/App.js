@@ -6,6 +6,7 @@ import "./App.css";
 import Map from "../map-view/MapView";
 import RouteDetailsView from '../route-details-view/RouteDetailsView.js';
 import RouteChooserPopup from "../route-chooser-popup/RouteChooserPopup";
+import LoadingPopup from "../loading-popup/LoadingPopup";
 import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
 
 import {getCurrentTime} from "../../services/TimeService";
@@ -13,10 +14,11 @@ import {getCurrentTime} from "../../services/TimeService";
 import MockedOnTransitService from '../../services/OnTransitService.js';
 
 import {GetLocationOnPath} from "../../services/LocationTracker";
-import EndOfRoutePopup from '../end-of-route-popup/end-of-route-popup';
+import EndOfRoutePopup from '../end-of-route-popup/EndOfRoutePopup';
 
 class App extends React.Component {
     state = {
+        displayLoadingSign: true,
         displayRouteChoices: false,
         displayRouteDetails: false,
         displayEndOfRouteMessage: false,
@@ -189,17 +191,31 @@ class App extends React.Component {
 
         console.log(this.state);
 
-        if (this.state.tripDetailsID === null){
+        if (this.state.possibleRoutes === null || this.state.possibleRoutes.length == 0){
             console.log("heee");
 
             // Get the nearby trips and vehicles
             let nearbyTripsPromise = this.onTransitService.getNearbyTrips(latitude, longitude, time, radius);
             let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
+
+            this.setState((prevState, props) => {
+                return {
+                    ...prevState,
+                    displayLoadingSign: true
+                }
+            });
             
             Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
-                .then(values => {    
+                .then(values => {  
                     
-                    if (this.state.tripDetailsID !== null){
+                    this.setState((prevState, props) => {
+                        return {
+                            ...prevState,
+                            displayLoadingSign: false
+                        }
+                    });
+                    
+                    if (this.state.possibleRoutes !== null && this.state.possibleRoutes.length > 0){
                         return;
                     }
 
@@ -226,9 +242,7 @@ class App extends React.Component {
                                 longitude: longitude
                             }
                         };
-                    });
-
-                    
+                    });                   
                 })
                 .catch(errors => {
                     console.log(errors);
@@ -244,8 +258,22 @@ class App extends React.Component {
     selectRoute = (tripID) => {
         console.log("Selected Trip ID: " + tripID);
         if (this.state.tripDetailsID !== tripID){
+            this.setState((prevState, props) => {
+                return {
+                    ...prevState,
+                    displayLoadingSign: true
+                }
+            });
+
             this.onTransitService.getTripDetails(tripID)
                 .then(results => {
+
+                    this.setState((prevState, props) => {
+                        return {
+                            ...prevState,
+                            displayLoadingSign: false
+                        }
+                    });
 
                     // Set the ID of results to their index
                     results.stops = results.stops.map((item, index) => {
@@ -406,15 +434,20 @@ class App extends React.Component {
                          stops={this.state.tripDetails.stops} />
                 </div>				
                 {
-                    this.state.displayRouteChoices 
+                    (this.state.displayRouteChoices && !this.state.displayLoadingSign)
                         ? <RouteChooserPopup 
                             routes={this.state.possibleRoutes}
                             onSelectRoute={this.selectRoute}/> 
                         : null 
                 }	
                 {
-                    this.state.displayEndOfRouteMessage
+                    (this.state.displayEndOfRouteMessage && !this.state.displayLoadingSign)
                         ? <EndOfRoutePopup restartApp={this.restartApp}/>
+                        : null
+                }
+                {
+                    this.state.displayLoadingSign
+                        ? <LoadingPopup />
                         : null
                 }
                 <ToastContainer />		

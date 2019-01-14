@@ -16,8 +16,6 @@ import OlStyle from "ol/style/Style";
 import OlCircleStyle from "ol/style/Circle";
 import Stroke from "ol/style/Stroke";
 
-import {GetLocationOnPath} from "../../services/LocationTracker";
-
 /**
  * A component which displays the map to the user
  * It uses OpenLayers as the map
