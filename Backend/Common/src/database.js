@@ -31,7 +31,7 @@ class Database{
 
             this._cache = {};
 
-            MongoClient.connect(mongoDbUrl, (error, db) => {
+            MongoClient.connect(mongoDbUrl, {poolSize: 100}, (error, db) => {
                 if (error){
                     console.log("Failed to connect to database!");
                     console.log(error);

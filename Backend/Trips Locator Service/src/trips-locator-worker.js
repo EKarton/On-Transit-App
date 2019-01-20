@@ -1,6 +1,7 @@
 const process = require("process");
 const Database = require("on-transit").Database;
 const PathLocationsTree = require("on-transit").PathLocationTree;
+const Config = require("./res/config");
 
 class TripsLocatorWorker{
     /**
@@ -82,7 +83,6 @@ class TripsLocatorWorker{
      * @return {Object} A map of trip IDs to their trip details.
      */
     async getTripIDs(location, time, stopSchedules, scheduleID){
-
         // Get two stop schedules which is immediately before and after the current time.
         var neighbouringStopSchedules = await this._getNeighbouringStopSchedules(stopSchedules, time);
         var prevStopSchedule = neighbouringStopSchedules.previousStopSchedule;
@@ -94,6 +94,7 @@ class TripsLocatorWorker{
         // Find the trips associated with this schedule
         var tripIDs = {};
         var tripsCursor = this.database.getObjects("trips", {"_id": scheduleID});
+
         while (await tripsCursor.hasNext()){
             var trip = await tripsCursor.next();
             var tripID = trip._id;
@@ -119,7 +120,7 @@ class TripsLocatorWorker{
                 }
             }
         }
-        return tripIDs;
+        return tripIDs;    
     }
 }
 
@@ -127,17 +128,23 @@ class TripsLocatorWorker{
  * The main method for this file.
  */
 (() => {
-    var curDatabase = null;
+    var databaseUrl = process.argv[2];
+    var databaseName = process.argv[3];
+    console.log("Name: " + databaseName + "URL: " + databaseUrl);
+
+    var curDatabase = new Database();
+    curDatabase.connectToDatabase(databaseUrl, databaseName);
+
     process.on("message", async (message) => {
 
-        if (curDatabase == null){
-            var databaseUrl = process.argv[2];
-            var databaseName = process.argv[3];
-            console.log("Name: " + databaseName + "URL: " + databaseUrl);
+        // if (curDatabase == null){
+        //     var databaseUrl = process.argv[2];
+        //     var databaseName = process.argv[3];
+        //     Config.IS_LOGGING && console.log("Name: " + databaseName + "URL: " + databaseUrl);
 
-            curDatabase = new Database();
-            await curDatabase.connectToDatabase(databaseUrl, databaseName);
-        }
+        //     curDatabase = new Database();
+        //     await curDatabase.connectToDatabase(databaseUrl, databaseName);
+        // }
 
         var jobID = message.jobID;
         var jobBatchID = message.jobBatchID;
@@ -146,7 +153,7 @@ class TripsLocatorWorker{
         var stopSchedules = message.stopSchedules;
         var scheduleID = message.scheduleID;
 
-        console.log("Process " + process.pid + " has recieved new job #" + jobID + " on batch #" + jobBatchID);
+        Config.IS_LOGGING && console.log("Process " + process.pid + " has recieved new job #" + jobID + " on batch #" + jobBatchID);
 
         var worker = new TripsLocatorWorker(curDatabase);
         var tripIDs = await worker.getTripIDs(location, time, stopSchedules, scheduleID);

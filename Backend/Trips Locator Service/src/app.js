@@ -44,6 +44,7 @@ class App{
             console.log("Request to get nearby trips received by process ", process.pid);
 
             var location = new Location(latitude, longitude);
+            console.log("Current time: " + (new Date()));
             
             tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight)
                 .then(tripIDs => {
@@ -56,6 +57,7 @@ class App{
 
                     response.setHeader('Content-Type', 'application/json');
                     response.send(JSON.stringify(jsonResponse));  
+                    console.log("Finish time: " + (new Date()));
                 })
                 .catch(error => {
                     var responseBody = {
