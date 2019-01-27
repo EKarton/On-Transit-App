@@ -51,8 +51,10 @@ class SchedulesCombiner {
                     "tripID": tripID
                 });
 
-                trip.schedules = tripSchedule.tripSchedules;
-                await this.newDb.saveObjectToDatabase("trips", trip);
+                if (tripSchedule){
+                    trip.schedules = tripSchedule.schedules;
+                    await this.newDb.saveObjectToDatabase("trips", trip);
+                }
             }
             resolve();
         });
@@ -66,7 +68,7 @@ class SchedulesCombiner {
                     _id: {
                         "tripID": "$tripID"
                     },
-                    tripSchedules: { $push: "$_id" }
+                    schedules: { $push: "$_id" }
                 }
             }]);
 
@@ -75,7 +77,7 @@ class SchedulesCombiner {
                 let obj = await aggregateCursor.next();
                 let newTripObject = {
                     tripID: obj._id.tripID,
-                    tripSchedules: obj.tripSchedules
+                    schedules: obj.schedules
                 };
                 insertionJobs.push(this.newDb.saveObjectToDatabase("trip-schedules", newTripObject));
             }

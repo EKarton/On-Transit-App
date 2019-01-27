@@ -7,8 +7,7 @@ const request = require("request");
 const AdmZip = require('adm-zip');
 
 class RawDataCollector{
-    constructor(database, downloadFolder){
-        this.database = database;
+    constructor(downloadFolder){
         this.downloadFolder = downloadFolder;
     }
 
@@ -94,7 +93,11 @@ class RawDataCollector{
         });
     }
 
-    saveTripsToDatabase(){
+    /**
+     * Reads the trips data from this.downloadFolder/trips.txt
+     * @param {Database} db The database instance to store the trips
+     */
+    saveTripsToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/trips.txt");
             CSV.fromStream(fileStream, { headers: true } )
@@ -113,7 +116,7 @@ class RawDataCollector{
                         tripShortName: tripShortName
                     }
 
-                    await this.database.saveObjectToDatabase("raw-trips", databaseObject);
+                    await db.saveObjectToDatabase("raw-trips", databaseObject);
                 })
                 .on("error", error => {
                     reject(error);
@@ -124,7 +127,7 @@ class RawDataCollector{
         });
     }
 
-    saveRoutesToDatabase(){
+    saveRoutesToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/routes.txt");
             CSV.fromStream(fileStream, { headers: true } )
@@ -141,7 +144,7 @@ class RawDataCollector{
                         type: type 
                     };
 
-                    await this.database.saveObjectToDatabase("raw-routes", databaseObject);
+                    await db.saveObjectToDatabase("raw-routes", databaseObject);
                 })
                 .on("error", error => {
                     reject(error);
@@ -153,7 +156,7 @@ class RawDataCollector{
         });
     }
 
-    saveShapesToDatabase(){
+    saveShapesToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/shapes.txt");
             CSV.fromStream(fileStream, { headers: true } )
@@ -170,7 +173,7 @@ class RawDataCollector{
                         sequence: sequence
                     };
 
-                    await this.database.saveObjectToDatabase("raw-shapes", databaseObject);
+                    await db.saveObjectToDatabase("raw-shapes", databaseObject);
                 })
                 .on("error", error => {
                     reject(error);
@@ -182,7 +185,7 @@ class RawDataCollector{
         });
     }
 
-    saveStopLocationsToDatabase(){
+    saveStopLocationsToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/stops.txt");
             CSV.fromStream(fileStream, { headers: true } )
@@ -201,7 +204,7 @@ class RawDataCollector{
                         longitude: longitude
                     };
 
-                    await this.database.saveObjectToDatabase("raw-stop-locations", databaseObject);
+                    await db.saveObjectToDatabase("raw-stop-locations", databaseObject);
                 })
                 .on("error", error => {
                     reject(error);
@@ -213,7 +216,7 @@ class RawDataCollector{
         });
     }
 
-    saveStopTimesToDatabase(){
+    saveStopTimesToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/stop_times.txt");
             CSV.fromStream(fileStream, { headers: true } )
@@ -237,7 +240,7 @@ class RawDataCollector{
                         headsign: headsign
                     };
 
-                    await this.database.saveObjectToDatabase("raw-stop-times", databaseObject);
+                    await db.saveObjectToDatabase("raw-stop-times", databaseObject);
                 })
                 .on("error", error => {
                     reject(error);

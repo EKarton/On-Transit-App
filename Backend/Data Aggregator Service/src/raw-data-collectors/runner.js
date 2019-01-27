@@ -2,31 +2,57 @@
 
 const Database = require("on-transit").Database;
 const RawDataCollector = require("./raw-data-collector");
-
-// Import the config file
 const Config = require("../res/config");
 
-module.exports = async function(){
-    var rawDatabase = null;
-    try{
-        rawDatabase = new Database();
-        await rawDatabase.connectToDatabase(Config.MONGODB_URL, Config.RAW_DATABASE_NAME);
+let dbs = [];
+let numDbs = 5;
 
-        var collector = new RawDataCollector(rawDatabase, Config.DOWNLOADS_DIRECTORY);
+var openConnections = async () => {
+    for (let i = 0; i < numDbs; i++){
+        let newDb = new Database();
+        await newDb.connectToDatabase(Config.MONGODB_URL, Config.RAW_DATABASE_NAME);
+        dbs.push(newDb);
+    }
+};
+
+var closeConnections = async () => {
+    for (let i = 0; i < numDbs; i++){
+        await dbs[i].closeDatabase();
+    }
+};
+
+module.exports = async function(){
+    try{
+        await openConnections();
+
+        var collector = new RawDataCollector(Config.DOWNLOADS_DIRECTORY);
         await collector.clearFolder();
         await collector.downloadAndExtractGtfsData(Config.GTFS_STATIC_RESOURCE);
         
-        await collector.saveTripsToDatabase();
-        await collector.saveRoutesToDatabase();
-        await collector.saveShapesToDatabase();
-        await collector.saveStopLocationsToDatabase();
-        await collector.saveStopTimesToDatabase();
+        let task1 = collector.saveTripsToDatabase(dbs[0]);
+        let task2 = collector.saveRoutesToDatabase(dbs[1]);
+        let task3 = collector.saveShapesToDatabase(dbs[2]);
+        let task4 = collector.saveStopLocationsToDatabase(dbs[3]);
+        let task5 = collector.saveStopTimesToDatabase(dbs[4]);
 
-        await rawDatabase.closeDatabase();
+        let parallelTasks = [task1, task2, task3, task4, task5];
+
+        await Promise.all(parallelTasks);
+
+        await closeConnections();
     }
     catch(error){
-        if (rawDatabase)
-            await rawDatabase.closeDatabase();
-        throw error;
+        await closeConnections();
     }
 };
+
+
+// Shutdown the app when the user types CTRL-C
+process.on('SIGINT', async function() {
+    await closeConnections();
+    process.exit(-1);
+});
+
+process.on("exit", async function(){
+    await closeConnections();
+});

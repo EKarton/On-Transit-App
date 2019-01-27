@@ -38,77 +38,77 @@ class TripScheduleBuilder{
     }
 
     async processData(){
-        // function map(){
-        //     let key = this.tripID;
+        function map(){
+            let key = this.tripID;
     
-        //     let value = {
-        //         schedules: [{
-        //             arrivalTime: this.arrivalTime,
-        //             departTime: this.departTime,
-        //             headsign: this.headsign,
-        //             sequence: this.sequence,
-        //             locationID: this.stopLocationID
-        //         }],
-        //         count: 0
-        //     };
+            let value = {
+                schedules: [{
+                    arrivalTime: this.arrivalTime,
+                    departTime: this.departTime,
+                    headsign: this.headsign,
+                    sequence: this.sequence,
+                    locationID: this.stopLocationID
+                }],
+                count: 0
+            };
     
-        //     emit(key, value);
-        // }
+            emit(key, value);
+        }
 
-        // function reduce(key, values){
-        //     var newValues = {
-        //         schedules: [],
-        //         count: 0
-        //     };
+        function reduce(key, values){
+            var newValues = {
+                schedules: [],
+                count: 0
+            };
     
-        //     values.forEach(function (value){
-        //         newValues.schedules = value.schedules.concat(newValues.schedules);
-        //         newValues.count += value.count;
-        //     });
-        //     return newValues;
-        // }
+            values.forEach(function (value){
+                newValues.schedules = value.schedules.concat(newValues.schedules);
+                newValues.count += value.count;
+            });
+            return newValues;
+        }
 
-        // function finalize(key, reducedValues){
-        //     let schedules = reducedValues.schedules;
-        //     let sortedValues = schedules.sort((a, b) => {
-        //         let sequenceA = a.sequence;
-        //         let sequenceB = b.sequence;
+        function finalize(key, reducedValues){
+            let schedules = reducedValues.schedules;
+            let sortedValues = schedules.sort((a, b) => {
+                let sequenceA = a.sequence;
+                let sequenceB = b.sequence;
     
-        //         if (sequenceA < sequenceB){
-        //             return -1;
-        //         }
-        //         else{
-        //             return 1;
-        //         }
-        //     });
+                if (sequenceA < sequenceB){
+                    return -1;
+                }
+                else{
+                    return 1;
+                }
+            });
     
-        //     let locationIDs = sortedValues.map(a => a.locationID);
-        //     let headsigns = sortedValues.map(a => a.headsign);
+            let locationIDs = sortedValues.map(a => a.locationID);
+            let headsigns = sortedValues.map(a => a.headsign);
     
-        //     let times = sortedValues.map(a => [a.arrivalTime, a.departTime]);
-        //     let numStops = times.length;
-        //     let startTime = times[0][0];
-        //     let endTime = times[numStops - 1][1];
+            let times = sortedValues.map(a => [a.arrivalTime, a.departTime]);
+            let numStops = times.length;
+            let startTime = times[0][0];
+            let endTime = times[numStops - 1][1];
     
-        //     let aggregatedSchedule = {
-        //         startTime: startTime,
-        //         endTime: endTime,
-        //         times: times,
-        //         locationIDs: locationIDs,
-        //         headsigns: headsigns
-        //     };
+            let aggregatedSchedule = {
+                startTime: startTime,
+                endTime: endTime,
+                times: times,
+                locationIDs: locationIDs,
+                headsigns: headsigns
+            };
     
-        //     return aggregatedSchedule;
-        // }
+            return aggregatedSchedule;
+        }
 
-        // await this.oldDb.getInstance().collection("raw-stop-times").mapReduce(
-        //     map,
-        //     reduce,
-        //     {
-        //         out: "computed-schedules",
-        //         finalize: finalize
-        //     }
-        // );
+        await this.oldDb.getInstance().collection("raw-stop-times").mapReduce(
+            map,
+            reduce,
+            {
+                out: "computed-schedules",
+                finalize: finalize
+            }
+        );
 
         let oldSchedulesCursor = await this.oldDb.getObjects("computed-schedules", {});
         while (await oldSchedulesCursor.hasNext()){
