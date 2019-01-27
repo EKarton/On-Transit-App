@@ -45,10 +45,7 @@ class PathBuilder{
 
         // Remove the sequence property
         let coordinates = items.map(obj => {
-            return {
-                latitude: obj.latitude,
-                longitude: obj.longitude
-            }
+            return [obj.longitude, obj.latitude];
         });
 
         return coordinates;

@@ -30,10 +30,7 @@ class DuplicatedPathsRemover{
     }
 
     computeCoordinatesHash(coordinates){
-        var hash = "";
-        for (let i = 0; i < coordinates.length; i++){
-            hash += "(" + coordinates[i].latitude + "," + coordinates[i].longitude + ")"
-        }
+        var hash = JSON.stringify(coordinates);
         return md5(hash);
     }
 

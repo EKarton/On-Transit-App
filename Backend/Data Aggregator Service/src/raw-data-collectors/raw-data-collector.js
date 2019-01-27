@@ -94,7 +94,8 @@ class RawDataCollector{
     }
 
     /**
-     * Reads the trips data from this.downloadFolder/trips.txt
+     * Reads the trips data from this.downloadFolder/trips.txt to the database.
+     * It places each trip from trips.txt as a new object in the database's "raw-trips" collection.
      * @param {Database} db The database instance to store the trips
      */
     saveTripsToDatabase(db){
