@@ -25,8 +25,8 @@ class PathsMigrator{
                 let newPathID = newDocument.insertedId;
 
                 await this.mappingsDb.saveObjectToDatabase("path-ID-mappings", {
-                    oldDocumentID: oldPathObj._id,
-                    newDocumentID: newPathID
+                    oldID: oldPathObj.pathID,
+                    newID: newPathID
                 });
             }
             resolve();

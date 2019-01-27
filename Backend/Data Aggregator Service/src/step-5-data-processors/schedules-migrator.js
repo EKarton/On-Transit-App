@@ -15,18 +15,17 @@ class StopLocationsMigrator{
     getNewLocationIDs(oldLocationIDs){
         return new Promise(async (resolve, reject) => {
 
-            let newJobs = oldLocationIDs.map(oldLocationID => {
+            let newLocationIDPromises = oldLocationIDs.map(oldLocationID => {
                 return new Promise(async (resolveJob, rejectJob) => {
                     let mapping = await this.mappingsDb.getObject("stop-location-ID-mappings", {
-                        oldDocumentID: oldLocationID
+                        oldID: oldLocationID
                     });
-    
-                    let newDocumentID = mapping.newDocumentID;
-                    resolveJob(newDocumentID);
+                    let newLocationID = mapping.newID;
+                    resolveJob(newLocationID);
                 });
             });
 
-            let newLocationIDs = await Promise.all(newJobs);
+            let newLocationIDs = await Promise.all(newLocationIDPromises);
             resolve(newLocationIDs);
         });
     }
@@ -51,8 +50,8 @@ class StopLocationsMigrator{
                 let newScheduleID = newDocument.insertedId;
 
                 await this.mappingsDb.saveObjectToDatabase("schedule-ID-mappings", {
-                    oldDocumentID: oldSchedule._id,
-                    newDocumentID: newScheduleID
+                    oldID: oldSchedule._id,
+                    newID: newScheduleID
                 });
             }
 

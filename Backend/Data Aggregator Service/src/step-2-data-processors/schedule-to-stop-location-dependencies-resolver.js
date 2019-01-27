@@ -14,10 +14,18 @@ class ScheduleToStopLocationDependencyResolver {
 
                 let newLocationIDs = [];
                 for (let i = 0; i < locationIDs.length; i++){
-                    let oldLocationID = locationIDs[i];
-                    let location = await this.db.getObject("stop-locations", {"stopLocationID": oldLocationID});
-                    let newLocationID = location._id;
-                    newLocationIDs.push(newLocationID);
+                    let locationID = locationIDs[i];
+                    let location = await this.db.getObject("stop-locations", { "stopLocationID": locationID });
+                    if (location){
+                        let newLocationID = location._id;
+                        newLocationIDs.push(newLocationID);
+                    }
+                    else{
+                        console.log("ERROR WITH SCHEDULE ID: " + schedule._id);
+                        console.log("ERROR! Cannot find: " + locationID);
+                        console.log(JSON.stringify(locationIDs));
+                        newLocationIDs.push(location);
+                    }
                 }
 
                 await this.db.updateObject("schedules", 

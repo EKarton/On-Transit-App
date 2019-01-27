@@ -28,8 +28,8 @@ class StopLocationsMigrator{
                 let newStopLocationID = newDocument.insertedId;
 
                 await this.mappingsDb.saveObjectToDatabase("stop-location-ID-mappings", {
-                    oldDocumentID: oldStopLocation._id,
-                    newDocumentID: newStopLocationID
+                    oldID: oldStopLocation.stopLocationID,
+                    newID: newStopLocationID
                 });
             }
             resolve();

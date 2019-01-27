@@ -1,6 +1,6 @@
 const Database = require("on-transit").Database;
 const Config = require("../res/config");
-const TripToScheduleDependencyResolver = require("./trip-to-schedule-dependencies-resolver");
+const TripToScheduleDependencyResolver = require("./schedule-to-trip-dependencies-resolver");
 const TripToPathDependencyResolver = require("./trip-to-path-dependencies-resolver");
 const ScheduleToStopLocationDependencyResolver = require("./schedule-to-stop-location-dependencies-resolver");
 
@@ -28,14 +28,14 @@ module.exports = function(){
             let resolver2 = new TripToPathDependencyResolver(db2);
             let resolver3 = new ScheduleToStopLocationDependencyResolver(db3);
 
-            await resolver1.processData();
-            console.log("Finished mapping trips to schedules");
+            await resolver3.processData();
+            console.log("Finished updating stop location IDs in schedules");
 
             await resolver2.processData();
             console.log("Finished updating path IDs of trips");
 
-            await resolver3.processData();
-            console.log("Finished updating stop location IDs in schedules");
+            await resolver1.processData();
+            console.log("Finished mapping trips to schedules");
 
             await closeConnections();
             resolve();

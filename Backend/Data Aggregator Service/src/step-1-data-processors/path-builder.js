@@ -12,14 +12,6 @@ class PathBuilder{
         this.newDb = newDb;
     }
 
-    computeCoordinatesHash(coordinates){
-        var hash = "";
-        for (let i = 0; i < coordinates.length; i++){
-            hash += "(" + coordinates[i].latitude + "," + coordinates[i].longitude + ")"
-        }
-        return hash;
-    }
-
     async getPath(trip){
 
         // Collect all the path locations with the same shape ID
@@ -73,10 +65,8 @@ class PathBuilder{
                 let existingTree = await this.newDb.getObject("paths", { "pathID": shapeID });
                 if (!existingTree){
                     let coordinates = await this.getPath(rawTrip);
-                    let pathHash = this.computeCoordinatesHash(coordinates);
                     let pathLocation = {
                         pathID: rawTrip.shapeID,
-                        hash: pathHash,
                         location: {
                             type: "LineString",
                             coordinates: coordinates

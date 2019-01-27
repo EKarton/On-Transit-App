@@ -1,6 +1,6 @@
 const Database = require("on-transit").Database;
 const Config = require("../res/config");
-const ScheduleCombiner = require("./schedules-combiner");
+const ScheduleCombiner = require("./trip-schedules-builder");
 
 var db1 = null;
 var db2 = null;

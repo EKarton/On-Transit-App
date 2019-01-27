@@ -1,7 +1,7 @@
 const Database = require("on-transit").Database;
 const RouteTripsCombiner = require("./route-trips-combiner");
 const PathBuilder = require("./path-builder");
-const TripScheduleBuilder = require("./trip-schedule-builder");
+const TripScheduleBuilder = require("./schedule-builder");
 const StopLocationsCopier = require("./stop-locations-copier");
 const Config = require("../res/config");
 
@@ -45,6 +45,7 @@ module.exports = function(){
 
             // Create indexes in the new collections
             await newDbs[0].getInstance().collection("trips").createIndex({ tripID: 1 });
+            await newDbs[0].getInstance().collection("trips").createIndex({ pathID: 1 });
             await newDbs[0].getInstance().collection("paths").createIndex({ pathID: 1 });
             await newDbs[0].getInstance().collection("schedules").createIndex({ tripID: 1 });
             await newDbs[0].getInstance().collection("stop-locations").createIndex({ stopLocationID: 1 });

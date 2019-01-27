@@ -13,28 +13,25 @@ class TripsMigrator{
     }
 
     async getNewPathID(oldPathID){
-        console.log(oldPathID);
         let mapping = await this.mappingsDb.getObject("path-ID-mappings", {
-            oldDocumentID: oldPathID
+            oldID: oldPathID
         });
-        console.log(mapping);
-        return mapping.newDocumentID;
+        return mapping.newID;
     }
 
-    async getNewTripSchedules(oldTripSchedules){
+    async getNewTripSchedules(oldSchedules){
 
-        let jobs = oldTripSchedules.map(oldDocumentID => {
+        let newSchedulePromises = oldSchedules.map(oldSchedule => {
             return new Promise(async (resolveJob, rejectJob) => {
                 let mapping = await this.mappingsDb.getObject("schedule-ID-mappings", {
-                    oldDocumentID: oldDocumentID
+                    oldID: oldSchedule
                 });
-                let newDocumentID = mapping.newDocumentID;
-
-                resolveJob(newDocumentID);
+                let newID = mapping.newID;
+                resolveJob(newID);
             });
         });
 
-        return await Promise.all(jobs);
+        return await Promise.all(newSchedulePromises);
     }
 
     processData(){
@@ -44,7 +41,7 @@ class TripsMigrator{
                 let oldTripObj = await oldTripsCursor.next();
 
                 let newPathID = await this.getNewPathID(oldTripObj.pathID);
-                let newTripSchedules = await this.getNewTripSchedules(oldTripObj.tripSchedules);
+                let newTripSchedules = await this.getNewTripSchedules(oldTripObj.schedules);
 
                 let newTripObj = {
                     shortName: oldTripObj.shortName,
@@ -59,8 +56,8 @@ class TripsMigrator{
                 let newDocumentID = newDocument.insertedId;
 
                 await this.mappingsDb.saveObjectToDatabase("trip-ID-mappings", {
-                    oldDocumentID: oldTripObj._id,
-                    newDocumentID: newDocumentID
+                    oldID: oldTripObj.tripID,
+                    newID: newDocumentID
                 });
             }
             resolve();

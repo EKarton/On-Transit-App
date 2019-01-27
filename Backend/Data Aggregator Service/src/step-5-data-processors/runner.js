@@ -27,6 +27,8 @@ var setupDatabases = () => {
 };
 
 var executeStage1 = async () => {
+    console.log("Executing Stage 1");
+
     let stage1Jobs = [];
 
     // Migrate the paths
@@ -42,22 +44,32 @@ var executeStage1 = async () => {
     stage1Jobs.push(stage1B.processData());
     
     await Promise.all(stage1Jobs);
+
+    console.log("Completed Stage 1");
 }
 
 var executeStage2 = async () => {
+    console.log("Executing Stage 2");
+
     // Migrate the schedules
     await oldDbs[2].connectToDatabase(Config.MONGODB_URL, Config.PROCESSED_STEP_2_DATABASE_NAME);
     await newDbs[2].connectToDatabase(Config.PROD_DATABASE_URL, Config.PROD_DATABASE_NAME); 
     let migrator3 = new SchedulesMigrator(oldDbs[2], newDbs[2], mappingsDb);
     await migrator3.processData();
+
+    console.log("Completed Stage 2");
 };
 
 var executeStage3 = async () => {
+    console.log("Executing Stage 3");
+
     // Migrate the trips
     await oldDbs[3].connectToDatabase(Config.MONGODB_URL, Config.PROCESSED_STEP_3_DATABASE_NAME);
     await newDbs[3].connectToDatabase(Config.PROD_DATABASE_URL, Config.PROD_DATABASE_NAME); 
     let migrator4 = new TripsMigrator(oldDbs[3], newDbs[3], mappingsDb);
     await migrator4.processData();
+
+    console.log("Completed Stage 3");
 };
 
 
@@ -69,8 +81,18 @@ module.exports = async function(){
         // Create a DB used to contain the mappings from old IDs to new IDs
         await mappingsDb.connectToDatabase(Config.MONGODB_URL, Config.PROCESSED_STEP_3_DATABASE_NAME);
 
-        // await executeStage1();
-        // await executeStage2();
+        // Create the various collections and index them
+        await mappingsDb.createCollectionInDatabase("stop-location-ID-mappings");
+        await mappingsDb.createCollectionInDatabase("trip-ID-mappings");
+        await mappingsDb.createCollectionInDatabase("schedule-ID-mappings");
+        await mappingsDb.createCollectionInDatabase("path-ID-mappings");
+        await mappingsDb.getInstance().collection("stop-location-ID-mappings").createIndex({ "oldID": 1 });
+        await mappingsDb.getInstance().collection("trip-ID-mappings").createIndex({ "oldID": 1 });
+        await mappingsDb.getInstance().collection("schedule-ID-mappings").createIndex({ "oldID": 1 });
+        await mappingsDb.getInstance().collection("path-ID-mappings").createIndex({ "oldID": 1 });
+
+        await executeStage1();
+        await executeStage2();
         await executeStage3();
 
         closeConnections();
