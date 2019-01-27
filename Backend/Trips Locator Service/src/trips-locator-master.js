@@ -89,7 +89,7 @@ class TripsLocatorMaster{
         // Handle the result if successful
         if (status == 0){
             // Delete the job object
-            delete this.jobIDToInstance[jobID];
+            //delete this.jobIDToInstance[jobID];
 
             // Save the results
             var jobBatch = this.jobsBatchIDToInstance[jobBatchID];
@@ -102,27 +102,10 @@ class TripsLocatorMaster{
             Config.IS_LOGGING && console.log("Master: Num jobs vs num jobs completed: " + jobBatch.numJobs + " " + jobBatch.numJobsCompleted);
 
             // Alert the caller once the jobs are all completed in the job batch
-            if (jobBatch.numJobs == jobBatch.numJobsCompleted){
+            if (jobsBatch.isReady && jobBatch.numJobs == jobBatch.numJobsCompleted){
                 Config.IS_LOGGING && console.log("Master: Job Batch " + jobBatchID + " has been completed!");
-                jobBatch.resolve(jobBatch.tripIDs);
+                this.finishJobsBatch(jobBatch.jobBatchID);
             }
-        }
-        // Put the job back into the job queue
-        else{
-            Config.IS_LOGGING && console.log("Master: Process " + workerPID + " has failed to finish job " + jobID);
-            this.readyJobIDs.push(jobID);
-        }
-
-        // Grab the next job (if there exists one)
-        if (this.readyJobIDs.length > 0){
-            var nextJobID = this.readyJobIDs.pop();
-            var nextJobObject = this.jobIDToInstance[nextJobID];   
-
-            Config.IS_LOGGING && console.log("Master: Sending process " + workerPID + " new job: " + nextJobID);
-            worker.send(nextJobObject);
-        }
-        else{
-            this.idleWorkersPid.push(workerPID);
         }
     }
 
@@ -150,9 +133,9 @@ class TripsLocatorMaster{
         this.jobsBatchIDToInstance[batchID] = jobsBatch;
     }
 
-    removeJobsBatch(jobBatchID){
+    finishJobsBatch(jobBatchID){
         let jobsBatch = this.jobsBatchIDToInstance[jobBatchID];
-        jobsBatch.resolve({});
+        jobsBatch.resolve(jobsBatch.tripIDs);
         delete this.jobsBatchIDToInstance[jobBatchID];
     }
 
@@ -167,6 +150,7 @@ class TripsLocatorMaster{
 
         // Create a new jobs batch
         var jobsBatch = new JobsBatch(0, resolve, reject);
+        jobsBatch.isReady = false;
         this.addJobsBatch(jobsBatch);
 
         // Get and add the jobs to the job queue
@@ -178,7 +162,7 @@ class TripsLocatorMaster{
         Config.IS_LOGGING && console.log("Finished getting schedules!");
 
         if (!cursor.hasNext()){
-            this.removeJobsBatch(jobsBatch.jobBatchID);
+            this.finishJobsBatch(jobsBatch.jobBatchID);
         }
 
         cursor.forEach((schedule) => {
@@ -189,6 +173,13 @@ class TripsLocatorMaster{
             var newJob = new Job(jobsBatch.jobBatchID, location, time, stopSchedules, scheduleID);
             jobsBatch.numJobs ++;
             this.addJob(newJob);
+        }, (error) => {
+            jobsBatch.isReady = true;
+
+            if (jobsBatch.numJobs == jobsBatch.numJobsCompleted){
+                Config.IS_LOGGING && console.log("Master: Job Batch " + jobsBatch.jobBatchID + " has been completed!");
+                this.finishJobsBatch(jobsBatch.jobBatchID);
+            }
         });
     }
 

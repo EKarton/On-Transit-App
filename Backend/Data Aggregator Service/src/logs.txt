@@ -1,0 +1,82 @@
+
+> data-aggregator@1.0.0 start /home/kartonoe/Documents/Code/Projects/On-Transit-App/Backend/Data Aggregator Service/src
+> node app.js
+
+== Starting Raw Data Collection ==
+== Finished Raw Data Collection ==
+== Starting Step 1 Data Processors ==
+== Finished Step 1 Data Processors ==
+== Starting Step 2 Data Processors ==
+== Finished Step 2 Data Processors ==
+== Starting Step 3 Data Processors ==
+== Finished Step 3 Data Processors ==
+== Starting Step 4 Data Processors ==
+== Finished Step 4 Data Processors ==
+== Starting Step 5 Data Processors ==
+Connected to database!
+Connected to database!
+Connected to database!
+5c4cdecea4940115da087b89
+{ _id: 5c4cf8fd763f583672ccf6aa,
+  oldDocumentID: 5c4cdecea4940115da087b89,
+  newDocumentID: 5c4cf8fd763f583672ccf6a9 }
+5c4cdecda4940115da08788a
+{ _id: 5c4cf8fd763f583672ccf6a4,
+  oldDocumentID: 5c4cdecda4940115da08788a,
+  newDocumentID: 5c4cf8fd763f583672ccf6a3 }
+5c4cdec5a4940115da0864c0
+{ _id: 5c4cf8fd763f583672ccf694,
+  oldDocumentID: 5c4cdec5a4940115da0864c0,
+  newDocumentID: 5c4cf8fd763f583672ccf693 }
+5c4cdec6a4940115da08661c
+{ _id: 5c4cf8fd763f583672ccf6a0,
+  oldDocumentID: 5c4cdec6a4940115da08661c,
+  newDocumentID: 5c4cf8fd763f583672ccf69f }
+5c4cdec6a4940115da0865dd
+{ _id: 5c4cf8fd763f583672ccf69a,
+  oldDocumentID: 5c4cdec6a4940115da0865dd,
+  newDocumentID: 5c4cf8fd763f583672ccf699 }
+5c4cdec5a4940115da08646e
+{ _id: 5c4cf8fd763f583672ccf68c,
+  oldDocumentID: 5c4cdec5a4940115da08646e,
+  newDocumentID: 5c4cf8fd763f583672ccf68b }
+5c4cdec5a4940115da086492
+{ _id: 5c4cf8fd763f583672ccf690,
+  oldDocumentID: 5c4cdec5a4940115da086492,
+  newDocumentID: 5c4cf8fd763f583672ccf68f }
+5c4cdec3a4940115da085f3d
+{ _id: 5c4cf8fd763f583672ccf688,
+  oldDocumentID: 5c4cdec3a4940115da085f3d,
+  newDocumentID: 5c4cf8fd763f583672ccf687 }
+5c4cdec4a4940115da086042
+{ _id: 5c4cf8fd763f583672ccf68a,
+  oldDocumentID: 5c4cdec4a4940115da086042,
+  newDocumentID: 5c4cf8fd763f583672ccf689 }
+5c4cdec2a4940115da085b5f
+{ _id: 5c4cf8fd763f583672ccf682,
+  oldDocumentID: 5c4cdec2a4940115da085b5f,
+  newDocumentID: 5c4cf8fd763f583672ccf681 }
+5c4cdec1a4940115da085a48
+{ _id: 5c4cf8fd763f583672ccf67c,
+  oldDocumentID: 5c4cdec1a4940115da085a48,
+  newDocumentID: 5c4cf8fd763f583672ccf67b }
+5c4cdec1a4940115da085a1a
+{ _id: 5c4cf8fd763f583672ccf678,
+  oldDocumentID: 5c4cdec1a4940115da085a1a,
+  newDocumentID: 5c4cf8fd763f583672ccf677 }
+5c4cdec3a4940115da085f25
+{ _id: 5c4cf8fd763f583672ccf684,
+  oldDocumentID: 5c4cdec3a4940115da085f25,
+  newDocumentID: 5c4cf8fd763f583672ccf683 }
+5c4cdec1a4940115da085913
+null
+Database connection already closed
+Database connection already closed
+Database connection already closed
+Database connection already closed
+Database connection already closed
+Database connection already closed
+Database successfully closed connection
+Database successfully closed connection
+Database successfully closed connection
+Database connection already closed

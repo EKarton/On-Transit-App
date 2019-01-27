@@ -32,16 +32,19 @@ class RawDataCollector{
     clearFolder(){
         return new Promise((resolve, reject) => {
             fs.readdir(this.downloadFolder, (error, files) => {
-                if (error)
+                if (error){
                     reject(error);
-                
-                files.forEach(file => {
-                    var dirPath = path.join(this.downloadFolder, file);
-                    fs.unlink(dirPath, error => {
-                        if (error)
-                            reject(error);
+                }
+
+                if (files){              
+                    files.forEach(file => {
+                        var dirPath = path.join(this.downloadFolder, file);
+                        fs.unlink(dirPath, error => {
+                            if (error)
+                                reject(error);
+                        });
                     });
-                });
+                }
                 resolve();
             });
         });
@@ -76,7 +79,7 @@ class RawDataCollector{
                 .on("finish", () => {
                     
                     // Extract the ZIP file
-                    console.log("finished downloading");
+                    console.log("Finished downloading");
                     var zip = new AdmZip(this.downloadFolder + "/master.zip");
                     zip.extractAllToAsync(this.downloadFolder, true, error => {
                         if (error){
@@ -96,14 +99,14 @@ class RawDataCollector{
             var fileStream = fs.createReadStream(this.downloadFolder + "/trips.txt");
             CSV.fromStream(fileStream, { headers: true } )
                 .on("data", async rawTripData => {
-                    var tripID = rawTripData.trip_id;
-                    var shapeID = rawTripData.shape_id;
-                    var routeID = rawTripData.route_id;
-                    var headSign = rawTripData.trip_headsign;
-                    var tripShortName = rawTripData.trip_short_name;
+                    var tripID = rawTripData.trip_id.trim();
+                    var shapeID = rawTripData.shape_id.trim();
+                    var routeID = rawTripData.route_id.trim();
+                    var headSign = rawTripData.trip_headsign.trim();
+                    var tripShortName = rawTripData.trip_short_name.trim();
                     
                     var databaseObject = {
-                        _id: tripID,
+                        tripID: tripID,
                         shapeID: shapeID,
                         routeID: routeID,
                         headSign: headSign,
@@ -132,7 +135,7 @@ class RawDataCollector{
                     var type = rawRouteData.route_type;
 
                     var databaseObject = {
-                        _id: routeID,
+                        routeID: routeID,
                         shortName: shortName,
                         longName: longName,
                         type: type 
@@ -184,14 +187,14 @@ class RawDataCollector{
             var fileStream = fs.createReadStream(this.downloadFolder + "/stops.txt");
             CSV.fromStream(fileStream, { headers: true } )
                 .on("data", async rawStopLocation => {
-                    var stopLocationID = rawStopLocation.stop_id;
-                    var name = rawStopLocation.stop_name;
-                    var description = rawStopLocation.stop_desc;
+                    var stopLocationID = rawStopLocation.stop_id.trim();
+                    var name = rawStopLocation.stop_name.trim();
+                    var description = rawStopLocation.stop_desc.trim();
                     var latitude = parseFloat(rawStopLocation.stop_lat.trim());
                     var longitude = parseFloat(rawStopLocation.stop_lon.trim());
 
                     var databaseObject = {
-                        _id: stopLocationID,
+                        stopLocationID: stopLocationID,
                         name: name,
                         description: description,
                         latitude: latitude,
@@ -215,12 +218,12 @@ class RawDataCollector{
             var fileStream = fs.createReadStream(this.downloadFolder + "/stop_times.txt");
             CSV.fromStream(fileStream, { headers: true } )
                 .on("data", async rawStopTimesData => {
-                    var tripID = rawStopTimesData.trip_id;
-                    var stopLocationID = rawStopTimesData.stop_id;
+                    var tripID = rawStopTimesData.trip_id.trim();
+                    var stopLocationID = rawStopTimesData.stop_id.trim();
                     var arrivalTime = rawStopTimesData.arrival_time;
                     var departTime = rawStopTimesData.departure_time;
                     var sequence = parseInt(rawStopTimesData.stop_sequence.trim());
-                    var headsign = rawStopTimesData.stop_headsign;
+                    var headsign = rawStopTimesData.stop_headsign.trim();
 
                     var convertedArrivalTime = this._convertTimeToInteger(arrivalTime);
                     var convertedDepartTime = this._convertTimeToInteger(departTime);

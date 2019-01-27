@@ -31,7 +31,7 @@ class Database{
 
             this._cache = {};
 
-            MongoClient.connect(mongoDbUrl, {poolSize: 100}, (error, db) => {
+            MongoClient.connect(mongoDbUrl, {poolSize: 10}, (error, db) => {
                 if (error){
                     console.log("Failed to connect to database!");
                     console.log(error);
@@ -48,6 +48,10 @@ class Database{
         });
     }
 
+    getInstance(){
+        return this._dbo;
+    }
+
     createCollectionInDatabase(collectionName){
         return new Promise((resolve, reject) => {
             this._dbo.createCollection(collectionName, (error, response) => {
@@ -61,34 +65,45 @@ class Database{
 
     saveArrayToDatabase(collectionName, objects){
         return new Promise((resolve, reject) => {
-            this._dbo.collection(collectionName).insertMany(objects, (error, response) => {
+            this._dbo.collection(collectionName).insertMany(objects, (error, documentInserted) => {
                 if (error)
                     reject(error);
-                resolve();
+                resolve(documentInserted);
             });
         });   
     }
 
     saveObjectToDatabase(collectionName, object){
         return new Promise((resolve, reject) => {
-            this._dbo.collection(collectionName).insertOne(object, (error, response) => {
+            this._dbo.collection(collectionName).insertOne(object, (error, documentInserted) => {
                 if (error)
                     reject(error);
-                resolve();
+                resolve(documentInserted);
             });
         });
     }
 
     updateObject(collectionName, query, newValues){
         return new Promise((resolve, reject) => {
-            this._dbo.collection(collectionName).updateOne(query, newValues, (error, response) => {
-                if (error){
-                    reject(error);
-                }
-                else{
-                    resolve();
-                }
-            });
+            try{
+            	this._dbo.collection(collectionName).updateOne(query, newValues);
+            	resolve();
+        	}
+        	catch(error){
+        		reject(error);
+        	}
+        });
+    }
+
+    updateObjects(collectionName, query, newValues){
+    	return new Promise((resolve, reject) => {
+    		try{
+            	this._dbo.collection(collectionName).updateMany(query, newValues);
+            	resolve();
+        	}
+        	catch(error){
+        		reject(error);
+        	}
         });
     }
 
@@ -149,6 +164,34 @@ class Database{
         //     };
         //     resolve(safeCursor);
         // });
+    }
+
+    getAggregatedObjects(collectionName, aggregationQuery){
+        return this._dbo.collection(collectionName)
+            .aggregate(aggregationQuery)
+            .batchSize(500);
+    }
+
+    removeObject(collectionName, query){
+    	return new Promise((resolve, reject) => {
+    		this._dbo.collection(collectionName).deleteOne(query, (error, object) => {
+    			if (error){
+    				reject(error);
+    			}
+    			resolve(object);
+    		});
+    	});
+    }
+
+    removeObjects(collectionName, query){
+    	return new Promise((resolve, reject) => {
+    		this._dbo.collection(collectionName).deleteMany(query, (error, object) => {
+    			if (error){
+    				reject(error);
+    			}
+    			resolve(object);
+    		});
+    	});
     }
 
     closeDatabase(){
