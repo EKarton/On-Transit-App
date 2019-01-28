@@ -1,14 +1,8 @@
-"use strict";
-
-const Processes = require("child_process");
-const OS = require("os");
 const Database = require("on-transit").Database;
 const Location = require("on-transit").Location;
-const Job = require("./job");
-const JobsBatch = require("./jobs-batch");
 const Config = require("./res/config");
 
-class TripsLocatorMaster{
+class TripsLocatorMasterV3 {
 
     /**
      * Initializes the Trips Locator with the database
@@ -16,170 +10,166 @@ class TripsLocatorMaster{
      */
     constructor(database){
         this.database = database;
-
-        this.workers = {};
-        this.idleWorkersPid = [];
-        this.numWorkers = OS.cpus().length;
-
-        this.readyJobIDs = [];
-
-        // The key is the job batch ID / job ID and the value 
-        // is the job batch object / job object
-        this.jobsBatchIDToInstance = {};
-        this.jobIDToInstance = {};
-
-        for (let i = 0; i < this.numWorkers; i++){
-            this.createWorker();
-        }
     }
 
     /**
-     * Creates a worker and adds its PID to this.idleWorkersPid[]
-     */
-    createWorker(){
-        var databaseUrl = this.database.databaseUrl;
-        var databaseName = this.database.databaseName;
-        var newWorker = Processes.fork(
-            "trips-locator-worker.js", 
-            [databaseUrl, databaseName]
-        );
-
-        var newWorkerPID = newWorker.pid;
-        this.workers[newWorkerPID] = newWorker;
-        this.idleWorkersPid.push(newWorkerPID);
-
-        Config.IS_LOGGING && console.log("Created new worker: " + newWorkerPID);
-
-        // An event when the worker is messaging back to the parent
-        newWorker.on("message", (message) => {
-            this.onHandleJobCompletion(message);
-        });
-    }
-
-    /**
-     * Handles an event when a worker sends a message.
-     * The message object needs to be in this format:
-     * {
-     *    pid: <WORKER_PID>,
-     *    jobExitCode: <EXIT_CODE>
-     *    payload: <PAYLOAD_OBJ>
-     * }
+     * Get the most recent stop visited in a trip based on the current time.
+     * The times[] contains the times which the bus / train will visit each stop,
+     * where it has the format:
+     * [ [A1, D1], [A2, D2], ..., [An, Dn] ]
      * 
-     * Note that if jobExitCode is 0, <PAYLOAD_OBJ> needs to be in the 
-     * following format:
-     * {
-     *    jobID: <JOB_ID>,
-     *    jobBatchID: <JOB_BATCH_ID>,
-     *    tripIDs: <LIST_OF_TRIP_IDS_FROM_DATABASE>
-     * }
+     * where [Ai, Di] contains the arrival time 'Ai' and the departure time 'Di'
+     * for stop 'i'.
      * 
-     * @param {Object} message The message object as described above
+     * It will return the index to a stop (in the case above, it could be 'i').
+     * 
+     * @param {Integer[][]} times The stop times for the trip
+     * @param {Integer} curTime The current time
+     * @returns {Integer} Index to the most recently visited stop.
      */
-    onHandleJobCompletion(message){
-        var workerPID = message.pid;
-        var worker = this.workers[workerPID];
-        var status = message.jobExitCode;
+    getRecentStopsVisitedByTime(times, curTime){
+        let possibleStop = -1;
+        for (let i = 0; i < times.length - 1; i++){
+            let stopA = times[i];
+            let stopB = times[i + 1];
 
-        var jobID = message.payload.jobID;
-        var jobBatchID = message.payload.jobBatchID;
-        var tripIDs = message.payload.tripIDs;
-
-        Config.IS_LOGGING && console.log("Master: Process " + workerPID + " has finished with: " + JSON.stringify(message));
-
-        // Handle the result if successful
-        if (status == 0){
-            // Delete the job object
-            //delete this.jobIDToInstance[jobID];
-
-            // Save the results
-            var jobBatch = this.jobsBatchIDToInstance[jobBatchID];
-            jobBatch.tripIDs = {
-                ...jobBatch.tripIDs,
-                ...tripIDs
-            };
-            jobBatch.numJobsCompleted = jobBatch.numJobsCompleted + 1;
-
-            Config.IS_LOGGING && console.log("Master: Num jobs vs num jobs completed: " + jobBatch.numJobs + " " + jobBatch.numJobsCompleted);
-
-            // Alert the caller once the jobs are all completed in the job batch
-            if (jobsBatch.isReady && jobBatch.numJobs == jobBatch.numJobsCompleted){
-                Config.IS_LOGGING && console.log("Master: Job Batch " + jobBatchID + " has been completed!");
-                this.finishJobsBatch(jobBatch.jobBatchID);
-            }
+            if (stopA[1] <= curTime && curTime <= stopB[0]){
+                possibleStop = i;
+                break;
+            } 
         }
+        return possibleStop;
     }
 
     /**
-     * Adds a new job to the jobs queue
-     * @param {Job} job A new job 
-     */
-    addJob(job){
-        this.jobIDToInstance[job.jobID] = job;
-
-        var idlingWorkerPid = this.idleWorkersPid.pop();
-        var idlingWorker = this.workers[idlingWorkerPid];
-
-        Config.IS_LOGGING && console.log("Adding new job to idling worker " + idlingWorkerPid + ": " + job.jobID);
-        idlingWorker.send(job);
-        this.idleWorkersPid.unshift(idlingWorkerPid);
-    }
-
-    /**
-     * Adds a new jobs batch to the list
-     * @param {JobsBatch} jobsBatch A new jobs batch
-     */
-    addJobsBatch(jobsBatch){
-        var batchID = jobsBatch.jobBatchID;
-        this.jobsBatchIDToInstance[batchID] = jobsBatch;
-    }
-
-    finishJobsBatch(jobBatchID){
-        let jobsBatch = this.jobsBatchIDToInstance[jobBatchID];
-        jobsBatch.resolve(jobsBatch.tripIDs);
-        delete this.jobsBatchIDToInstance[jobBatchID];
-    }
-
-    /**
-     * Handles a new request by calculating and running its jobs.
+     * Determines a set of stops that the user might most recently visit based on the user's location.
+     * The 'locationIDs' must be in the format:
+     * [ S1, S2, ..., Sn ]
+     * 
+     * where S1 is the stop location ID for the first stop, S2 is the stop location ID for the second
+     * stop, ..., Sn is the stop location ID for the last stop.
+     * 
+     * It will return a set of indexes to locationIDs[] that could be the most recently visited stop
+     * 
+     * @param {String[]} locationIDs A list of stop location IDs
      * @param {Location} location The current location
-     * @param {int} time The time ellapsed from midnight
-     * @param {Function} resolve A function used to return back to the client.
-     * @param {Function} reject A function that is used to return back to the client
+     * @returns {Set} The stop locations
      */
-    async handleNewRequest(location, time, resolve, reject){
+    getRecentStopsVisitedByLocation(locationIDs, location){
+        return new Promise(async (resolve, reject) => {
 
-        // Create a new jobs batch
-        var jobsBatch = new JobsBatch(0, resolve, reject);
-        jobsBatch.isReady = false;
-        this.addJobsBatch(jobsBatch);
+            let jobs = [];
+            for (let i = 0; i < locationIDs.length - 1; i++){
+                let newJob = new Promise(async (resolveJob, rejectJob) => {
+                    let locationID_1 = locationIDs[i];
+                    let locationID_2 = locationIDs[i + 1];
+                    
+                    let request1 = this.database.getObject("stop-locations", { "_id": locationID_1 });
+                    let request2 = this.database.getObject("stop-locations", { "_id": locationID_2 });
+                    let locations = await Promise.all([request1, request2]);
 
-        // Get and add the jobs to the job queue
-        Config.IS_LOGGING && console.log("Getting schedules");
-        var cursor = this.database.getObjects("schedules", {
-            startTime: { $lte: time },
-            endTime: { $gte: time }
-        });
-        Config.IS_LOGGING && console.log("Finished getting schedules!");
+                    let location_1 = locations[0];
+                    let location_2 = locations[1];
 
-        if (!cursor.hasNext()){
-            this.finishJobsBatch(jobsBatch.jobBatchID);
-        }
+                    let dx = location_1.longitude - location_2.longitude;
+                    let dy = location_1.latitude - location_2.latitude;
+                    let lengthOfLineSquared = (dx * dx + dy * dy);
+                    let innerProduct = (location.longitude - location_2.longitude) * dx + 
+                                       (location.latitude - location_2.latitude) * dy;
+                    
+                    let isProjectionInLine = 0 <= innerProduct && innerProduct <= lengthOfLineSquared;
 
-        cursor.forEach((schedule) => {
-            Config.IS_LOGGING && console.log("Finished getting schedule");
-            var stopSchedules = schedule.stopSchedules;
-            var scheduleID = schedule._id;    
-
-            var newJob = new Job(jobsBatch.jobBatchID, location, time, stopSchedules, scheduleID);
-            jobsBatch.numJobs ++;
-            this.addJob(newJob);
-        }, (error) => {
-            jobsBatch.isReady = true;
-
-            if (jobsBatch.numJobs == jobsBatch.numJobsCompleted){
-                Config.IS_LOGGING && console.log("Master: Job Batch " + jobsBatch.jobBatchID + " has been completed!");
-                this.finishJobsBatch(jobsBatch.jobBatchID);
+                    if (isProjectionInLine){
+                        resolveJob(i);
+                    }
+                    else{
+                        resolveJob(null);
+                    }
+                });
+                jobs.push(newJob);
             }
+            let possibleStops = await Promise.all(jobs);
+            possibleStops = possibleStops.filter(a => a !== null);
+            let possibleStopsSet = new Set(possibleStops);
+            resolve(possibleStopsSet);
+        });
+    }
+
+    /**
+     * Get a subset from the list of possible schedules the user might be on based on
+     * the user's location and current time.
+     * 
+     * It will return a subset of the 'schedules' list as a set. 
+     * @param {String[]} schedules A list of possible schedules
+     * @param {Integer} time The time in seconds from midnight
+     * @param {Location} location The location
+     * @returns {Set} A set of schedules the user might be in.
+     */
+    getPossibleSchedules(tripScheduleIDs, time, location){
+        return new Promise(async (resolve, reject) => {
+
+            let possibleSchedules = new Set();
+            let schedulesAggregatorCursor = await this.database.getAggregatedObjects("schedules", [
+                {
+                    $match: {
+                        $and: [
+                            { _id: { $in: tripScheduleIDs } },
+                            { startTime: { $lte: time } },
+                            { endTime: { $gte: time } } 
+                        ]
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            "headsigns": "$headsigns",
+                            "locationIDs": "$locationIDs"
+                        },
+                        times: { $push: "$times" },
+                        scheduleIDs: { $push: "$_id" }
+                    }
+                }
+            ]);
+            while (await schedulesAggregatorCursor.hasNext()){
+                let aggregatedSchedule = await schedulesAggregatorCursor.next();
+
+                // console.log(" ====================== AGGREGATED SCHEDULE ==============================");
+                // console.log(JSON.stringify(aggregatedSchedule));
+
+                let times = aggregatedSchedule.times;
+                let locationIDs = aggregatedSchedule._id.locationIDs;
+                let scheduleIDs = aggregatedSchedule.scheduleIDs;
+
+                let stopRangesByLocation = await this.getRecentStopsVisitedByLocation(locationIDs, location);
+
+                // console.log("Recent stops visited by location");
+                // console.log(JSON.stringify(Array.from(stopRangesByLocation)));
+
+                // console.log("WASD:");
+                // console.log(await this.getStopRangesByTime(times, time));
+
+                for (let i = 0; i < times.length; i++){
+                    let tripSchedule = times[i];
+                    let tripScheduleID = scheduleIDs[i];
+                    let recentStopVisitedByTime = this.getRecentStopsVisitedByTime(tripSchedule, time);
+
+                    // console.log("Recent stops visited per schedule by time: " + recentStopVisitedByTime);
+
+                    if (recentStopVisitedByTime >= 0){
+                        if (stopRangesByLocation.has(recentStopVisitedByTime)){
+                            possibleSchedules.add(tripScheduleID);
+                        }
+                        else if (stopRangesByLocation.has(recentStopVisitedByTime - 1)){
+                            possibleSchedules.add(tripScheduleID);
+                        }
+                        else if (stopRangesByLocation.has(recentStopVisitedByTime + 1)){
+                            possibleSchedules.add(tripScheduleID);
+                        }
+                    }
+                }
+            }
+
+            resolve(possibleSchedules);
         });
     }
 
@@ -191,18 +181,58 @@ class TripsLocatorMaster{
      *  When successful, it will pass the found trip IDs to the .resolve(); 
      *  else it will pass the error to .reject().
      */
-    getTripIDsNearLocation(location, time){
-        var jobBatchPromise = new Promise(async (resolve, reject) => {
-            try{
-                this.handleNewRequest(location, time, resolve, reject);
+    getTripIDsNearLocation(location, time, radius){
+        return new Promise(async (resolve, reject) => {
+            let latitude = location.latitude;
+            let longitude = location.longitude;
+            // console.log("Current time:" + time);
+            // console.log("Location: " + JSON.stringify(location));
+
+            let responseObj = {};
+
+            let nearbyPathsCursor = await this.database.getObjects("paths", { 
+                location: { 
+                    $nearSphere: { 
+                        $geometry: { 
+                            type: "Point", 
+                            coordinates: [ longitude, latitude ] 
+                        }, 
+                        $maxDistance: radius 
+                    } 
+                } 
+            });
+
+            while (await nearbyPathsCursor.hasNext()){
+                let nearbyPath = await nearbyPathsCursor.next();
+                let pathID = nearbyPath._id;
+
+                let tripsCursor = await this.database.getObjects("trips", {
+                    "pathID": pathID
+                });
+                while (await tripsCursor.hasNext()){
+                    let trip = await tripsCursor.next();
+
+                    // console.log(" ============================ TRIP =================================");
+                    // console.log(JSON.stringify(trip));
+
+                    let schedules = trip.schedules;
+                    let possibleScheduleIDs = await this.getPossibleSchedules(schedules, time, location);
+
+                    if (possibleScheduleIDs.size > 0){
+
+                        responseObj[trip._id] = {
+                            shortname: trip.shortName,
+                            longname: trip.longName,
+                            headsign: trip.headSign,
+                            type: trip.type,
+                            schedules: Array.from(possibleScheduleIDs)
+                        }
+                    }
+                }
             }
-            catch(error){
-                Config.IS_LOGGING && console.log(error);
-                reject(error);
-            }
+            resolve(responseObj);
         });
-        return jobBatchPromise;
     }
 }
 
-module.exports = TripsLocatorMaster;
+module.exports = TripsLocatorMasterV3;

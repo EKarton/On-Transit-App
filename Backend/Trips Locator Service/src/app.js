@@ -3,7 +3,7 @@ const process = require("process");
 const Location = require("on-transit").Location;
 const Database = require("on-transit").Database;
 
-const TripsLocator = require("./trips-locator-master-v3");
+const TripsLocator = require("./trips-locator-master");
 
 const config = require("./res/config");
 const DATABASE_URI = config.DATABASE_URI;
@@ -33,6 +33,7 @@ class App{
             var latitude = parseFloat(request.query.lat);
             var longitude = parseFloat(request.query.long);
             var rawTime = request.query.time;
+            var radius = parseInt(request.query.radius);
 
              // Convert raw time to the number of seconds after midnight
             var timeSections = rawTime.split(":");
@@ -46,7 +47,7 @@ class App{
             var location = new Location(latitude, longitude);
             console.log("Current time: " + (new Date()));
             
-            tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight)
+            tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight, radius)
                 .then(tripIDs => {
                     var jsonResponse = {
                         status: "success",

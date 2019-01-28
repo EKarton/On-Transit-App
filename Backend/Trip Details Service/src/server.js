@@ -7,16 +7,15 @@ const app = require("./app");
 if (Cluster.isMaster){
 
     // Make N copies of the same app with N being the number of CPUs
-    // var numCPUs = OS.cpus().length;
-    let numCPUs = 1;
-    for (var i = 0; i < numCPUs; i++){
+    let numCPUs = OS.cpus().length;
+    for (let i = 0; i < numCPUs; i++){
         Cluster.fork();
     }
 
     // Fork the server again if it dies
     Cluster.on("exit", (worker) => {
         console.log("A worker has died! Relaunching app again!");
-        // Cluster.fork();
+        Cluster.fork();
     });
 }
 else{
