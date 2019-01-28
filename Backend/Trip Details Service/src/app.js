@@ -23,7 +23,7 @@ module.exports = async function(){
     var server_port = process.env.YOUR_PORT || process.env.PORT || config.DEFAULT_PORT;
     var server_host = process.env.YOUR_HOST || '0.0.0.0';
 
-    app.get("/api/v2/trips/:tripID/schedules/:scheduleID", (request, response) => {
+    app.get("/api/v1/trips/:tripID/schedules/:scheduleID", (request, response) => {
         let tripID = request.params.tripID;
         let scheduleID = request.params.scheduleID;
 
