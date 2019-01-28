@@ -28,9 +28,8 @@ module.exports = async function(){
         let tripID = request.params.tripID;
         let scheduleID = request.params.scheduleID;
 
-        console.log("Recieved request to get trip schedule details on ", tripID, " on process ", process.pid);
-        console.log("Trip ID:" + tripID);
-        console.log("Schedule ID: " + scheduleID);
+        console.log("Request to get nearby trips received by process ", process.pid);
+        console.log("Current time: " + (new Date()));
 
         tripDataService.getTripScheduleData(tripID, scheduleID)
             .then(tripScheduleData => {
@@ -42,6 +41,7 @@ module.exports = async function(){
 
                 response.setHeader('Content-Type', 'application/json');
                 response.status(200).json(jsonResponse);
+                console.log("Finish time: " + (new Date()));
             })
             .catch(error => {
                 let message = "";
@@ -55,7 +55,7 @@ module.exports = async function(){
                     statusCode = 401;
                 }
                 else{
-                    message = JSON.stringify(error);
+                    message = error.message;
                     statusCode = 500;
                 }
 

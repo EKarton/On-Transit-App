@@ -3,6 +3,7 @@
 const Database = require("on-transit").Database;
 const ObjectID = require('mongodb').ObjectID;
 const ErrorCodes = require("./constants").ERROR_CODES;
+const MongoDB_ErrorMessages = require("./constants").MONGODB_ERROR_MESSAGES;
 
 
 /**
@@ -31,16 +32,21 @@ class TripDataService{
      */
     getPathDetails(pathID){
         return new Promise(async (resolve, reject) => {
-            let path = await this.database.getObject("paths", { "_id": new ObjectID(pathID) });
-            let coordinates = path.location.coordinates;
-            let pathLocations = coordinates.map(coord => {
-                return {
-                    lat: coord[1],
-                    long: coord[0]
-                };
-            });
+            try {
+                let path = await this.database.getObject("paths", { "_id": new ObjectID(pathID) });
+                let coordinates = path.location.coordinates;
+                let pathLocations = coordinates.map(coord => {
+                    return {
+                        lat: coord[1],
+                        long: coord[0]
+                    };
+                });
 
-            resolve(pathLocations);
+                resolve(pathLocations);
+            }
+            catch(error) {
+                reject(error);
+            }
         });
     }
 
@@ -57,25 +63,33 @@ class TripDataService{
      */
     getTripDetails(tripID){
         return new Promise(async (resolve, reject) => {
-            let trip = await this.database.getObject("trips", { "_id": new ObjectID(tripID) });
-            if (trip === null){
-                reject(ErrorCodes.TRIP_NOT_FOUND);
+            try {
+                let trip = await this.database.getObject("trips", { "_id": new ObjectID(tripID) });
+                if (trip === null){
+                    reject(ErrorCodes.TRIP_NOT_FOUND);
+                }
+
+                let shortName = trip.shortName;
+                let longName = trip.longName;
+                let headSign = trip.headSign;
+                let type = trip.type;
+                let pathID = trip.pathID;
+
+                let tripObj = {
+                    shortName: shortName,
+                    longName: longName,
+                    headSign: headSign,
+                    type: type,
+                    pathID: pathID
+                };
+                resolve(tripObj);
             }
-
-            let shortName = trip.shortName;
-            let longName = trip.longName;
-            let headSign = trip.headSign;
-            let type = trip.type;
-            let pathID = trip.pathID;
-
-            let tripObj = {
-                shortName: shortName,
-                longName: longName,
-                headSign: headSign,
-                type: type,
-                pathID: pathID
-            };
-            resolve(tripObj);
+            catch(error) {
+                if (error.message === MongoDB_ErrorMessages.OBJECT_ID_ERROR){
+                    reject(ErrorCodes.TRIP_NOT_FOUND);
+                }
+                reject(error);
+            }
         });
     }
 
@@ -96,39 +110,47 @@ class TripDataService{
      */
     getScheduleDetails(scheduleID){
         return new Promise(async (resolve, reject) => {
-            let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
-            if (schedule === null){
-                reject(ErrorCodes.SCHEDULE_NOT_FOUND);
-            }
+            try {
+                let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
+                if (schedule === null){
+                    reject(ErrorCodes.SCHEDULE_NOT_FOUND);
+                }
 
-            let times = schedule.times;
-            let headsigns = schedule.headsigns;
-            let locationIDs = schedule.locationIDs;
+                let times = schedule.times;
+                let headsigns = schedule.headsigns;
+                let locationIDs = schedule.locationIDs;
 
-            let locationPromises = locationIDs.map((locationID, index) => {
-                return new Promise(async (resolveJob, rejectJob) => {
-                    let stopLocation = await this.database.getObject("stop-locations", { "_id": new ObjectID(locationID) });
-                    let latitude = stopLocation.latitude;
-                    let longitude = stopLocation.longitude;
-                    let description = stopLocation.description;
-                    let name = stopLocation.name;
+                let locationPromises = locationIDs.map((locationID, index) => {
+                    return new Promise(async (resolveJob, rejectJob) => {
+                        let stopLocation = await this.database.getObject("stop-locations", { "_id": new ObjectID(locationID) });
+                        let latitude = stopLocation.latitude;
+                        let longitude = stopLocation.longitude;
+                        let description = stopLocation.description;
+                        let name = stopLocation.name;
 
-                    let time = times[index];
-                    let headsign = headsigns[index];
+                        let time = times[index];
+                        let headsign = headsigns[index];
 
-                    let stop = {
-                        lat: latitude,
-                        long: longitude,
-                        description: description,
-                        name: name,
-                        time: time[0],
-                        headsign: headsign
-                    };
-                    resolveJob(stop);
+                        let stop = {
+                            lat: latitude,
+                            long: longitude,
+                            description: description,
+                            name: name,
+                            time: time[0],
+                            headsign: headsign
+                        };
+                        resolveJob(stop);
+                    });
                 });
-            });
-            let locations = await Promise.all(locationPromises);
-            resolve(locations);
+                let locations = await Promise.all(locationPromises);
+                resolve(locations);
+            }
+            catch(error) {
+                if (error.message === MongoDB_ErrorMessages.OBJECT_ID_ERROR){
+                    reject(ErrorCodes.SCHEDULE_NOT_FOUND);
+                }
+                reject(error);                
+            }
         });
     }
 
