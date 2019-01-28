@@ -13,56 +13,6 @@ class TripsLocatorMasterV3 {
     }
 
     /**
-     * Determines which two stops each trip in 'times' lies on based on the 
-     * current time.
-     * The 'times' param must be a 2D matrix that looks like:
-     * 
-     * [
-     *      [[1A1, 1D1], [1A2, 1D2], ..., [1An, 1Dn]],
-     *      [[2A1, 2D1], [2A2, 2D2], ..., [2An, 2Dn]],
-     *      ...
-     *      [[TA1, TD1], [TA2, TD2], ..., [TAn, TDn]],
-     * ]
-     * where each row corresponds to a trip, and each column represents the arrival / departure time
-     * of each stop.
-     * 
-     * Each trip must cover the same number of stops (hence the "n" param).
-     * 
-     * It will return an object:
-     * {
-     *      "[i, i + 1]": [a1, a2, ..., an],
-     *      ...
-     * }
-     * 
-     * where each key represents a set of two adjacent stops that the user can be in,
-     * and each value are indexes to the trips that contains that possible adjacent stops.
-     * 
-     * @param {Object[][]} times The times per trip
-     * @param {Integer} time The current time in seconds
-     */
-    getStopRangesByTime(times, time){
-        return new Promise(async (resolve, reject) => {
-            let stopRangeToTrips = {};
-            for (let i = 0; i < times.length; i++){
-                for (let j = 0; j < times[i].length - 1; j++){
-                    let stopTimeA = times[i][j];
-                    let stopTimeB = times[i][j + 1];
-
-                    if (stopTimeA[1] <= time && time <= stopTimeB[0]){
-                        if (stopRangeToTrips[j] === undefined){
-                            stopRangeToTrips[j] = [i];
-                        }
-                        else{
-                            stopRangeToTrips[j].push(i);
-                        }
-                    }
-                }
-            }
-            resolve(stopRangeToTrips);
-        });
-    }
-
-    /**
      * Get the most recent stop visited in a trip based on the current time.
      * The times[] contains the times which the bus / train will visit each stop,
      * where it has the format:
@@ -78,19 +28,17 @@ class TripsLocatorMasterV3 {
      * @returns {Integer} Index to the most recently visited stop.
      */
     getRecentStopsVisitedByTime(times, curTime){
-        return new Promise(async (resolve, reject) => {
-            let possibleStop = -1;
-            for (let i = 0; i < times.length - 1; i++){
-                let stopA = times[i];
-                let stopB = times[i + 1];
+        let possibleStop = -1;
+        for (let i = 0; i < times.length - 1; i++){
+            let stopA = times[i];
+            let stopB = times[i + 1];
 
-                if (stopA[1] <= curTime && curTime <= stopB[0]){
-                    possibleStop = i;
-                    break;
-                } 
-            }
-            resolve(possibleStop);
-        });
+            if (stopA[1] <= curTime && curTime <= stopB[0]){
+                possibleStop = i;
+                break;
+            } 
+        }
+        return possibleStop;
     }
 
     /**
@@ -203,7 +151,7 @@ class TripsLocatorMasterV3 {
                 for (let i = 0; i < times.length; i++){
                     let tripSchedule = times[i];
                     let tripScheduleID = scheduleIDs[i];
-                    let recentStopVisitedByTime = await this.getRecentStopsVisitedByTime(tripSchedule, time);
+                    let recentStopVisitedByTime = this.getRecentStopsVisitedByTime(tripSchedule, time);
 
                     // console.log("Recent stops visited per schedule by time: " + recentStopVisitedByTime);
 
