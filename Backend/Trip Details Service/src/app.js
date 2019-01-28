@@ -1,6 +1,7 @@
 const express = require("express");
 const process = require("process");
 const Database = require("on-transit").Database;
+const ErrorCodes = require("./constants").ERROR_CODES;
 
 const TripDataService = require("./trip-data-service");
 
@@ -40,17 +41,30 @@ module.exports = async function(){
                 };
 
                 response.setHeader('Content-Type', 'application/json');
-                response.send(JSON.stringify(jsonResponse));  
+                response.status(200).json(jsonResponse);
             })
             .catch(error => {
-                var responseBody = {
-                    status: "failure",
-                    data: {},
-                    message: JSON.stringify(error)
-                };
+                let message = "";
+                let statusCode = 500;
+                if (error === ErrorCodes.TRIP_NOT_FOUND){
+                    message = "Trip is not found";
+                    statusCode = 401;
+                }
+                else if (error === ErrorCodes.SCHEDULE_NOT_FOUND){
+                    message = "Schedule not found";
+                    statusCode = 401;
+                }
+                else{
+                    message = JSON.stringify(error);
+                    statusCode = 500;
+                }
 
+                let responseBody = {
+                    status: "failure",
+                    message: message
+                };
                 response.setHeader('Content-Type', 'application/json');
-                response.send(JSON.stringify(responseBody));      
+                response.status(statusCode).json(responseBody);
             });
     });
 

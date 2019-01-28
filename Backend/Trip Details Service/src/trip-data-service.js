@@ -2,6 +2,7 @@
 
 const Database = require("on-transit").Database;
 const ObjectID = require('mongodb').ObjectID;
+const ErrorCodes = require("./constants").ERROR_CODES;
 
 
 /**
@@ -57,6 +58,10 @@ class TripDataService{
     getTripDetails(tripID){
         return new Promise(async (resolve, reject) => {
             let trip = await this.database.getObject("trips", { "_id": new ObjectID(tripID) });
+            if (trip === null){
+                reject(ErrorCodes.TRIP_NOT_FOUND);
+            }
+
             let shortName = trip.shortName;
             let longName = trip.longName;
             let headSign = trip.headSign;
@@ -91,40 +96,39 @@ class TripDataService{
      */
     getScheduleDetails(scheduleID){
         return new Promise(async (resolve, reject) => {
-            try{
-                let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
-                let times = schedule.times;
-                let headsigns = schedule.headsigns;
-                let locationIDs = schedule.locationIDs;
+            let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
+            if (schedule === null){
+                reject(ErrorCodes.SCHEDULE_NOT_FOUND);
+            }
 
-                let locationPromises = locationIDs.map((locationID, index) => {
-                    return new Promise(async (resolveJob, rejectJob) => {
-                        let stopLocation = await this.database.getObject("stop-locations", { "_id": new ObjectID(locationID) });
-                        let latitude = stopLocation.latitude;
-                        let longitude = stopLocation.longitude;
-                        let description = stopLocation.description;
-                        let name = stopLocation.name;
+            let times = schedule.times;
+            let headsigns = schedule.headsigns;
+            let locationIDs = schedule.locationIDs;
 
-                        let time = times[index];
-                        let headsign = headsigns[index];
+            let locationPromises = locationIDs.map((locationID, index) => {
+                return new Promise(async (resolveJob, rejectJob) => {
+                    let stopLocation = await this.database.getObject("stop-locations", { "_id": new ObjectID(locationID) });
+                    let latitude = stopLocation.latitude;
+                    let longitude = stopLocation.longitude;
+                    let description = stopLocation.description;
+                    let name = stopLocation.name;
 
-                        let stop = {
-                            lat: latitude,
-                            long: longitude,
-                            description: description,
-                            name: name,
-                            time: time[0],
-                            headsign: headsign
-                        };
-                        resolveJob(stop);
-                    });
+                    let time = times[index];
+                    let headsign = headsigns[index];
+
+                    let stop = {
+                        lat: latitude,
+                        long: longitude,
+                        description: description,
+                        name: name,
+                        time: time[0],
+                        headsign: headsign
+                    };
+                    resolveJob(stop);
                 });
-                let locations = await Promise.all(locationPromises);
-                resolve(locations);
-            }
-            catch(error){
-                reject(error);
-            }
+            });
+            let locations = await Promise.all(locationPromises);
+            resolve(locations);
         });
     }
 
@@ -160,11 +164,6 @@ class TripDataService{
                 let tripDetails = results[0];
                 let scheduleDetails = results[1];
                 let pathDetails = await this.getPathDetails(tripDetails.pathID);
-
-                console.log("TRIP DETAILS: ");
-                console.log(tripDetails);
-                console.log("SCHEDULE DETAILS: ");
-                console.log(scheduleDetails);
 
                 let completeTripSchedule = {
                     id: tripID,
