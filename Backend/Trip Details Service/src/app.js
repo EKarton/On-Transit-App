@@ -2,7 +2,7 @@ const express = require("express");
 const process = require("process");
 const Database = require("on-transit").Database;
 
-const TripDataService = require("./trip-data-service-v2");
+const TripDataService = require("./trip-data-service");
 
 const config = require("./res/config");
 

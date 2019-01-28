@@ -1,7 +1,8 @@
 "use strict";
 
 const Database = require("on-transit").Database;
-const PathLocationTree = require("on-transit").PathLocationTree;
+const ObjectID = require('mongodb').ObjectID;
+
 
 /**
  * A class used to obtain the complete Trip details given a trip ID.
@@ -27,77 +28,49 @@ class TripDataService{
      * @param {string} pathID The _id to a path in the database's path-tree collection.
      * @return {object[]} A list of path locations in an object format specified above.
      */
-    _getPathLocations(pathID){
+    getPathDetails(pathID){
         return new Promise(async (resolve, reject) => {
-            try{
-                var path = await this.database.getObject("path-trees", { "_id": pathID });
-                var pathTree = new PathLocationTree(path.tree);
-                var unorderedPathLocations = pathTree.getAllLocations();
+            let path = await this.database.getObject("paths", { "_id": new ObjectID(pathID) });
+            let coordinates = path.location.coordinates;
+            let pathLocations = coordinates.map(coord => {
+                return {
+                    lat: coord[1],
+                    long: coord[0]
+                };
+            });
 
-                // Sort the path locations by the sequence
-                var orderedPathLocations = unorderedPathLocations.sort((a, b) => {
-                    var sequenceA = a.sequence;
-                    var sequenceB = b.sequence;
-
-                    if (sequenceA < sequenceB){
-                        return -1;
-                    }
-                    else{
-                        return 1;
-                    }
-                });
-
-                // Remove any other properties from the unorderedPathLocations[] except 
-                // for latitude and longitude
-                var filteredPathLocations = [];
-                for (let i = 0; i < orderedPathLocations.length; i++){
-                    var pathLocation = orderedPathLocations[i];
-                    var latitude = pathLocation.latitude;
-                    var longitude = pathLocation.longitude;
-                    var filteredLocation = {
-                        lat: latitude,
-                        long: longitude
-                    };
-
-                    filteredPathLocations.push(filteredLocation);
-                }                
-
-                resolve(filteredPathLocations);
-            }
-            catch(error){
-                reject(error);
-            }
+            resolve(pathLocations);
         });
     }
 
     /**
-     * Returns a the stop locaiton from the database given the stop location's ID.
-     * The object returned is in this format:
+     * Returns the trip details in this format:
      * {
-     *    lat: <LATITUDE>,
-     *    long: <LONGITUDE>,
-     *    name: <NAME_OF_STOP>
+     *     shortName: <SHORT_NAME>,
+     *     longName: <LONG_NAME>,
+     *     headSign: <HEAD_SIGN>,
+     *     type: <TRANSIT_TYPE>,
+     *     pathID: <PATH_ID>
      * }
-     * 
-     * @param {string} stopLocationID The _id to a stop location in the database's stop-locations collection.
-     * @return {object} Returns the details of the stop location, as mentioned above.
+     * @param {String} tripID The trip ID
      */
-    _getStopLocation(stopLocationID){
+    getTripDetails(tripID){
         return new Promise(async (resolve, reject) => {
-            try{
-                var rawData = await this.database
-                    .getObject("stop-locations", { "_id": stopLocationID });
+            let trip = await this.database.getObject("trips", { "_id": new ObjectID(tripID) });
+            let shortName = trip.shortName;
+            let longName = trip.longName;
+            let headSign = trip.headSign;
+            let type = trip.type;
+            let pathID = trip.pathID;
 
-                var stopLocation = {
-                    lat: rawData.latitude,
-                    long: rawData.longitude,
-                    name: rawData.name
-                };
-                resolve(stopLocation);
-            }
-            catch(error){
-                reject(error);
-            }
+            let tripObj = {
+                shortName: shortName,
+                longName: longName,
+                headSign: headSign,
+                type: type,
+                pathID: pathID
+            };
+            resolve(tripObj);
         });
     }
 
@@ -108,38 +81,46 @@ class TripDataService{
      *    lat: <LATITUDE>,
      *    long: <LONGITUDE>
      *    name: <NAME_OF_STOP_LOCATION>,
-     *    time: <ARRIVAL_TIME>
+     *    description: <DESCRIPTION>,
+     *    time: <ARRIVAL_TIME>,
+     *    headsign: <HEAD_SIGN>
      * }
      * 
      * @param {string} scheduleID The _id to a schedule in the database's schedules collection.
      * @return {object[]} Returns an array of stop schedules as shown above.
      */
-    _getSchedule(scheduleID){
+    getScheduleDetails(scheduleID){
         return new Promise(async (resolve, reject) => {
             try{
-                var schedule = await this.database.getObject("schedules", { "_id": scheduleID });
-                var stopSchedules = schedule.stopSchedules;
+                let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
+                let times = schedule.times;
+                let headsigns = schedule.headsigns;
+                let locationIDs = schedule.locationIDs;
 
-                var stops = [];
-                for (let i = 0; i < stopSchedules.length; i++) {
-                    var stopSchedule = stopSchedules[i];
+                let locationPromises = locationIDs.map((locationID, index) => {
+                    return new Promise(async (resolveJob, rejectJob) => {
+                        let stopLocation = await this.database.getObject("stop-locations", { "_id": new ObjectID(locationID) });
+                        let latitude = stopLocation.latitude;
+                        let longitude = stopLocation.longitude;
+                        let description = stopLocation.description;
+                        let name = stopLocation.name;
 
-                    var stopLocationID = stopSchedule.stopLocationID;    
-                    var arrivalTime = stopSchedule.arrivalTime;
-                    
-                    var stopLocation = await this._getStopLocation(stopLocationID);
-                    if (stopLocation != null){
-                        var stop = {
-                            lat: stopLocation.lat,
-                            long: stopLocation.long,
-                            name: stopLocation.name,
-                            time: arrivalTime
+                        let time = times[index];
+                        let headsign = headsigns[index];
+
+                        let stop = {
+                            lat: latitude,
+                            long: longitude,
+                            description: description,
+                            name: name,
+                            time: time[0],
+                            headsign: headsign
                         };
-
-                        stops.push(stop);
-                    }
-                }
-                resolve(stops);
+                        resolveJob(stop);
+                    });
+                });
+                let locations = await Promise.all(locationPromises);
+                resolve(locations);
             }
             catch(error){
                 reject(error);
@@ -148,12 +129,14 @@ class TripDataService{
     }
 
     /**
-     * Returns the trip details in a trip including its path and schedule
+     * Returns the trip schedule details.
      * It will return it as an array of objects, with each object formatted as:
      * {
      *    id: 12131321231,
      *    shortName: "109",
      *    longName: "Meadowvale Express",
+     *    headSign: <HEAD_SIGN>,
+     *    type: <TRANSIT_TYPE>,
      *    stops: [
      *        { lat: <LATITUDE> , long: <LONGITUDE> , name: <NAME> , time: <TIME> },
      *        ...
@@ -167,21 +150,35 @@ class TripDataService{
      * @param {string} tripID The _id to a trip in the database's trips collection.
      * @return {object} Returns the trip details in an object as shown above.
      */
-    getTripData(tripID){
+    getTripScheduleData(tripID, scheduleID){
         return new Promise(async (resolve, reject) => {
             try{        
-                var trip = await this.database.getObject("trips", { "_id": tripID });
+                let tripPromise = this.getTripDetails(tripID);
+                let schedulePromise = this.getScheduleDetails(scheduleID);
+                let results = await Promise.all([tripPromise, schedulePromise]);
 
-                var tripDetails = {
+                let tripDetails = results[0];
+                let scheduleDetails = results[1];
+                let pathDetails = await this.getPathDetails(tripDetails.pathID);
+
+                console.log("TRIP DETAILS: ");
+                console.log(tripDetails);
+                console.log("SCHEDULE DETAILS: ");
+                console.log(scheduleDetails);
+
+                let completeTripSchedule = {
                     id: tripID,
-                    shortName: trip.shortname,
-                    longName: trip.headsign,
-                    stops: await this._getSchedule(tripID),
-                    path: await this._getPathLocations(trip.pathID)
+                    shortName: tripDetails.shortName,
+                    longName: tripDetails.longName,
+                    headSign: tripDetails.headSign,
+                    type: tripDetails.type,
+                    path: pathDetails,
+                    stops: scheduleDetails
                 };
-                resolve(tripDetails);
+                resolve(completeTripSchedule);
             }
             catch(error){
+                console.error(error);
                 reject(error);
             }
         });
