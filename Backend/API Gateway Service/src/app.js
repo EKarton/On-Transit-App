@@ -63,16 +63,17 @@ class App{
         /**
          * Returns a set of trip IDs that are close to a location by a certain radius
          * Example of HTTP GET request:
-         * https://localhost:3000/api/v1/trips?lat=43&long=-73.6&time=17:50:00
+         * https://localhost:3000/api/v1/trips?lat=43&long=-73.6&time=17:50:00&radius=50
          */
         app.get("/api/v1/trips", (req, res) => {
             var latitude = req.query.lat;
             var longitude = req.query.long;
             var rawTime = req.query.time;
+            var radius = req.query.radius;
 
             console.log("API Gateway Service: Request for finding nearby trips received on process #", process.pid);
 
-            var uri = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${rawTime}`;
+            var uri = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${rawTime}&radius=${radius}`;
             this._handleRequest(req, res, uri);
         });
 
@@ -81,12 +82,13 @@ class App{
         * Example of HTTP GET request:
         * http://localhost:3000/api/v1/trips/123456
         */
-        app.get("/api/v1/trips/:tripID", (req, res) => {
+        app.get("/api/v1/trips/:tripID/schedules/:scheduleID", (req, res) => {
             var tripID = req.params.tripID;
+            var scheduleID = req.params.scheduleID;
 
             console.log("API Gateway Service: Request for getting trip details received on process #", process.pid);
 
-            var uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/trips/${tripID}`;
+            var uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/trips/${tripID}/schedules/${scheduleID}`;
             this._handleRequest(req, res, uri);
         });
 

@@ -4,6 +4,9 @@ import "./../popup/Popup.css"
 
 import {getCurrentTime} from "../../services/TimeService";
 
+/**
+ * This is a module used to ask users to pick a nearby trip.
+ */
 class NearbyTripsChooserPopup extends React.Component {
 
     handleSubmit = (event) => {
@@ -11,13 +14,14 @@ class NearbyTripsChooserPopup extends React.Component {
         console.log("Hi there!");
         console.log(event.target.route.value);
 
-        let selectedTripID = event.target.route.value;
-        console.log("I am here!");
+        let checkboxValue = event.target.route.value;
+        let tokenizedCheckboxValue = checkboxValue.split("/");
+        let selectedTripID = tokenizedCheckboxValue[0];
+        let selectedScheduleID = tokenizedCheckboxValue[1];
         if (selectedTripID === ""){
-            // Show error message
         }
         else{
-            this.props.onSelectRoute(selectedTripID);
+            this.props.onSelectRoute(selectedTripID, selectedScheduleID);
         }
     }
 
@@ -46,19 +50,19 @@ class NearbyTripsChooserPopup extends React.Component {
             };
         }).sort((tripA, tripB) => {
             return tripA.display < tripB.display;
-        }).filter(trip => {
-            return trip.startTime <= getCurrentTime() <= trip.endTime;
         }).map(item => {
             let tripID = item.tripID;
+            let scheduleID = item.scheduleID;
             let display = item.display;
+
+            let checkboxValue = tripID + "/" + scheduleID;
             
             return (
                 <div key={tripID}>
-                    <input type="radio" name="route" value={tripID}/>
+                    <input type="radio" name="route" value={checkboxValue}/>
                     <div className="tripInfo">{display}</div>
                 </div>
             );
-
         });
 
         return (

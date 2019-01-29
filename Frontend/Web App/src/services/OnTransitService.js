@@ -19,6 +19,7 @@ class OnTransitService {
                 params: urlParams
             }
             let rawData = await Axios.get(TRIPS_LOCATOR_URL, options);
+            console.log("Raw data:");
             console.log(rawData);
             return rawData.data.data;
         }
@@ -27,9 +28,9 @@ class OnTransitService {
         }
     }
 
-    async getTripDetails(tripID){
+    async getTripDetails(tripID, scheduleID){
         try{
-            let url = TRIP_DETAILS_URL + "/" + tripID;
+            let url = TRIP_DETAILS_URL + "/" + tripID + "/schedules/" + scheduleID;
             let rawData = await Axios.get(url);
             return rawData.data.data;
         }

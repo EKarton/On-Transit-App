@@ -95,7 +95,7 @@ class App extends React.Component {
         };
 
         if (navigator.geolocation){
-            this.geolocationWatch = navigator.geolocation.watchPosition(
+            this.geolocationWatch = navigator.geolocation.getCurrentPosition(
                 this.onLocationChangedSuccess, this.onLocationChangedError, geolocationOptions);
         }
     };
@@ -219,16 +219,32 @@ class App extends React.Component {
                         return;
                     }
 
+                    console.log(values[0].tripIDs);
                     console.log(Object.keys(values[0].tripIDs));
-                    
-                    let nearbyTrips = Object.keys(values[0].tripIDs).map(key => {
-                        let tripID = key;
+                    let tripIDs = Object.keys(values[0].tripIDs);
+                    let nearbyTrips = [];
+                    for (let i = 0; i < tripIDs.length; i++){
+                        let tripID = tripIDs[i];
                         let tripDetails = values[0].tripIDs[tripID];
-                        return {
-                            ...tripDetails, 
-                            tripID: tripID
-                        };
-                    });
+                        let scheduleIDs = tripDetails.schedules;
+                        let shortName = tripDetails.shortname;
+                        let longName = tripDetails.longname;
+                        let headsign = tripDetails.headsign;
+                        let type = tripDetails.type;
+
+                        for (let j = 0; j < scheduleIDs.length; j++){
+                            let scheduleID = scheduleIDs[j];
+
+                            nearbyTrips.push({
+                                tripID: tripID,
+                                scheduleID: scheduleID,
+                                shortName: shortName,
+                                longName: longName,
+                                headsign: headsign,
+                                type: type
+                            });
+                        }
+                    }
 
                     console.log(nearbyTrips);
 
@@ -255,8 +271,8 @@ class App extends React.Component {
         console.log(error);
     }
 
-    selectRoute = (tripID) => {
-        console.log("Selected Trip ID: " + tripID);
+    selectRoute = (tripID, scheduleID) => {
+        console.log("Selected Trip Schedule: " + tripID + "/" + scheduleID);
         if (this.state.tripDetailsID !== tripID){
             this.setState((prevState, props) => {
                 return {
@@ -265,7 +281,7 @@ class App extends React.Component {
                 }
             });
 
-            this.onTransitService.getTripDetails(tripID)
+            this.onTransitService.getTripDetails(tripID, scheduleID)
                 .then(results => {
 
                     this.setState((prevState, props) => {
