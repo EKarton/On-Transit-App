@@ -1,17 +1,23 @@
-const App = require("./app");
-const process = require("process");
+const Cluster = require("cluster");
+const OS = require("os");
+const Process = require("process");
+const app = require("./app");
 
-// Launch only one instance of the app.
-var app = new App();
-app.run();
+if (Cluster.isMaster){
 
-// Shutdown the app when the user types CTRL-C
-process.on('SIGINT', async function() {
-    await app.shutdown();
-    process.exit(-1);
-});
+    // Make N copies of the same app with N being the number of CPUs
+    let numCPUs = OS.cpus().length;
+    for (let i = 0; i < numCPUs; i++){
+        Cluster.fork();
+    }
 
-process.on("exit", async function(){
-    await app.shutdown();
-});
-
+    // Fork the server again if it dies
+    Cluster.on("exit", (worker) => {
+        console.log("A worker has died! Relaunching app again!");
+        Cluster.fork();
+    });
+}
+else{
+    console.log("Child process #", Process.pid, " has spawned");
+    app();
+}
