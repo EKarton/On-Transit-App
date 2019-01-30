@@ -107,7 +107,7 @@ class Database{
         });
     }
 
-    getObject(collectionName, query){
+    getObject(collectionName, query, projection){
         // return new Promise(async (resolve, reject) => {
         //     // var cacheID = JSON.stringify(query) + ",_collectionName=" + collectionName;
         //     // var cacheResult = this._cache[cacheID];

@@ -1,7 +1,7 @@
 const Cluster = require("cluster");
 const OS = require("os");
 const Process = require("process");
-const app = require("./web-app");
+const worker = require("./trips-locator-worker");
 
 if (Cluster.isMaster){
 
@@ -16,8 +16,11 @@ if (Cluster.isMaster){
         console.log("A worker has died! Relaunching app again!");
         Cluster.fork();
     });
+
+    // Create a web api that will output the health of the application
+    
 }
 else{
     console.log("Child process #", Process.pid, " has spawned");
-    app();
+    worker.run();
 }
