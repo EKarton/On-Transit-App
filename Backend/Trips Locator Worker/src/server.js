@@ -19,7 +19,7 @@ if (Cluster.isMaster){
     });
 
     // Create a web api that will output the health of the application
-    
+    WebApp.run();
 }
 else{
     console.log("Child process #", Process.pid, " has spawned");
