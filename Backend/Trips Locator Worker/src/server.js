@@ -2,6 +2,7 @@ const Cluster = require("cluster");
 const OS = require("os");
 const Process = require("process");
 const worker = require("./trips-locator-worker");
+const WebApp = require("./web-app");
 
 if (Cluster.isMaster){
 
