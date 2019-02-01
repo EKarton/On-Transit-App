@@ -196,7 +196,7 @@ class App extends React.Component {
 
             // Get the nearby trips and vehicles
             let nearbyTripsPromise = this.onTransitService.getNearbyTrips(latitude, longitude, time, radius);
-            let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
+            // let nearbyVehiclesPromise = this.onTransitService.getNearbyVehicles(latitude, longitude, radius);
 
             this.setState((prevState, props) => {
                 return {
@@ -205,7 +205,7 @@ class App extends React.Component {
                 }
             });
             
-            Promise.all([nearbyTripsPromise, nearbyVehiclesPromise])
+            Promise.all([nearbyTripsPromise])
                 .then(values => {  
                     
                     this.setState((prevState, props) => {

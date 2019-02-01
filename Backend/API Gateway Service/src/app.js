@@ -68,12 +68,13 @@ class App{
         app.get("/api/v1/trips", (req, res) => {
             var latitude = req.query.lat;
             var longitude = req.query.long;
-            var rawTime = req.query.time;
+            var time = req.query.time;
             var radius = req.query.radius;
 
             console.log("API Gateway Service: Request for finding nearby trips received on process #", process.pid);
+            console.log(`lat:${latitude},long:${longitude},time:${time},radius:${radius}`);
 
-            var uri = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${rawTime}&radius=${radius}`;
+            var uri = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${time}&radius=${radius}`;
             this._handleRequest(req, res, uri);
         });
 
@@ -111,18 +112,15 @@ class App{
         app.get("/api/v1/health", (req, res) => {
             let tripsLocatorUrl = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/health`;
             let tripDetailsUrl = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/health`;
-            let vehiclesLocatorUrl = `${config.VEHICLES_LOCATOR_URL}/api/v1/health`;
 
             let tripsLocatorRequest = this._obtainServiceHealth(tripsLocatorUrl);
             let tripDetailsRequest = this._obtainServiceHealth(tripDetailsUrl);
-            let vehiclesLocatorRequest = this._obtainServiceHealth(vehiclesLocatorUrl);
-            Promise.all([tripsLocatorRequest, tripDetailsRequest, vehiclesLocatorRequest])
+            Promise.all([tripsLocatorRequest, tripDetailsRequest])
                 .then(results => {                    
                     let isTripsLocatorOk = results[0].statusCode == 200;
                     let isTripDetailsOk = results[1].statusCode == 200;
-                    let isVehiclesLocatorOk = results[2].statusCode == 200;
 
-                    if (isTripsLocatorOk && isTripDetailsOk && isVehiclesLocatorOk){
+                    if (isTripsLocatorOk && isTripDetailsOk){
                         res.status(200).send("OK");
                     }
                     else{

@@ -33,12 +33,16 @@ module.exports = {
      * of the app.
      */
     run(){
-        const redisOptions = {
-            host: Config.REDIS_HOST,
-            port: Config.REDIS_PORT,
-            auth: Config.REDIS_AUTH
-        };
-        queue = Kue.createQueue(redisOptions);
+        const kueOptions = {
+            prefix: "q",
+            redis: {
+                host: Config.REDIS_HOST,
+                port: Config.REDIS_PORT,
+                auth: Config.REDIS_AUTH,
+                db: Config.REDIS_DB
+            }
+        }
+        queue = Kue.createQueue(kueOptions);
 
         process.on("SIGINT", async () => {
             await closeQueueConnection();

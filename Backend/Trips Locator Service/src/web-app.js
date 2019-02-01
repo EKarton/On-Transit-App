@@ -3,7 +3,7 @@ const process = require("process");
 const Location = require("on-transit").Location;
 const Config = require("./res/config");
 
-const TripsLocator = require("./trips-locator-master");
+const TripsLocator = require("./trips-locator");
 
 /**
  * A class used to represent the entire application with handling and responding to 
@@ -12,7 +12,7 @@ const TripsLocator = require("./trips-locator-master");
 module.exports = async function(){
 
     let app = express();
-    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.DEFAULT_PORT;
+    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.WEB_APP_DEFAULT_PORT;
     let server_host = process.env.YOUR_HOST || '0.0.0.0';
 
     TripsLocator.run();
@@ -26,7 +26,7 @@ module.exports = async function(){
         let latitude = parseFloat(request.query.lat);
         let longitude = parseFloat(request.query.long);
         let rawTime = request.query.time;
-        let radius = parseInt(request.query.radius);
+        let radius = Math.min(Math.max(10, parseInt(request.query.radius)), 200);
 
         // Convert raw time to the number of seconds after midnight
         let timeSections = rawTime.split(":");

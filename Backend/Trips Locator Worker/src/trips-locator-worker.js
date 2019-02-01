@@ -2,10 +2,14 @@ const kue = require("kue");
 const config = require("./res/config");
 const Database = require("on-transit").Database;
 
-const redisOptions = {
-    host: config.REDIS_HOST,
-    port: config.REDIS_PORT,
-    auth: config.REDIS_AUTH
+const kueOptions = {
+    prefix: 'q',
+    redis: {
+        host: config.REDIS_HOST,
+        port: config.REDIS_PORT,
+        auth: config.REDIS_AUTH,
+        db: config.REDIS_DB
+    }
 };
 
 var queue = undefined;
@@ -139,9 +143,7 @@ function getTripIDsNearLocation(location, time, radius){
                     $maxDistance: radius 
                 } 
             } 
-        }, {
-            location: 0
-        });
+        }, { location: 0 });
 
         while (await nearbyPathsCursor.hasNext()){
             let nearbyPath = await nearbyPathsCursor.next();
@@ -174,7 +176,7 @@ function getTripIDsNearLocation(location, time, radius){
 
 module.exports = {
     run(){
-        queue = kue.createQueue(redisOptions);
+        queue = kue.createQueue(kueOptions);
 
         database = new Database();
         database.connectToDatabase(config.DATABASE_URI, config.DATABASE_NAME);
