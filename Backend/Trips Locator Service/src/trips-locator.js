@@ -4,7 +4,6 @@ const Config = require("./res/config");
 
 var database = undefined;
 
-
 /**
  * Get the most recent stop visited in a trip based on the current time.
  * The times[] contains the times which the bus / train will visit each stop,
@@ -126,9 +125,6 @@ function getPossibleSchedules(tripScheduleIDs, time, location){
         while (await schedulesAggregatorCursor.hasNext()){
             let aggregatedSchedule = await schedulesAggregatorCursor.next();
 
-            // console.log(" ====================== AGGREGATED SCHEDULE ==============================");
-            // console.log(JSON.stringify(aggregatedSchedule));
-
             let times = aggregatedSchedule.times;
             let locationIDs = aggregatedSchedule._id.locationIDs;
             let scheduleIDs = aggregatedSchedule.scheduleIDs;
@@ -139,8 +135,6 @@ function getPossibleSchedules(tripScheduleIDs, time, location){
                 let tripSchedule = times[i];
                 let tripScheduleID = scheduleIDs[i];
                 let recentStopVisitedByTime = getRecentStopsVisitedByTime(tripSchedule, time);
-
-                // console.log("Recent stops visited per schedule by time: " + recentStopVisitedByTime);
 
                 if (recentStopVisitedByTime >= 0){
                     if (stopRangesByLocation.has(recentStopVisitedByTime)){
@@ -223,9 +217,6 @@ module.exports = {
                 });
                 while (await tripsCursor.hasNext()){
                     let trip = await tripsCursor.next();
-
-                    // console.log(" ============================ TRIP =================================");
-                    // console.log(JSON.stringify(trip));
 
                     let schedules = trip.schedules;
                     let possibleScheduleIDs = await getPossibleSchedules(schedules, time, location);
