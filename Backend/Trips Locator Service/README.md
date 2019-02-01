@@ -32,31 +32,58 @@ Clients needs to make HTTP requests to the application in order to get the trips
 - Note that the format [HH:mm:ss] means to specify the time in 24-hour format.
 For instance, "13:04:55" means 55 seconds after 1:04PM 
 
-**Sample Success Response:**
+**Sample Success Response Code:**
+- Status code: 200 (Ok)
+
+**Sample Success Response Body:**
 ```
 {
     status: "success",
     data: {
-        tripIDs: [
-            "17283431",
-            "17283646",
-            "17283709",
-            "17286532",
-            "17286953",
-            "17287436",
-            "17287800",
-            "17291264",
-            "17291977",
-            "17292609",
-            "17293460",
-            "17293698",
-            "17296966"
-        ]
+        "tripIDs": {
+            "5c4e158f3b9294327663817b": {
+                "shortname": "46",
+                "longname": "Tenth Line-Osprey",
+                "headsign": "Northbound",
+                "type": "3",
+                "schedules": [
+                    "5c4e15153b92943276631d19",
+                    "5c4e15153b92943276631d20",
+                    "5c4e15153b92943276631d21"
+                ]
+            },
+            "5c4e158f3b9294327663817f": {
+                "shortname": "46",
+                "longname": "Tenth Line-Osprey",
+                "headsign": "Southbound",
+                "type": "3",
+                "schedules": [
+                    "5c4e15163b92943276631dd1"
+                ]
+            }
+        }
     }
 }
 ```
 
-**Sample Failure Response:**
+- Note that a trip can contain multiple trip schedules. For instance, a trip is a route (such as route 109 Northbound) while a schedule for route 109 Northbound represents a bus on that route.
+
+**Sample Bad Request Failure Response Code:**
+- Status code: 400 (Server Error)
+
+**Sample Bad Request Failure Response Body:**
+```
+{
+	status: "failure",
+	data: {	}
+	message: "<REASON_FOR_FAILURE>"
+}
+```
+
+**Sample Server Failure Response Code:**
+- Status code: 500 (Server Error)
+
+**Sample Server Failure Response Body:**
 ```
 {
 	status: "failure",
@@ -66,13 +93,13 @@ For instance, "13:04:55" means 55 seconds after 1:04PM
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius=10&time=11:50:00
+$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&time=11:50:00&radius=10
 ```
 
 ### Installation
 
 ##### Required Programs and Tools:
-- Linux machine
+- Unix machine
 - Node JS v8.0+ with NPM
 
 ##### Step 1: Install the packages
@@ -84,8 +111,27 @@ $ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius
 2. Open up "config.js" and edit the port number for the app to use. Note that the port must be free to use. By default, the port number is 3001.
 
 ##### Step 3: Run the app
-1. In the "Backend/Trips Locator Service" folder of the project directory, type in the command `npm start`. It should launch N processes; one process as the master process, and N - 1 child processes (with N being the number of CPUs on your machine).
+1. In the "Backend/Trips Locator Service" folder of the project directory, type in the command `npm start`.
 2. It is done!
+
+### Deployment to Heroku
+
+##### Required Programs and Tools:
+- Unix machine
+- Node JS v8.0+ with NPM
+- Heroku CLI
+
+##### Step 1: Create a new service on Heroku
+1. On Heroku, make a new service with a new service name.
+
+##### Step 2: Set up the config file
+1. Make a copy of the file "Deploy-to-Heroku-Template.sh" under the folder "Backend/Trips Locator Service/scripts", name it "Deploy-to-Heroku.sh", and save it in the same directory.
+2. Open up "Deploy-to-Heroku.sh", edit the Heroku App name to the name you specified to the new service, and the temp folder.
+3. Save the file
+
+##### Step 3: Deploy on Heroku
+1. On the terminal, change the directory to "Backend/Trips Locator Service/scripts" and run the command ```./Deploy-To-Heroku.sh```.
+2. Follow the instructions on the terminal, and you should be done.
 
 ### Usage
 Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
