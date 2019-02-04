@@ -26,7 +26,7 @@ module.exports = async function(){
         let latitude = parseFloat(request.query.lat);
         let longitude = parseFloat(request.query.long);
         let rawTime = request.query.time;
-        let radius = Math.min(Math.max(10, parseInt(request.query.radius)), 200);
+        let radius = Math.max(10, parseInt(request.query.radius));
 
         // Convert raw time to the number of seconds after midnight
         let timeSections = rawTime.split(":");

@@ -43,7 +43,7 @@ class App{
                     };
                 
                     response.setHeader('Content-Type', 'application/json');
-                    response.send(JSON.stringify(jsonResponse));
+                    response.status(200).send(JSON.stringify(jsonResponse));
                 })
                 .catch(error => {
                     var responseBody = {
@@ -53,7 +53,7 @@ class App{
                     };
 
                     response.setHeader('Content-Type', 'application/json');
-                    response.send(JSON.stringify(responseBody));    
+                    response.status(500).send(JSON.stringify(responseBody));    
                 });  
         });
 
