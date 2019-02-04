@@ -76,6 +76,7 @@ class App extends React.Component {
             let duration = this.props.notifications.duration;
 
             this.dispatchNotification(message, duration);
+            this.props.removeNotification();
         }
         
         return (
