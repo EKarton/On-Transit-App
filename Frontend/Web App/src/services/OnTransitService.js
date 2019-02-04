@@ -15,10 +15,9 @@ export async function getNearbyTrips(latitude, longitude, time, radius){
         };
         let options = {
             params: urlParams
-        }
+        };
+
         let rawData = await Axios.get(TRIPS_LOCATOR_URL, options);
-        console.log("Raw data:");
-        console.log(rawData);
         return rawData.data.data;
     }
     catch(error){

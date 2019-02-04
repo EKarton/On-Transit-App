@@ -64,64 +64,14 @@ class RouteDetailsView extends React.Component {
         }
     };
 
-    onAlarmButtonClick = (stopIndex) => {
-        if (this.state.stopsWithAlarms[stopIndex]){
-            let dispatchTime = this.state.stopsWithAlarms[stopIndex];
-            this.props.deleteAlarm(dispatchTime);
+    addAlarm = (stopIndex) => {
+        let stop = this.props.stops[stopIndex];
+        let currentTime = getTimeInSeconds(getCurrentTime());
+        let dispatchTime = Math.max(stop.time - 300, currentTime);
 
-            let newStopsWithAlarms = Object.assign({}, this.state.stopsWithAlarms);
-            delete newStopsWithAlarms[stopIndex];
-
-            this.setState((prevState, prevProps) => {
-                return {
-                    ...prevState,
-                    stopsWithAlarms: newStopsWithAlarms
-                };
-            });
-        } 
-        else {
-            let stop = this.props.stops[stopIndex];
-            let currentTime = getTimeInSeconds(getCurrentTime());
-            let dispatchTime = Math.max(stop.time - 300, currentTime);
-
-            if (dispatchTime > currentTime){
-                this.props.createAlarm(dispatchTime, () => {
-                    let currentTime = getTimeInSeconds(getCurrentTime());
-                    let remainingTime = stop.time - currentTime;
-                    let formattedRemainingTime = getFormattedTime(remainingTime);
-
-                    let message = `You are ${formattedRemainingTime.value} ` + 
-                        `${formattedRemainingTime.unit} away from ${stop.name}`;
-
-                    let duration = 10000;
-
-                    this.props.createNotification(message, duration);
-                    
-                    let newStopsWithAlarms = Object.assign({}, this.state.stopsWithAlarms);
-                    delete newStopsWithAlarms[stopIndex];
-        
-                    this.setState((prevState, prevProps) => {
-                        return {
-                            ...prevState,
-                            stopsWithAlarms: newStopsWithAlarms
-                        };
-                    });
-                });
-
-                let message = `You will be notified 5 minutes before reaching ${stop.name}`;
-                this.props.createNotification(message, 10000);
-
-                let newStopsWithAlarms = Object.assign({}, this.state.stopsWithAlarms);
-                newStopsWithAlarms[stopIndex] = dispatchTime
-    
-                this.setState((prevState, prevProps) => {
-                    return {
-                        ...prevState,
-                        stopsWithAlarms: newStopsWithAlarms
-                    };
-                });
-            }
-            else {
+        if (dispatchTime > currentTime){
+            this.props.createAlarm(dispatchTime, () => {
+                let currentTime = getTimeInSeconds(getCurrentTime());
                 let remainingTime = stop.time - currentTime;
                 let formattedRemainingTime = getFormattedTime(remainingTime);
 
@@ -131,7 +81,69 @@ class RouteDetailsView extends React.Component {
                 let duration = 10000;
 
                 this.props.createNotification(message, duration);
-            }
+                
+                let newStopsWithAlarms = Object.assign({}, this.state.stopsWithAlarms);
+                delete newStopsWithAlarms[stopIndex];
+    
+                this.setState((prevState, prevProps) => {
+                    return {
+                        ...prevState,
+                        stopsWithAlarms: newStopsWithAlarms
+                    };
+                });
+            });
+
+            let message = `You will be notified 5 minutes before reaching ${stop.name}`;
+            this.props.createNotification(message, 10000);
+
+            let newStopsWithAlarms = Object.assign({}, this.state.stopsWithAlarms);
+            newStopsWithAlarms[stopIndex] = dispatchTime;
+
+            this.setState((prevState, prevProps) => {
+                return {
+                    ...prevState,
+                    stopsWithAlarms: newStopsWithAlarms
+                };
+            });
+        }
+        else {
+            let remainingTime = stop.time - currentTime;
+            let formattedRemainingTime = getFormattedTime(remainingTime);
+
+            let message = `You are ${formattedRemainingTime.value} ` + 
+                `${formattedRemainingTime.unit} away from ${stop.name}`;
+
+            let duration = 10000;
+
+            this.props.createNotification(message, duration);
+        }
+    };
+
+    removeAlarm = (stopIndex) => {
+        let dispatchTime = this.state.stopsWithAlarms[stopIndex];
+        this.props.deleteAlarm(dispatchTime);
+
+        let newStopsWithAlarms = Object.assign({}, this.state.stopsWithAlarms);
+        delete newStopsWithAlarms[stopIndex];
+
+        let stop = this.props.stops[stopIndex];
+        let message = `Removed notification for ${stop.name}`;
+        this.props.createNotification(message, 10000);
+
+        this.setState((prevState, prevProps) => {
+            return {
+                ...prevState,
+                stopsWithAlarms: newStopsWithAlarms
+            };
+        });
+    };
+
+    onAlarmButtonClick = (stopIndex) => {
+        if (this.state.stopsWithAlarms[stopIndex]){
+            this.removeAlarm(stopIndex);
+        } 
+        else {
+            this.addAlarm(stopIndex);
         }
     };
     

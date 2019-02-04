@@ -2,6 +2,9 @@ import React from "react";
 import "./LoadingPopup.css";
 import "./../popup/Popup.css"
 
+/**
+ * Renders the loading sign.
+ */
 class LoadingPopup extends React.Component {
 
     render() {

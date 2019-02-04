@@ -1,11 +1,18 @@
 import React from "react";
 import "./../popup/Popup.css";
 
+/**
+ * This component renders an "Out of route" message
+ */
 class EndOfRoutePopup extends React.Component {
     state = {
         countdownValue: 5
     }
     
+    /**
+     * This method gets called after the component mounts
+     * to the DOM
+     */
     componentDidMount() {
         this.countdownInterval = setInterval(() => {
             if (this.state.countdownValue <= 0){
@@ -22,12 +29,19 @@ class EndOfRoutePopup extends React.Component {
         }, 1000);
     }
 
+    /**
+     * This method gets called before the component unmounts
+     * from the DOM.
+     */
     componentWillUnmount(){
         if (this.countdownInterval){
             clearInterval(this.countdownInterval);
         }
     }
 
+    /**
+     * Renders the component on the DOM.
+     */
     render() {
         return (
             <div className="popup-background">

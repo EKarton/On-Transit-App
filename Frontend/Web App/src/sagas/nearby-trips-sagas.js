@@ -3,9 +3,6 @@ import { types } from "../constants/nearby-trips-constants";
 import { getNearbyTrips as getNearbyTripsByAPI } from "../services/OnTransitService";
 
 function* getNearbyTrips({ payload }){
-
-    console.log(payload);
-
     let latitude = payload.latitude;
     let longitude = payload.longitude;
     let time = payload.time;

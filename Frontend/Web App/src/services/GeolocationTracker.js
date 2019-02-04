@@ -18,8 +18,6 @@ var locationWatch = null;
  * @param {Object} callbacks A set of callbacks
  */
 export function startLocationWatch(callbacks){
-    console.log("Started watching location");
-
     let onSuccess = callbacks.onSuccess;
     let onError = callbacks.onError;
     
@@ -30,9 +28,7 @@ export function startLocationWatch(callbacks){
 }
 
 export function stopLocationWatch(){
-    console.log("Stopped watching locations");
-    
-    if (locationWatch){
+   if (locationWatch){
         clearInterval(locationWatch);
     }
 }

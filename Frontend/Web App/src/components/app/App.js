@@ -11,9 +11,16 @@ import Map from "../map-view/MapView";
 import RouteDetailsView from './../route-details-view/RouteDetailsView';
 import RouteChooserPopup from "./../route-chooser-popup/RouteChooserPopup";
 
+/**
+ * A React component that holds the entire app.
+ */
 class App extends React.Component {
 
-   componentDidMount(){       
+    /**
+     * This method gets called when the component mounts to
+     * the DOM
+     */
+    componentDidMount(){       
         if (!("Notification" in window)){
             alert("Notifications are not supported in this browser!");
         }
@@ -22,10 +29,18 @@ class App extends React.Component {
         this.props.startAlarm();
     }
 
+    /**
+     * This method gets called when the component unmounts
+     * from the DOM
+     */
     componentWillUnmount(){
         this.props.stopAlarm();
     }
 
+    /**
+     * Dispatches the notification on both the web notification
+     * and on the toast.
+     */
     dispatchNotification = (message, duration) => {
 
         // Dispatch the web notification container
@@ -36,7 +51,6 @@ class App extends React.Component {
                 }
             })
             .then(() => {
-                console.log("We have access here!");
                 let notification = new Notification(message);
 
                 // Close the notification after 10 seconds
@@ -53,18 +67,17 @@ class App extends React.Component {
             position: toast.POSITION.BOTTOM_CENTER
         });
     }
-
-    componentWillUpdate() {
-        if (this.props.notifications.text){
+    /**
+     * Renders the component
+     */
+    render() {
+        if (this.props.notifications.text !== null){
             let message = this.props.notifications.text;
             let duration = this.props.notifications.duration;
 
             this.dispatchNotification(message, duration);
-            this.props.removeNotification();
         }
-    }
-
-    render() {
+        
         return (
             <div className="app-container">
                 {
@@ -88,6 +101,10 @@ class App extends React.Component {
     }
 }
 
+/**
+ * Maps part of the store's state to this component
+ * @param {Object} state The store's state
+ */
 function mapStateToProps(state){
     return {
         displayTripDetails: state.selectedTrip.tripID !== null,

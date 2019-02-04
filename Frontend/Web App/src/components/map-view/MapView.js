@@ -46,6 +46,10 @@ class MapView extends React.Component {
         this.olStopsLayer = null;
     }
 
+    /**
+     * Starts predicting the user's location on the path
+     * in regular intervals
+     */
     startPredictedLocationWatch = () => {
         if (this.liveLocationWatch){
             this.stopLiveLocationWatch();
@@ -76,6 +80,9 @@ class MapView extends React.Component {
         });
     }
 
+    /**
+     * Stops tracking the user's location on the path
+     */
     stopLiveLocationWatch = () => {
         if (this.liveLocationWatch){
             clearInterval(this.liveLocationWatch);
@@ -189,7 +196,6 @@ class MapView extends React.Component {
      * @param {Object} newPath The new path
      */
     updatePathLayer = (newPath) => {
-        // console.log("updatePathLayer() @ MapView");
         let pathCoordinates = newPath.map(item => {
             return fromLonLat([item.long, item.lat]);
         });
@@ -213,6 +219,10 @@ class MapView extends React.Component {
         }
     }
 
+    /**
+     * Creates the user's location layer on a path
+     * for the OLMap
+     */
     createLiveLocationLayer = () => {
         var liveLocationStyle = new OlStyle({
             image: new OlCircleStyle({
@@ -236,6 +246,11 @@ class MapView extends React.Component {
         return liveLocationLayer;
     }
 
+    /**
+     * Updates the user's location on the path
+     * @param {Number} newLatitude The user's latitude
+     * @param {Number} newLongitude The user's longitude
+     */
     updateLiveLocationLayer = (newLatitude, newLongitude) => {
         let geoJsonObject = {
             "type": "Feature",
@@ -317,6 +332,11 @@ class MapView extends React.Component {
      * This method will prevent the OpenLayers map from being
      * deconstructed and re-instantiated and instead update the 
      * stops and the path displayed on the map.
+     * 
+     * @param {Object} oldProps The component's old set of properties
+     * @param {Object} newProps The component's new set of properties
+     * @param {Object} oldState The component's old set of states
+     * @param {Object} newState The component's new set of states
      */
     updateMap = (oldProps, newProps, oldState, newState) => {
         if (this.olMap){
@@ -378,6 +398,10 @@ class MapView extends React.Component {
     }
 }
 
+/**
+ * Maps the store's state with this component's properties
+ * @param {Object} state The store's state
+ */
 function mapStateToProps(state) {
 
     let stops = state.selectedTrip.tripDetails ? state.selectedTrip.tripDetails.stops : null;

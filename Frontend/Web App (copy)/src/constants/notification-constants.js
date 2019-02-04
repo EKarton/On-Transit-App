@@ -1,4 +1,0 @@
-export const types = {
-    DISPATCH_NOTIFICATION: "notifications/DISPATCH_NOTIFICATIONS",
-    REMOVE_NOTIFICATION: "notifications/REMOVE_NOTIFICATION"
-};
