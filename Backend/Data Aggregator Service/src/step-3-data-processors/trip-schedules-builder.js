@@ -40,6 +40,9 @@ class SchedulesCombiner {
         this.newDb = newDb;
     }
 
+    /**
+     * Combines each trip schedule to its proper trip object.
+     */
     combineTripScheduleToTrip(){
         return new Promise(async (resolve, reject) => {            
             let tripsCursor = await this.oldDb.getObjects("trips", {});
@@ -60,6 +63,9 @@ class SchedulesCombiner {
         });
     }
 
+    /**
+     * Runs the app
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
 

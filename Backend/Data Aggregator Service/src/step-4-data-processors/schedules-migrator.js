@@ -1,17 +1,41 @@
 
 /**
+ * Copies the schedules from the old DB to the new DB with their IDs
+ * dynamically set by the new database.
+ * 
+ * It also updates each schedule object from the old DB with the new set
+ * of stop location IDs in the new database.
+ * 
  * The algorithm:
- * Each time we send a path to the new DB, it will return back the document ID.
+ * Each time we send an object to the new DB, it will return back the document ID.
  * That document ID will get placed in the mappings DB, where the key is the old 
  * document ID from the old DB, and the value is the new document ID.
  */
-class StopLocationsMigrator{
+class SchedulesMigrator{
+
+    /**
+     * Constructs the SchedulesMigrator
+     * @param {Database} oldDb The old database
+     * @param {Database} newDb The new database
+     * @param {Database} mappingsDb The database used to store the stop locations' 
+     *  IDs from the old DB to the new stop locations' IDs in the new DB.
+     */
     constructor(oldDb, newDb, mappingsDb){
         this.oldDb = oldDb;
         this.newDb = newDb;
         this.mappingsDb = mappingsDb;
     }
 
+    /**
+     * Obtains a list of the new location IDs given a list
+     * of old location IDs.
+     * 
+     * The mappings from the old location IDs to the new location IDs must be stored 
+     * in the mappings DB with the collection name 'stop-location-ID-mappings'
+     * 
+     * @param {String[]} oldLocationIDs A set of old location IDs
+     * @returns {String[]} A set of new location IDs
+     */
     getNewLocationIDs(oldLocationIDs){
         return new Promise(async (resolve, reject) => {
 
@@ -30,6 +54,9 @@ class StopLocationsMigrator{
         });
     }
 
+    /**
+     * Runs the app
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
             
@@ -60,4 +87,4 @@ class StopLocationsMigrator{
     }
 }
 
-module.exports = StopLocationsMigrator;
+module.exports = SchedulesMigrator;

@@ -1,5 +1,8 @@
 
 /**
+ * It will migrate the paths from the old database to the new database with 
+ * a new, unique ID set by the new database.
+ * 
  * The algorithm:
  * Each time we send a path to the new DB, it will return back the document ID.
  * That document ID will get placed in the mappings DB, where the key is the old 
@@ -12,6 +15,10 @@ class PathsMigrator{
         this.mappingsDb = mappingsDb;
     }
 
+    /**
+     * Migrates the paths from the old DB to the new DB
+     * with unique path IDs set by the new DB.
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
             let oldPathsCursor = await this.oldDb.getObjects("paths", {});
