@@ -22,7 +22,12 @@ Below is a more detailed architecture of how data gets processed from the source
 Data moves from the source to production in order from left to right in the diagram below.
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/Detailed%20Architecture.png" width="100%"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/Datapath-Part-1.png" width="100%"/>
+    </p>
+</div>
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Data%20Aggregator%20Service/docs/Datapath-Part-2.png" width="100%"/>
     </p>
 </div>
 
