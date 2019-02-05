@@ -1,5 +1,33 @@
 const Database = require("on-transit").Database;
 
+/**
+ * Combines trip and route data from two different collections 
+ * with the same route ID
+ * {
+ *    tripID: <TRIP ID>,
+ *    shapeID: <SHAPE ID>,
+ *    routeID: <ROUTE ID>,
+ *    headSign: <HEAD SIGN>,
+ *    tripShortName: <TRIP SHORT NAME>
+ * }
+ * and
+ * {
+ *    routeID: <ROUTE ID>,
+ *    shortName: <SHORT NAME>,
+ *    longName: <LONG NAME>
+ * }
+ * 
+ * into a single object:
+ * {
+ *    _id: <NEW_ROUTE_ID>,
+ *    shortName: <SHORT_NAME>,
+ *    longName: <LONG_NAME>,
+ *    headsign: <HEAD_SIGN>,
+ *    type: <TYPE_OF_TRANSPORTATION>
+ *    pathID: <NEW_PATH_ID>,
+ *    scheduleID: <NEW_SCHEDULE_ID>
+ * }
+ */
 class RouteTripsCombiner{
 
     /**
@@ -12,6 +40,9 @@ class RouteTripsCombiner{
         this.newDb = newDb;
     }
 
+    /**
+     * Runs the entire app.
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
 
@@ -30,18 +61,6 @@ class RouteTripsCombiner{
                 let routeLongName = rawRouteData.longName.trim();
                 let routeType = rawRouteData.type.trim();
                 
-                /**
-                 * What we want at the end:
-                 * {
-                 *    _id: <NEW_ROUTE_ID>,
-                 *    shortName: <SHORT_NAME>,
-                 *    longName: <LONG_NAME>,
-                 *    headsign: <HEAD_SIGN>,
-                 *    type: <TYPE_OF_TRANSPORTATION>
-                 *    pathID: <NEW_PATH_ID>,
-                 *    scheduleID: <NEW_SCHEDULE_ID>
-                 * }
-                 */
                 let newTripObject = {
                     tripID: tripID,
                     pathID: shapeID,

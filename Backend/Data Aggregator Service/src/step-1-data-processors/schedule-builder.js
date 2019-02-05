@@ -37,6 +37,9 @@ class TripScheduleBuilder{
         this.newDb = newDb;
     }
 
+    /**
+     * Runs and aggregates the data
+     */
     async processData(){
         function map(){
             let key = this.tripID;
@@ -123,63 +126,6 @@ class TripScheduleBuilder{
             }
             await this.newDb.saveObjectToDatabase("schedules", newObj);
         }
-
-        // return new Promise(async (resolve, reject) => {
-        //     let rawTripsCursor = this.oldDb.getObjects("raw-trips", {});
-        //     while (await rawTripsCursor.hasNext()){
-        //         let rawTrip = await rawTripsCursor.next();
-        //         let tripID = rawTrip.tripID;
-
-        //         // Ensure that the same trip ID does not exist in the new db.
-        //         let existingSchedule = await this.newDb.getObject("schedules", { "tripID": tripID });
-        //         if (!existingSchedule){
-
-        //             // Get all the stops that the bus / train will travel to.
-        //             let rawStopTimesCursor = this.oldDb.getObjects("raw-stop-times", { "tripID": tripID });
-        //             let rawStopTimes = [];
-        //             while (await rawStopTimesCursor.hasNext()){
-        //                 let rawStopTime = await rawStopTimesCursor.next();
-        //                 rawStopTimes.push(rawStopTime);
-        //             }
-                    
-        //             // Sort the stop times by the sequence of trips the bus / train will travel to.
-        //             rawStopTimes = rawStopTimes.sort((a, b) => {
-        //                 let sequenceA = a.sequence;
-        //                 let sequenceB = b.sequence;
-
-        //                 if (sequenceA < sequenceB){
-        //                     return -1;
-        //                 }
-        //                 else{
-        //                     return 1;
-        //                 }
-        //             });
-
-        //             // Combine the list to one object
-        //             let times = rawStopTimes.map(a => {
-        //                 return [a.arrivalTime, a.departTime];
-        //             });
-        //             let numStops = times.length;
-        //             let startTime = times[0][0];
-        //             let endTime = times[numStops - 1][1];
-        //             let locationIDs = rawStopTimes.map(a => a.stopLocationID);
-        //             let headsigns = rawStopTimes.map(a => a.headsign);
-
-        //             let tripSchedule = {
-        //                 tripID: tripID,
-        //                 startTime: startTime,
-        //                 endTime: endTime,
-        //                 times: times,
-        //                 locationIDs: locationIDs,
-        //                 headsigns: headsigns
-        //             };
-
-        //             await this.newDb.saveObjectToDatabase("schedules", tripSchedule);
-        //         }
-        //     }
-
-        //     resolve();
-        // });
     }
 }
 

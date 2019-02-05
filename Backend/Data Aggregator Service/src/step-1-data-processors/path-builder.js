@@ -1,5 +1,26 @@
 const Database = require("on-transit").Database;
 
+/**
+ * Combines path locations with the same shape ID:
+ * {
+ *    shapeID: <shape id>,
+ *    latitude: <latitude>,
+ *    longitude: <longitude>,
+ *    sequence: <sequence>
+ * }
+ * 
+ * into:
+ * {
+ *    pathID: <shape id>,
+ *    location: {
+ *       type: "LineString",
+ *       coordinates: [
+ *           [longitude, latitude],
+ *           [longitude, latitude]
+ *       ]
+ *    }
+ * }
+ */
 class PathBuilder{
 
     /**
@@ -12,6 +33,13 @@ class PathBuilder{
         this.newDb = newDb;
     }
 
+    /**
+     * Obtains a path given a trip object.
+     * Pre-condition: the 'trip' object needs to have a property called 'shapeID'
+     * which defines which path locations define the path of the trip.
+     * 
+     * @param {Object} trip The trip object
+     */
     async getPath(trip){
 
         // Collect all the path locations with the same shape ID
@@ -51,6 +79,9 @@ class PathBuilder{
         return coordinates;
     }
 
+    /**
+     * The main method
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
             let rawTripsCursor = this.oldDb.getObjects("raw-trips", {});
