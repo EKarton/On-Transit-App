@@ -1,11 +1,29 @@
 const md5 = require('md5');
 
+/**
+ * Removes duplicate schedules from the database
+ * by storing the unique schedules in a separate database.
+ * 
+ * It also stores the hash of each schedule object
+ * for faster computations.
+ */
 class DuplicatedSchedulesRemover {
+
+    /**
+     * Constructs the DuplicatedSchedulesRemover
+     * @param {Database} oldDb The old database
+     * @param {Database} newDb The new database
+     */
     constructor(oldDb, newDb){
         this.oldDb = oldDb;
         this.newDb = newDb;
     }
 
+    /**
+     * Computes the hash of a schedule object.
+     * @param {Object} schedule A schedule
+     * @returns {String} The hash of the schedule.
+     */
     computeHash(schedule){
         let hash = "";
         hash += schedule.tripID;
@@ -15,6 +33,9 @@ class DuplicatedSchedulesRemover {
         return md5(hash); 
     }
 
+    /**
+     * Runs the application.
+     */
     processData() {
         return new Promise(async (resolve, reject) => {
             let schedulesCursor = await this.oldDb.getObjects("schedules", {});

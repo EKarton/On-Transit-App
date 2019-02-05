@@ -1,12 +1,34 @@
 const md5 = require('md5');
 
+/**
+ * Removes duplicate trips by storing the unique trips
+ * in a new database.
+ * 
+ * It requires computing and storing the hash code of each unique
+ * trip in the new database for faster computations.
+ * 
+ * It also updates the schedules who link to a duplicated trip.
+ */
 class DuplicatedTripsRemover {
+
+    /**
+     * Constructs the DuplicatedTripsRemover
+     * @param {Database} oldDb The database with duplicated trips
+     * @param {Database} newDb The database used to store unique trips
+     * @param {Database} mappingDb Stores the mappings of duplicated trips to unique trips.
+     */
     constructor(oldDb, newDb, mappingDb) {
         this.oldDb = oldDb;
         this.newDb = newDb;
         this.mappingDb = mappingDb;
     }
 
+    /**
+     * Updates the schedules that were linked to a duplicated trip
+     * to the unique trips in the new database.
+     * 
+     * It updates the schedules in the old database.
+     */
     updateSchedules(){
         return new Promise(async (resolve, reject) => {
             let duplicateCursor = await this.mappingDb.getObjects("duplicate-to-unique-trip-IDs", {});
@@ -23,6 +45,11 @@ class DuplicatedTripsRemover {
         });
     }
 
+    /**
+     * Computes the hash code of a trip object
+     * @param {Object} trip The trip object
+     * @returns {String} The hash code of the trip object
+     */
     computeHashCode(trip){
         let hash = "";
         hash += trip.pathID;
@@ -34,6 +61,9 @@ class DuplicatedTripsRemover {
         return md5(hash);
     }
 
+    /**
+     * Runs the entire app.
+     */
     processData() {
         return new Promise(async (resolve, reject) => {
             let tripsCursor = await this.oldDb.getObjects("trips", {});

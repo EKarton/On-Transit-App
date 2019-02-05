@@ -1,12 +1,35 @@
 const md5 = require('md5');
 
+/**
+ * Removes any duplicate stop locations by saving the unique
+ * stop locations in a new database.
+ * 
+ * Computes the hash of each stop location from the old database
+ * and stores them in the new database for faster computations.
+ * 
+ * Also stores the mappings of duplicate stop locations' stop ID
+ * to the unique stop locations' stop ID.
+ */
 class DuplicateStopLocationsResolver {
+
+    /**
+     * 
+     * @param {Database} oldDb A database with the stop locations.
+     * @param {Database} newDb A database used to store the unique stop locations
+     * @param {Database} mappingDb A database used to store the mappings
+     */
     constructor(oldDb, newDb, mappingDb){
         this.oldDb = oldDb;
         this.newDb = newDb;
         this.mappingDb = mappingDb;
     }
 
+    /**
+     * Updates the affected schedules to the unique stop locations 
+     * whose schedules link to duplicate stop locations.
+     * 
+     * It updates the schedules directly in the old database.
+     */
     updateSchedules(){
         return new Promise(async (resolve, reject) => {
             let duplicatesCursor = await this.mappingDb.getObjects("duplicate-to-unique-stop-location-ID", {});
@@ -35,6 +58,11 @@ class DuplicateStopLocationsResolver {
         });
     }
 
+    /**
+     * Computes the hash code of the stop location.
+     * @param {Object} stopLocation The stop location
+     * @returns {String} The hash code of the stop location.
+     */
     computeHash(stopLocation){
         let hash = "";
         hash += "[" + stopLocation.name + "]";
@@ -44,6 +72,9 @@ class DuplicateStopLocationsResolver {
         return md5(hash);
     }
 
+    /**
+     * Runs the app.
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
             let stopLocationsCursor = await this.oldDb.getObjects("stop-locations", {});

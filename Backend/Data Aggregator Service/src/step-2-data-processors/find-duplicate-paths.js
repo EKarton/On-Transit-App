@@ -1,12 +1,33 @@
 const md5 = require('md5');
 
+/**
+ * Removes the duplicate paths from the database
+ * and updates the documents who references the duplicated paths
+ * to the unique paths.
+ * 
+ * It also creates a new table called 'duplicate-to-unique-path-ID' in a 
+ * specified database which maps the path IDs of duplicate paths to the path IDs 
+ * of unique paths.
+ */
 class DuplicatedPathsRemover{
+
+    /**
+     * Constructs the DuplicatedPathsRemover.
+     * @param {Database} oldDb The old database
+     * @param {*} newDb The new database
+     * @param {*} mappingDb The database used to save mappings 
+     *  from duplicate paths to unique paths.
+     */
     constructor(oldDb, newDb, mappingDb){
         this.oldDb = oldDb;
         this.newDb = newDb;
         this.mappingDb = mappingDb;
     }
 
+    /**
+     * Updates the trips' path ID that links from a duplicate path
+     * to a unique path.
+     */
     updateTrips(){
         return new Promise(async (resolve, reject) => {
             let duplicatesCursor = await this.mappingDb.getObjects("duplicate-to-unique-path-ID", {});
@@ -29,11 +50,19 @@ class DuplicatedPathsRemover{
         });
     }
 
+    /**
+     * Computes the hash of a list of coordinates
+     * @param {Object[]} coordinates A list of coordinates
+     * @returns {String} The hash of the coordinates
+     */
     computeCoordinatesHash(coordinates){
         var hash = JSON.stringify(coordinates);
         return md5(hash);
     }
 
+    /**
+     * Runs the app.
+     */
     processData(){
         return new Promise(async (resolve, reject) => {
             let pathsCursor = await this.oldDb.getObjects("paths", {});
