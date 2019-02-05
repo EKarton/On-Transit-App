@@ -2,7 +2,7 @@
 
 (async () => {
     console.log("== Starting Raw Data Collection ==");
-    await require("./raw-data-collectors/runner")();
+    await require("./step-0-data-processors/runner")();
     console.log("== Finished Raw Data Collection ==");
 
     console.log("== Starting Step 1 Data Processors ==");
