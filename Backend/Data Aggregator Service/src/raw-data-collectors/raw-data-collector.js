@@ -11,6 +11,12 @@ class RawDataCollector{
         this.downloadFolder = downloadFolder;
     }
 
+    /**
+     * Converts the time from HH:MM:SS to the number of seconds
+     * after midnight.
+     * @param {String} time Time in HH:MM:SS format
+     * @returns {Integer} The number of seconds after midnight.
+     */
     _convertTimeToInteger(time){
         var splittedTime = time.split(":");
         var numHrsFromNoon = parseInt(splittedTime[0]);
@@ -94,7 +100,7 @@ class RawDataCollector{
     }
 
     /**
-     * Reads the trips data from this.downloadFolder/trips.txt to the database.
+     * Reads the trips data from ${this.downloadFolder}/trips.txt to the database.
      * It places each trip from trips.txt as a new object in the database's "raw-trips" collection.
      * @param {Database} db The database instance to store the trips
      */
@@ -128,6 +134,11 @@ class RawDataCollector{
         });
     }
 
+    /**
+     * Reads the route data from ${this.downloadFolder}/routes.txt to the database.
+     * It places each route from routes.txt as a new object in the database's "raw-routes" collection.
+     * @param {Database} db The database instance to store the routes
+     */
     saveRoutesToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/routes.txt");
@@ -157,6 +168,11 @@ class RawDataCollector{
         });
     }
 
+    /**
+     * Reads the shape data from ${this.downloadFolder}/shapes.txt to the database.
+     * It places each row in the file as a new object in the database's "raw-shapes" collection.
+     * @param {Database} db The database instance to store the shapes data
+     */
     saveShapesToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/shapes.txt");
@@ -186,6 +202,11 @@ class RawDataCollector{
         });
     }
 
+    /**
+     * Reads the stop locations data from ${this.downloadFolder}/stops.txt to the database.
+     * It places each row in the file as a new object in the database's "raw-stops" collection.
+     * @param {Database} db The database instance to store the stop locations data
+     */
     saveStopLocationsToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/stops.txt");
@@ -217,6 +238,11 @@ class RawDataCollector{
         });
     }
 
+    /**
+     * Reads the stop times data from ${this.downloadFolder}/times.txt to the database.
+     * It places each row in the file as a new object in the database's "raw-times" collection.
+     * @param {Database} db The database instance to store the stop times data
+     */
     saveStopTimesToDatabase(db){
         return new Promise((resolve, reject) => {
             var fileStream = fs.createReadStream(this.downloadFolder + "/stop_times.txt");
