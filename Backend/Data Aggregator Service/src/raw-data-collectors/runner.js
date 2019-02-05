@@ -7,7 +7,7 @@ const Config = require("../res/config");
 let dbs = [];
 let numDbs = 5;
 
-var openConnections = async () => {
+const openConnections = async () => {
     for (let i = 0; i < numDbs; i++){
         let newDb = new Database();
         await newDb.connectToDatabase(Config.MONGODB_URL, Config.RAW_DATABASE_NAME);
@@ -15,7 +15,7 @@ var openConnections = async () => {
     }
 };
 
-var closeConnections = async () => {
+const closeConnections = async () => {
     for (let i = 0; i < numDbs; i++){
         await dbs[i].closeDatabase();
     }
@@ -45,7 +45,6 @@ module.exports = async function(){
         await closeConnections();
     }
 };
-
 
 // Shutdown the app when the user types CTRL-C
 process.on('SIGINT', async function() {

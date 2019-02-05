@@ -1,4 +1,4 @@
-import {getCurrentTime} from "./MockedTimeService";
+import {getCurrentTime} from "./TimeService";
 import { getTimeInSeconds } from "./TimeFormatter";
 
 var alarmWatch = null;

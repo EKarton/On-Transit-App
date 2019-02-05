@@ -3,7 +3,7 @@ import { connect } from "react-redux";
 import "./RouteChooserPopup.css";
 import "./../popup/Popup.css"
 import LoadingPopup from "../loading-popup/LoadingPopup";
-import { getCurrentTime } from "../../services/MockedTimeService";
+import { getCurrentTime } from "../../services/TimeService";
 import { getNearbyTrips } from "../../actions/nearby-trips-actions";
 import { startTrackingLocation, stopTrackingLocation } from "../../actions/geolocation-actions";
 import { getTripDetails } from "../../actions/select-trip-actions";
