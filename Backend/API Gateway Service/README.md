@@ -55,24 +55,31 @@ Once the server is up, you are able to make many HTTP requests to the server.
 **Sample Success Response:**
 ```
 {
-	status: "success",
-	data: {
-		tripIDs: [
-			"17283431",
-            "17283646",
-            "17283709",
-            "17286532",
-            "17286953",
-            "17287436",
-            "17287800",
-            "17291264",
-            "17291977",
-            "17292609",
-            "17293460",
-            "17293698",
-            "17296966"
-		]
-	}
+    status: "success",
+    data: {
+        "tripIDs": {
+            "5c4e158f3b9294327663817b": {
+                "shortname": "46",
+                "longname": "Tenth Line-Osprey",
+                "headsign": "Northbound",
+                "type": "3",
+                "schedules": [
+                    "5c4e15153b92943276631d19",
+                    "5c4e15153b92943276631d20",
+                    "5c4e15153b92943276631d21"
+                ]
+            },
+            "5c4e158f3b9294327663817f": {
+                "shortname": "46",
+                "longname": "Tenth Line-Osprey",
+                "headsign": "Southbound",
+                "type": "3",
+                "schedules": [
+                    "5c4e15163b92943276631dd1"
+                ]
+            }
+        }
+    }
 }
 ```
 
