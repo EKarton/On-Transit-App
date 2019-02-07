@@ -109,6 +109,7 @@ $ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&time=1
 ##### Step 2: Set up the config file
 1. Make a copy of the file "config_template.js" under the folder "Backend/Trips Locator Service/src/res", name it "config.js", and save it in the same directory.
 2. Open up "config.js" and edit the port number for the app to use. Note that the port must be free to use. By default, the port number is 3001.
+3. Add the Mongo DB url and credentials to "config.js".
 
 ##### Step 3: Run the app
 1. In the "Backend/Trips Locator Service" folder of the project directory, type in the command `npm start`.
