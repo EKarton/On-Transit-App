@@ -14,7 +14,7 @@ This microservice is used to obtain the closest possible trips based on a GPS lo
 This microservice is comprised of several clusters that work together to make it very scalable.
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Trips%20Locator%20Service/docs/Architecture.png" width="600px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Trips%20Locator%20Service/docs/System-Architecture.png" width="600px"/>
     </p>
 </div>
 
