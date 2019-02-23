@@ -86,7 +86,7 @@ This section has moved here: https://facebook.github.io/create-react-app/docs/de
 You can also deploy it on Heroku:
 - Step 0: Get Heroku CLI on your machine as well as creating a Heroku app on your Heroku account.
 - Step 1: Make a copy of the file ```Deploy-to-Heroku-Template.sh``` in the folder ```scripts``` with the new file name ```Deploy-to-Heroku.sh```.
-- Step 2: Inside ```Deploy-to-Heroku.sh``` set the variable ```HEROKU_APP_NAME``` to the app name you have made on Heroku.
+- Step 2: Inside the ```Deploy-to-Heroku.sh``` file, set the variable ```HEROKU_APP_NAME``` to the app name you have made on Heroku.
 - Step 3: In the terminal, run the command ```sh scripts/Deploy-to-Heroku.sh``` in the Web App folder. Follow the onboarded instructions.
 
 ## `npm run build` fails to minify

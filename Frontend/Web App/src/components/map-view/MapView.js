@@ -29,8 +29,8 @@ class MapView extends React.Component {
 
     state = {
         location: {
-            latitude: 0,
-            longitude: 0
+            latitude: null,
+            longitude: null
         }
     };
 
@@ -344,8 +344,19 @@ class MapView extends React.Component {
 
             let tripDetailsAdded = oldProps && newProps && oldProps.path === null && newProps.path !== null;
             let tripDetailsRemoved = oldProps && newProps && oldProps.path !== null && newProps.path === null;
+            let predictedLocationAdded = oldState.location.latitude === null && newState.location.latitude !== null;
+            let predictedLocationChanged = oldState.location.latitude !== newState.location.latitude 
+                                        && oldState.location.longitude !== newState.location.longitude;
             
-            if (tripDetailsAdded){
+            if (predictedLocationAdded) {
+                newViewOptions.center = fromLonLat([
+                    newState.location.longitude, 
+                    newState.location.latitude
+                ]);
+                newViewOptions.duration = 2000;
+                newViewOptions.zoom = 13;
+            }
+            else if (tripDetailsAdded){
                 let sumOfAllPathLatitudes = newProps.path.reduce((curSum, item) => curSum + item.lat, 0);
                 let sumOfAllPathLongitudes = newProps.path.reduce((curSum, item) => curSum + item.long, 0);
                 let midPathLatitude = sumOfAllPathLatitudes / newProps.path.length;
@@ -353,7 +364,7 @@ class MapView extends React.Component {
 
                 newViewOptions.center = fromLonLat([midPathLongitude, midPathLatitude]);
                 newViewOptions.duration = 2000;
-                newViewOptions.zoom = 13;
+                newViewOptions.zoom = 10;
                 
             }
             else if (tripDetailsRemoved){
@@ -361,6 +372,7 @@ class MapView extends React.Component {
                 newViewOptions.duration = 2000;
                 newViewOptions.zoom = 2;
             }
+
 
             if (newViewOptions !== {}){
                 this.olView.animate(newViewOptions);
@@ -371,9 +383,11 @@ class MapView extends React.Component {
                 this.updateStopsLayer(newProps.stops);
             }
 
-            let curLatitude = newState.location.latitude;
-            let curLongitude = newState.location.longitude;
-            this.updateLiveLocationLayer(curLatitude, curLongitude);
+            if (predictedLocationChanged) {
+                let curLatitude = newState.location.latitude;
+                let curLongitude = newState.location.longitude;
+                this.updateLiveLocationLayer(curLatitude, curLongitude);
+            }
         }
     };
 

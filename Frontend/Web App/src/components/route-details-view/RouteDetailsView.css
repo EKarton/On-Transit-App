@@ -22,19 +22,18 @@
 
 .trip-header-details{
     padding-left: 10px;
-    padding-top: 5px;
-    padding-bottom: 5px;
+    padding-top: 25px;
+    padding-bottom: 25px;
 }
 
 .short-name {
-    font-size: 1.6em;
-    padding-top: 20px;
+    font-size: 1.2em;
     margin: 0;
 }
 
 .long-name {
     margin: 0px;
-    font-size: 1.2em;
+    font-size: 1.1em;
 }
 
 .stop-containers-list {
@@ -52,9 +51,8 @@
 }
 
 .stop-name {
-    font-size: 1.1em;
+    font-size: 1.0em;
     width: 70%;
-    /* float: left; */
     display: inline-block;
     padding-top: 10px;
     padding-bottom: 10px;
@@ -64,13 +62,12 @@
     width: 30%;
     float: right;
     text-align: right;
-    /* height: 100%; */
     padding-top: 10px;
     padding-bottom: 10px;
 }
 
 .remaining-time-value {
-    font-size: 1.2em;
+    font-size: 1.0em;
 }
 
 .remaining-time-unit {
@@ -85,11 +82,9 @@
     -ms-transition: max-height 1s; 
     -o-transition: max-height 1s; 
     transition: max-height 1s;  
-    /*display: none; */
 }
 
 .stop-container:hover .stop-interactions-container {
-    /*display: block;*/
     max-height: 50px;
 }
 

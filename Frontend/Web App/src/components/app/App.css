@@ -8,14 +8,30 @@
     height: 100%;
 }
 
+@media screen and (max-width: 1000px) {
+    .left-panel {
+        max-width: 25%;
+    }
+}
+
+@media screen and (max-width: 900px) {
+    .left-panel {
+        max-width: 30%;
+    }
+}
+
+@media screen and (max-width: 800px) {
+    .left-panel {
+        max-width: 35%;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .left-panel {
+        max-width: 40%;
+    }
+}
+
 .right-panel {
-    /* width: auto;
-    height: 100%;
-    display: inline-block; */
-
-    /* width: 100%; */
-    /* height: 100vh; */
-    /* display: inline-block; */
-
     flex: 1;
 }
