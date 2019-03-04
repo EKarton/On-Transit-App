@@ -1,8 +1,8 @@
 package com.kartonoe.ontransitapp.utils;
 
-public class RemainingTimeFormatter {
+public class TimeFormatter {
 
-    public static RemainingTime getFormattedTime(int numSeconds) {
+    public static TimeString getFormattedTime(int numSeconds) {
         int numHrsRemaining = numSeconds / 3600;
         numSeconds = numSeconds % 3600;
 
@@ -42,6 +42,6 @@ public class RemainingTimeFormatter {
             }
         }
 
-        return new RemainingTime(remainingTimeValue, remainingTimeUnit);
+        return new TimeString(remainingTimeValue, remainingTimeUnit);
     }
 }

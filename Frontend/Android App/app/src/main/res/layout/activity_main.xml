@@ -37,7 +37,7 @@
             android:layout_marginTop="8dp"
             app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
             map:layout_constraintTop_toBottomOf="@id/routeDetails"
-            tools:context=".MainActivity" />
+            tools:context=".views.MainActivity" />
 
         <!-- The location button -->
         <android.support.design.widget.FloatingActionButton
@@ -63,7 +63,7 @@
         android:gravity="center|top"
         android:layout_weight="0.8">
 
-        <android.support.v7.widget.RecyclerView
+        <com.kartonoe.ontransitapp.views.stopdetails.StopDetailsRecyclerView
             android:id="@+id/stopsRecyclerView"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

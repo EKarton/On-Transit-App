@@ -1,11 +1,11 @@
 package com.kartonoe.ontransitapp.utils;
 
-public class RemainingTime {
+public class TimeString {
     private String value;
     private String units;
 
 
-    public RemainingTime(String value, String units) {
+    public TimeString(String value, String units) {
         this.value = value;
         this.units = units;
     }
@@ -17,5 +17,4 @@ public class RemainingTime {
     public String getUnits() {
         return units;
     }
-
 }

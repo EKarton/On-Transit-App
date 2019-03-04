@@ -1,4 +1,4 @@
-package com.kartonoe.ontransitapp.views;
+package com.kartonoe.ontransitapp.views.nearbytrips;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -26,6 +26,7 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class NearbyTripsPickerDialog extends Dialog {
 
@@ -149,7 +150,7 @@ public class NearbyTripsPickerDialog extends Dialog {
 
     private void updateRoutes(LatLng curLocation) {
 
-        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.CANADA);
         Date curTime = Calendar.getInstance().getTime();
         String formattedTime = format.format(curTime);
 

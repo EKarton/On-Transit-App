@@ -1,4 +1,4 @@
-package com.kartonoe.ontransitapp;
+package com.kartonoe.ontransitapp.views;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -13,9 +13,10 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,40 +27,59 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.kartonoe.ontransitapp.R;
 import com.kartonoe.ontransitapp.models.NearbyTrip;
 import com.kartonoe.ontransitapp.models.Stop;
 import com.kartonoe.ontransitapp.models.Trip;
 import com.kartonoe.ontransitapp.models.Vector;
 import com.kartonoe.ontransitapp.services.GetTripDetailsHandler;
+import com.kartonoe.ontransitapp.services.OnTransitMockedWebService;
 import com.kartonoe.ontransitapp.services.OnTransitService;
 import com.kartonoe.ontransitapp.services.OnTransitWebService;
-import com.kartonoe.ontransitapp.views.NearbyTripsPickerDialog;
-import com.kartonoe.ontransitapp.views.StopDetailsAdapter;
-import com.kartonoe.ontransitapp.views.TripDetailsView;
+import com.kartonoe.ontransitapp.services.StopAlarmsManager;
+import com.kartonoe.ontransitapp.views.nearbytrips.NearbyTripsPickerDialog;
+import com.kartonoe.ontransitapp.views.stopdetails.StopDetailsAdapter;
+import com.kartonoe.ontransitapp.views.stopdetails.StopDetailsRecyclerView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
-    private RecyclerView stopsRecyclerView;
+    private StopDetailsRecyclerView stopsRecyclerView;
 
     private GoogleMap mMap;
     private LocationManager locationManager;
     private LocationListener locationListener;
 
     private TripDetailsView tripDetailsView;
+    private StopAlarmsManager stopAlarmManager;
+    private OnTransitService onTransitService;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        if (getIntent().getBooleanExtra("lock", false)) {
+            // These next few lines of code open a window with the MainActivity
+            // evan if the device is locked
+            Window win = this.getWindow();
+            win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
+            win.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
+        }
+
+        stopAlarmManager = new StopAlarmsManager(this);
+        onTransitService = OnTransitMockedWebService.getInstance(this);
+
+        setupUI();
+        setupLocationServices();
+    }
+
+    public void setupUI() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -68,21 +88,6 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         // Get the UI components
         this.tripDetailsView = findViewById(R.id.routeDetails);
         this.stopsRecyclerView = findViewById(R.id.stopsRecyclerView);
-
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (stopsRecyclerView.getAdapter() != null) {
-                            stopsRecyclerView.getAdapter().notifyDataSetChanged();
-                        }
-                    }
-                });
-            }
-        }, 0, 1000);
 
         // Fix the drag and scrolling with the listview in the sliding panel
         SlidingUpPanelLayout scrollPanel = findViewById(R.id.sliding_layout);
@@ -96,13 +101,16 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
                 requestLocation();
             }
         });
+    }
 
+    public void setupLocationServices() {
         this.locationManager = (LocationManager)
                 getSystemService(Context.LOCATION_SERVICE);
 
         this.locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
+
             }
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
@@ -123,12 +131,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         requestLocation();
     }
 
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
         mMap.setBuildingsEnabled(true);
 
-        NearbyTripsPickerDialog dialog = new NearbyTripsPickerDialog(this, OnTransitWebService.getInstance(this), new NearbyTripsPickerDialog.OnTripSelectedListener() {
+        NearbyTripsPickerDialog dialog = new NearbyTripsPickerDialog(this, onTransitService, new NearbyTripsPickerDialog.OnTripSelectedListener() {
             @Override
             public void onTripSelected(NearbyTrip nearbyTrip) {
                 selectTripSchedule(nearbyTrip);
@@ -138,9 +147,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void selectTripSchedule(NearbyTrip trip) {
-        final OnTransitService service = OnTransitWebService.getInstance(this);
-
-        service.getTripDetails(trip.getTripID(), trip.getScheduleID(), new GetTripDetailsHandler() {
+        onTransitService.getTripDetails(trip.getTripID(), trip.getScheduleID(), new GetTripDetailsHandler() {
             @Override
             public void onSuccess(Trip trip) {
 
@@ -229,6 +236,12 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         StopDetailsAdapter stopDetailsAdapter = new StopDetailsAdapter(stops, new StopDetailsAdapter.OnAlarmCreatedListener() {
             @Override
             public void createAlarm(Stop stop) {
+
+                if (stopAlarmManager.isAlarmCreated(stop)) {
+                    stopAlarmManager.deleteAlarm(stop);
+                } else {
+                    stopAlarmManager.addAlarm(stop);
+                }
             }
         });
         stopsRecyclerView.setAdapter(stopDetailsAdapter);

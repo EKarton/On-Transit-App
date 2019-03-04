@@ -18,6 +18,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
+        <receiver android:name=".views.AlarmReciever"/>
+
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").
@@ -36,7 +38,7 @@
             android:value="26.1.0"/>
 
         <activity
-            android:name=".MainActivity"
+            android:name=".views.MainActivity"
             android:label="@string/title_activity_main">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
