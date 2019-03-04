@@ -14,19 +14,19 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
- * A singleton that is used to make calls to the server
+ * A singleton that is used to make calls to the On Transit service
  */
 public class OnTransitWebService implements OnTransitService {
 
     // Basic server details
-    private final String SERVER_PROTOCOL = "http";
+    private final String SERVER_PROTOCOL = "https";
     private final String SERVER_AUTH = null;
-    private final String SERVER_HOSTNAME = "100.64.173.59";
-    private final int SERVER_PORT = 3000;
+    private final String SERVER_HOSTNAME = "on-transit-app-api-gateway.herokuapp.com";
+    private final int SERVER_PORT = -1;
 
-    // Routes
-    private final String ROUTES_URI = "/api/v1/trips";
-    private final String VEHICLES_URI = "/api/v1/vehicles";
+    // Trips
+    private final static String TRIPS_LOCATOR_ROUTE = "/api/v1/trips";
+    private final static String TRIP_DETAILS_ROUTE = "/api/v1/trips/%s/schedules/%s";
 
     private static OnTransitService instance = null;
 
@@ -43,7 +43,7 @@ public class OnTransitWebService implements OnTransitService {
         this.requestQueue = Volley.newRequestQueue(context);
     }
 
-    public void getTripIDsNearLocation(LatLng location, double radius, String time, GetTripsHandler handler) {
+    public void getTripIDsNearLocation(LatLng location, double radius, String time, GetNearbyTripsHandler handler) {
         String query = new StringBuilder("lat=")
                 .append(location.latitude)
                 .append("&long=")
@@ -56,7 +56,7 @@ public class OnTransitWebService implements OnTransitService {
 
         try {
             URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
-                    ROUTES_URI, query, null);
+                    TRIPS_LOCATOR_ROUTE, query, null);
 
             Log.d(LOG_TAG, "Making HTTP request to " + uri);
 
@@ -76,11 +76,8 @@ public class OnTransitWebService implements OnTransitService {
         }
     }
 
-    public void getTripDetails(String routeID, GetTripDetailsHandler handler) {
-        String apiEndpoint = new StringBuilder(ROUTES_URI)
-                .append("/")
-                .append(routeID)
-                .toString();
+    public void getTripDetails(String tripID, String scheduleID, GetTripDetailsHandler handler) {
+        String apiEndpoint = String.format(TRIP_DETAILS_ROUTE, tripID, scheduleID);
 
         try {
             URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT,
@@ -95,33 +92,6 @@ public class OnTransitWebService implements OnTransitService {
                     500000,
                     DefaultRetryPolicy.DEFAULT_MAX_RETRIES,
                     DefaultRetryPolicy.DEFAULT_BACKOFF_MULT));
-
-            this.requestQueue.add(request);
-        } catch (URISyntaxException e) {
-            Log.d(LOG_TAG, e.getMessage());
-            handler.onError(e);
-        }
-    }
-
-    public void getVehiclesNearLocation(LatLng location, double radius, GetVehiclesHandler handler) {
-        // Create the URL
-        String query = new StringBuilder("lat=")
-                .append(location.latitude)
-                .append("&long=")
-                .append(location.longitude)
-                .append("&radius=")
-                .append(radius)
-                .toString();
-
-        try {
-            URI uri = new URI(SERVER_PROTOCOL, SERVER_AUTH, SERVER_HOSTNAME, SERVER_PORT, VEHICLES_URI,
-                    query, null);
-
-            Log.d(LOG_TAG, "Making HTTP request to " + uri);
-
-            // Send the request
-            JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET,
-                    uri.toString(), null, handler, handler);
 
             this.requestQueue.add(request);
         } catch (URISyntaxException e) {

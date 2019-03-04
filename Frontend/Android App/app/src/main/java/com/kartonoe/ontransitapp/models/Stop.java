@@ -1,18 +1,16 @@
 package com.kartonoe.ontransitapp.models;
 
-import java.sql.Time;
-
 /**
  * A class used to represent a transit stop
  */
 public class Stop {
     private Vector location;
-    private int expectedArrivalTime;
+    private int arrivalTime;
     private String name;
 
-    public Stop(Vector location, int expectedArrivalTime){
+    public Stop(Vector location, int arrivalTime){
         this.location = location;
-        this.expectedArrivalTime = expectedArrivalTime;
+        this.arrivalTime = arrivalTime;
     }
 
     public Vector getLocation() {
@@ -23,12 +21,12 @@ public class Stop {
         this.location = location;
     }
 
-    public int getExpectedArrivalTime() {
-        return expectedArrivalTime;
+    public int getArrivalTime() {
+        return arrivalTime;
     }
 
-    public void setExpectedArrivalTime(int expectedArrivalTime) {
-        this.expectedArrivalTime = expectedArrivalTime;
+    public void setArrivalTime(int arrivalTime) {
+        this.arrivalTime = arrivalTime;
     }
 
     public String getName() {

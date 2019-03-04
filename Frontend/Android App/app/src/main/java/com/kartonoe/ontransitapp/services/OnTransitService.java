@@ -7,7 +7,6 @@ public interface OnTransitService {
     // For debugging purposes (to put in the Log.d())
     String LOG_TAG = "OnTransitService";
 
-    void getTripIDsNearLocation(LatLng location, double radius, String time, GetTripsHandler handler);
-    void getTripDetails(String routeID, GetTripDetailsHandler handler);
-    void getVehiclesNearLocation(LatLng location, double radius, GetVehiclesHandler handler);
+    void getTripIDsNearLocation(LatLng location, double radius, String time, GetNearbyTripsHandler handler);
+    void getTripDetails(String tripID, String scheduleID, GetTripDetailsHandler handler);
 }

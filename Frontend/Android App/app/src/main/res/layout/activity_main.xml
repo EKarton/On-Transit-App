@@ -63,14 +63,14 @@
         android:gravity="center|top"
         android:layout_weight="0.8">
 
-        <ListView
-            android:id="@+id/stopsListView"
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/stopsRecyclerView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
+            android:choiceMode="multipleChoice"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent">
-        </ListView>
+            app:layout_constraintRight_toRightOf="parent"/>
 
     </android.support.constraint.ConstraintLayout>
 
