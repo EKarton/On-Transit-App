@@ -3,6 +3,7 @@ package com.ontransit.androidapp.views;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -62,14 +63,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-
-        if (getIntent().getBooleanExtra("lock", false)) {
-            // These next few lines of code open a window with the MainActivity
-            // evan if the device is locked
-            Window win = this.getWindow();
-            win.addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED);
-            win.addFlags(WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON);
-        }
 
         stopAlarmManager = new StopAlarmsManager(this);
         onTransitService = OnTransitMockedWebService.getInstance(this);
@@ -136,13 +129,24 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
         mMap.setBuildingsEnabled(true);
 
-        NearbyTripsPickerDialog dialog = new NearbyTripsPickerDialog(this, onTransitService, new NearbyTripsPickerDialog.OnTripSelectedListener() {
-            @Override
-            public void onTripSelected(NearbyTrip nearbyTrip) {
-                selectTripSchedule(nearbyTrip);
-            }
-        });
-        dialog.show();
+        Intent intent = getIntent();
+
+        if (intent.getBooleanExtra("hasSelectedTrip", false)) {
+            String tripID = intent.getStringExtra("tripID");
+            String scheduleID = intent.getStringExtra("scheduleID");
+
+            NearbyTrip nearbyTrip = new NearbyTrip(tripID, null, null, null, null, scheduleID);
+            selectTripSchedule(nearbyTrip);
+
+        } else {
+            NearbyTripsPickerDialog dialog = new NearbyTripsPickerDialog(this, onTransitService, new NearbyTripsPickerDialog.OnTripSelectedListener() {
+                @Override
+                public void onTripSelected(NearbyTrip nearbyTrip) {
+                    selectTripSchedule(nearbyTrip);
+                }
+            });
+            dialog.show();
+        }
     }
 
     public void selectTripSchedule(NearbyTrip trip) {

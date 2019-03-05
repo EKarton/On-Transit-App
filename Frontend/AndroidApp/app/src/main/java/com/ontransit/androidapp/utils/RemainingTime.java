@@ -1,11 +1,11 @@
 package com.ontransit.androidapp.utils;
 
-public class TimeString {
+public class RemainingTime {
     private String value;
     private String units;
 
 
-    public TimeString(String value, String units) {
+    public RemainingTime(String value, String units) {
         this.value = value;
         this.units = units;
     }

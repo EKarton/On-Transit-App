@@ -1,8 +1,8 @@
 package com.ontransit.androidapp.utils;
 
-public class TimeFormatter {
+public class RemainingTimeFormatter {
 
-    public static TimeString getFormattedTime(int numSeconds) {
+    public static RemainingTime getFormattedTime(int numSeconds) {
         int numHrsRemaining = numSeconds / 3600;
         numSeconds = numSeconds % 3600;
 
@@ -42,6 +42,6 @@ public class TimeFormatter {
             }
         }
 
-        return new TimeString(remainingTimeValue, remainingTimeUnit);
+        return new RemainingTime(remainingTimeValue, remainingTimeUnit);
     }
 }

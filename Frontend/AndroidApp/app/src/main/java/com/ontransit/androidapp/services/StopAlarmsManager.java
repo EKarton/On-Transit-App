@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.ontransit.androidapp.models.Stop;
-import com.ontransit.androidapp.views.AlarmReciever;
+import com.ontransit.androidapp.views.stopalarm.StopAlarmReceiver;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +28,12 @@ public class StopAlarmsManager {
             throw new IllegalArgumentException("Stop already exists!");
         }
 
-        Intent newIntent = new Intent(context, AlarmReciever.class);
+        Intent newIntent = new Intent(context, StopAlarmReceiver.class);
+        newIntent.putExtra("stopName", stop.getName());
+        newIntent.putExtra("arrivalTime", stop.getArrivalTime());
+        newIntent.putExtra("tripID", "5c4e158e3b929432766380a7");
+        newIntent.putExtra("scheduleID", "5c4e14fa3b9294327663060f");
+
         PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, newIntent, 0);
         alarmManager.set(AlarmManager.RTC_WAKEUP, 10000, pendingIntent);
 

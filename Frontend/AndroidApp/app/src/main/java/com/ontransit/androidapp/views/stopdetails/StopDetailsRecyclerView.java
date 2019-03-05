@@ -1,21 +1,21 @@
-package com.ontransit.androidapp.views.stopdetails;
+    package com.ontransit.androidapp.views.stopdetails;
 
-import android.content.Context;
-import android.os.Handler;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v7.widget.RecyclerView;
-import android.util.AttributeSet;
+    import android.content.Context;
+    import android.os.Handler;
+    import android.support.annotation.NonNull;
+    import android.support.annotation.Nullable;
+    import android.support.v7.widget.RecyclerView;
+    import android.util.AttributeSet;
 
-import com.ontransit.androidapp.models.Stop;
+    import com.ontransit.androidapp.models.Stop;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+    import java.util.ArrayList;
+    import java.util.Calendar;
+    import java.util.List;
+    import java.util.Timer;
+    import java.util.TimerTask;
 
-public class StopDetailsRecyclerView extends RecyclerView {
+    public class StopDetailsRecyclerView extends RecyclerView {
     private final Timer timer;
 
     public StopDetailsRecyclerView(@NonNull Context context) {
@@ -40,35 +40,35 @@ public class StopDetailsRecyclerView extends RecyclerView {
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
 
-                        Adapter adapter = getAdapter();
+                Adapter adapter = getAdapter();
 
-                        if (adapter instanceof StopDetailsAdapter) {
-                            StopDetailsAdapter stopDetailsAdapter = (StopDetailsAdapter) adapter;
-                            List<Stop> stopList = stopDetailsAdapter.getStops();
+                if (adapter instanceof StopDetailsAdapter) {
+                    StopDetailsAdapter stopDetailsAdapter = (StopDetailsAdapter) adapter;
+                    List<Stop> stopList = stopDetailsAdapter.getStops();
 
-                            List<Stop> stopsRemaining = new ArrayList<>();
-                            for (Stop stop : stopList) {
+                    List<Stop> stopsRemaining = new ArrayList<>();
+                    for (Stop stop : stopList) {
 
-                                // Get the time between now and the stop's arrival time
-                                Calendar curTime = Calendar.getInstance();
-                                int numHoursFromMidnight = curTime.get(Calendar.HOUR_OF_DAY);
-                                int numMinutesFromHour = curTime.get(Calendar.MINUTE);
-                                int numSecondsFromMin = curTime.get(Calendar.SECOND);
-                                int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
+                        // Get the time between now and the stop's arrival time
+                        Calendar curTime = Calendar.getInstance();
+                        int numHoursFromMidnight = curTime.get(Calendar.HOUR_OF_DAY);
+                        int numMinutesFromHour = curTime.get(Calendar.MINUTE);
+                        int numSecondsFromMin = curTime.get(Calendar.SECOND);
+                        int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
 
-                                if (stop.getArrivalTime() > numSecondsFromMidnight) {
-                                    stopsRemaining.add(stop);
-                                }
-                            }
-
-                            stopDetailsAdapter.setStops(stopsRemaining);
+                        if (stop.getArrivalTime() > numSecondsFromMidnight) {
+                            stopsRemaining.add(stop);
                         }
                     }
-                });
+
+                    stopDetailsAdapter.setStops(stopsRemaining);
+                }
+                }
+            });
             }
         }, 0, 1000);
 

@@ -8,8 +8,8 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.ontransit.androidapp.R;
-import com.ontransit.androidapp.utils.TimeFormatter;
-import com.ontransit.androidapp.utils.TimeString;
+import com.ontransit.androidapp.utils.RemainingTimeFormatter;
+import com.ontransit.androidapp.utils.RemainingTime;
 
 import java.util.Calendar;
 
@@ -57,11 +57,11 @@ public class StopDetailsViewHolder extends RecyclerView.ViewHolder {
         int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
         int secondsDiff = stop.getStop().getArrivalTime() - numSecondsFromMidnight;
 
-        TimeString timeString = TimeFormatter.getFormattedTime(secondsDiff);
+        RemainingTime remainingTime = RemainingTimeFormatter.getFormattedTime(secondsDiff);
 
         this.getStopNameLabel().setText(stop.getStop().getName());
-        this.getStopTimeValueLabel().setText(timeString.getValue());
-        this.getStopTimeUnitLabel().setText(timeString.getUnits());
+        this.getStopTimeValueLabel().setText(remainingTime.getValue());
+        this.getStopTimeUnitLabel().setText(remainingTime.getUnits());
 
         if (stop.isSelected()) {
             this.getNotifyPanel().setVisibility(View.VISIBLE);
@@ -72,20 +72,20 @@ public class StopDetailsViewHolder extends RecyclerView.ViewHolder {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stop.setSelected(!stop.isSelected());
+            stop.setSelected(!stop.isSelected());
 
-                if (stop.isSelected()) {
-                    getNotifyPanel().setVisibility(View.VISIBLE);
-                } else {
-                    getNotifyPanel().setVisibility(View.GONE);
-                }
+            if (stop.isSelected()) {
+                getNotifyPanel().setVisibility(View.VISIBLE);
+            } else {
+                getNotifyPanel().setVisibility(View.GONE);
+            }
             }
         });
 
         notifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                stop.getOnAlarmCreatedListener().createAlarm(stop.getStop());
+            stop.getOnAlarmCreatedListener().createAlarm(stop.getStop());
             }
         });
     }
