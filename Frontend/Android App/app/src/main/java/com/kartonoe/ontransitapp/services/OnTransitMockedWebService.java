@@ -16,6 +16,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.nio.charset.StandardCharsets;
 import java.util.Calendar;
 
 public class OnTransitMockedWebService implements OnTransitService {
@@ -38,12 +39,12 @@ public class OnTransitMockedWebService implements OnTransitService {
         Resources resources = this.context.getResources();
 
         InputStream resourceReader = resources.openRawResource(id);
-        Writer writer = new StringWriter();
+        StringBuilder stringBuilder = new StringBuilder();
         try {
-            BufferedReader reader = new BufferedReader(new InputStreamReader(resourceReader, "UTF-8"));
+            BufferedReader reader = new BufferedReader(new InputStreamReader(resourceReader, StandardCharsets.UTF_8));
             String line = reader.readLine();
             while (line != null) {
-                writer.write(line);
+                stringBuilder.append(line);
                 line = reader.readLine();
             }
         } catch (Exception e) {
@@ -56,7 +57,7 @@ public class OnTransitMockedWebService implements OnTransitService {
             }
         }
 
-        return writer.toString();
+        return stringBuilder.toString();
     }
 
     @Override
