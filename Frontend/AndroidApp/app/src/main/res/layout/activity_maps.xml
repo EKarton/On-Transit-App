@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.sothree.slidinguppanel.SlidingUpPanelLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:sothree="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/sliding_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="bottom"
+    sothree:umanoPanelHeight="108dp"
+    sothree:umanoShadowHeight="4dp">
+
+    <!-- The main content -->
+    <android.support.constraint.ConstraintLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/constraintLayout">
+
+        <com.ontransit.androidapp.views.TripDetailsView
+            android:id="@+id/routeDetails"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"/>
+
+        <!-- The maps fragment -->
+        <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:map="http://schemas.android.com/apk/res-auto"
+            xmlns:tools="http://schemas.android.com/tools"
+            android:id="@+id/map"
+            android:name="com.google.android.gms.maps.SupportMapFragment"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
+            map:layout_constraintTop_toBottomOf="@id/routeDetails"
+            tools:context=".views.MainActivity" />
+
+        <!-- The location button -->
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/resetLocationButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="46dp"
+            android:layout_marginRight="24dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:src="@drawable/ic_round_gps_fixed_24px"
+            app:fabSize="auto"
+            app:layout_constraintBottom_toBottomOf="@id/constraintLayout"
+            app:layout_constraintRight_toRightOf="@id/constraintLayout" />
+
+    </android.support.constraint.ConstraintLayout>
+
+    <!-- The part that slides up -->
+    <android.support.constraint.ConstraintLayout
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center|top"
+        android:layout_weight="0.8">
+
+        <com.ontransit.androidapp.views.stopdetails.StopDetailsRecyclerView
+            android:id="@+id/stopsRecyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:choiceMode="multipleChoice"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintRight_toRightOf="parent"/>
+
+    </android.support.constraint.ConstraintLayout>
+
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>
