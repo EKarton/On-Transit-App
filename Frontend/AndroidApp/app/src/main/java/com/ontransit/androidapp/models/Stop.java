@@ -1,23 +1,25 @@
 package com.ontransit.androidapp.models;
 
+import com.google.android.gms.maps.model.LatLng;
+
 /**
  * A class used to represent a transit stop
  */
 public class Stop {
-    private Vector location;
+    private LatLng location;
     private int arrivalTime;
     private String name;
 
-    public Stop(Vector location, int arrivalTime){
+    public Stop(LatLng location, int arrivalTime){
         this.location = location;
         this.arrivalTime = arrivalTime;
     }
 
-    public Vector getLocation() {
+    public LatLng getLocation() {
         return location;
     }
 
-    public void setLocation(Vector location) {
+    public void setLocation(LatLng location) {
         this.location = location;
     }
 

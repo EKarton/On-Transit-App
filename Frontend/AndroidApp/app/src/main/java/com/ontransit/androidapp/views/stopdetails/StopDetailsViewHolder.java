@@ -73,7 +73,6 @@ public class StopDetailsViewHolder extends RecyclerView.ViewHolder {
             @Override
             public void onClick(View v) {
             stop.setSelected(!stop.isSelected());
-
             if (stop.isSelected()) {
                 getNotifyPanel().setVisibility(View.VISIBLE);
             } else {

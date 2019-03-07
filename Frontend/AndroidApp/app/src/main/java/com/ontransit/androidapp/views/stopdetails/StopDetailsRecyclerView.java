@@ -48,10 +48,12 @@
 
                 if (adapter instanceof StopDetailsAdapter) {
                     StopDetailsAdapter stopDetailsAdapter = (StopDetailsAdapter) adapter;
-                    List<Stop> stopList = stopDetailsAdapter.getStops();
+                    List<StopDetailsListItemData> stopList = stopDetailsAdapter.getStopsListItems();
 
-                    List<Stop> stopsRemaining = new ArrayList<>();
-                    for (Stop stop : stopList) {
+                    List<StopDetailsListItemData> stopsRemaining = new ArrayList<>();
+                    for (StopDetailsListItemData stopDetailsListItemData : stopList) {
+
+                        Stop stop = stopDetailsListItemData.getStop();
 
                         // Get the time between now and the stop's arrival time
                         Calendar curTime = Calendar.getInstance();
@@ -61,11 +63,11 @@
                         int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
 
                         if (stop.getArrivalTime() > numSecondsFromMidnight) {
-                            stopsRemaining.add(stop);
+                            stopsRemaining.add(stopDetailsListItemData);
                         }
                     }
 
-                    stopDetailsAdapter.setStops(stopsRemaining);
+                    stopDetailsAdapter.setStopsListItems(stopsRemaining);
                 }
                 }
             });

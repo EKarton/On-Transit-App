@@ -8,40 +8,24 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.ontransit.androidapp.R;
-import com.ontransit.androidapp.models.Stop;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class StopDetailsAdapter extends RecyclerView.Adapter<StopDetailsViewHolder> {
 
-    private List<Stop> stops;
-    private final OnAlarmCreatedListener onAlarmCreatedListener;
+    private List<StopDetailsListItemData> stopsListItems;
 
-    public interface OnAlarmCreatedListener {
-        void createAlarm(Stop stop);
+    public StopDetailsAdapter(List<StopDetailsListItemData> stopsListItems) {
+        this.stopsListItems = stopsListItems;
     }
 
-    private final List<StopDetailsListItemData> stopsListItems = new ArrayList<>();
-
-    public StopDetailsAdapter(List<Stop> stops, OnAlarmCreatedListener onAlarmCreatedListener) {
-        this.stops = stops;
-        this.onAlarmCreatedListener = onAlarmCreatedListener;
-        setStops(stops);
+    public List<StopDetailsListItemData> getStopsListItems() {
+        return stopsListItems;
     }
 
-    public List<Stop> getStops() {
-        return stops;
-    }
-
-    public void setStops(List<Stop> stops) {
-        this.stops = stops;
-
-        stopsListItems.clear();
-        for (Stop stop : stops) {
-            stopsListItems.add(new StopDetailsListItemData(stop, onAlarmCreatedListener));
-        }
-        notifyDataSetChanged();
+    public void setStopsListItems(List<StopDetailsListItemData> stopsListItems) {
+        this.stopsListItems = stopsListItems;
+        this.notifyDataSetChanged();
     }
 
     @NonNull

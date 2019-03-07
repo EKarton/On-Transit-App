@@ -5,6 +5,7 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
@@ -16,8 +17,6 @@ import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -26,19 +25,19 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.ontransit.androidapp.R;
 import com.ontransit.androidapp.models.NearbyTrip;
 import com.ontransit.androidapp.models.Stop;
 import com.ontransit.androidapp.models.Trip;
-import com.ontransit.androidapp.models.Vector;
 import com.ontransit.androidapp.services.GetTripDetailsHandler;
 import com.ontransit.androidapp.services.OnTransitMockedWebService;
 import com.ontransit.androidapp.services.OnTransitService;
 import com.ontransit.androidapp.services.StopAlarmsManager;
 import com.ontransit.androidapp.views.nearbytrips.NearbyTripsPickerDialog;
+import com.ontransit.androidapp.views.stopdetails.OnAlarmCreatedListener;
 import com.ontransit.androidapp.views.stopdetails.StopDetailsAdapter;
+import com.ontransit.androidapp.views.stopdetails.StopDetailsListItemData;
 import com.ontransit.androidapp.views.stopdetails.StopDetailsRecyclerView;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 
@@ -150,27 +149,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     public void selectTripSchedule(NearbyTrip trip) {
-        onTransitService.getTripDetails(trip.getTripID(), trip.getScheduleID(), new GetTripDetailsHandler() {
+        final String tripID = trip.getTripID();
+        final String scheduleID = trip.getScheduleID();
+
+        onTransitService.getTripDetails(tripID, scheduleID, new GetTripDetailsHandler(scheduleID) {
             @Override
             public void onSuccess(Trip trip) {
-
-                // Get the current time in seconds from midnight
-                Calendar curTime = Calendar.getInstance(TimeZone.getDefault());
-                int numHoursFromMidnight = curTime.get(Calendar.HOUR_OF_DAY);
-                int numMinutesFromHour = curTime.get(Calendar.MINUTE);
-                int numSecondsFromMin = curTime.get(Calendar.SECOND);
-                Log.d("MainActivity", "Time " + numHoursFromMidnight + ":" + numMinutesFromHour + ":" + numSecondsFromMin);
-                int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
-
-                // Get the stops that are still pending
-                List<Stop> incomingStops = new ArrayList<>();
-                for (Stop stop : trip.getNextStops()) {
-                    if (numSecondsFromMidnight < stop.getArrivalTime()){
-                        incomingStops.add(stop);
-                    }
-                }
-
-                Log.d("MainActivity", "Num stops left: " + incomingStops.size());
 
                 String provider = locationManager.getBestProvider(new Criteria(), false);
                 if (handlePermissions()) {
@@ -182,8 +166,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     if (location != null) {
                         LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
                         updateTripDetailsUI(trip);
-                        updateStopsUI(incomingStops);
-                        updateMapsUI(latLng, trip.getPath(), incomingStops);
+                        updateStopsUI(trip);
+                        updateMapsUI(latLng, trip.getPath(), trip.getStops());
                     }
                 }
             }
@@ -235,48 +219,69 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         this.tripDetailsView.setRoute(newTrip);
     }
 
-    private void updateStopsUI(List<Stop> stops){
-        StopDetailsAdapter stopDetailsAdapter = new StopDetailsAdapter(stops, new StopDetailsAdapter.OnAlarmCreatedListener() {
+    private void updateStopsUI(Trip newTrip){
+        final String tripID = newTrip.getTripID();
+        final String scheduleID = newTrip.getScheduleID();
+        final List<Stop> stops = newTrip.getStops();
+
+        OnAlarmCreatedListener listener = new OnAlarmCreatedListener() {
             @Override
             public void createAlarm(Stop stop) {
 
                 if (stopAlarmManager.isAlarmCreated(stop)) {
                     stopAlarmManager.deleteAlarm(stop);
                 } else {
-                    stopAlarmManager.addAlarm(stop);
+                    stopAlarmManager.addAlarm(stop, tripID, scheduleID);
                 }
             }
-        });
+        };
+
+        // Get the current time in seconds from midnight
+        Calendar curTime = Calendar.getInstance(TimeZone.getDefault());
+        int numHoursFromMidnight = curTime.get(Calendar.HOUR_OF_DAY);
+        int numMinutesFromHour = curTime.get(Calendar.MINUTE);
+        int numSecondsFromMin = curTime.get(Calendar.SECOND);
+        Log.d("MainActivity", "Time " + numHoursFromMidnight + ":" + numMinutesFromHour + ":" + numSecondsFromMin);
+        int numSecondsFromMidnight = numSecondsFromMin + (60 * numMinutesFromHour) + (3600 * numHoursFromMidnight);
+
+        // Get the stops that are still pending
+        List<StopDetailsListItemData> stopDetailsList = new ArrayList<>();
+        for (Stop stop : stops) {
+            if (numSecondsFromMidnight < stop.getArrivalTime()){
+                stopDetailsList.add(new StopDetailsListItemData(stop, listener));
+            }
+        }
+
+        StopDetailsAdapter stopDetailsAdapter = new StopDetailsAdapter(stopDetailsList);
         stopsRecyclerView.setAdapter(stopDetailsAdapter);
         stopsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void updateMapsUI(LatLng curLocation, List<Vector> path, List<Stop> stops){
+    private void updateMapsUI(LatLng curLocation, List<LatLng> path, List<Stop> stops){
         mMap.clear();
 
         // Change the path in google maps
-        PolylineOptions polylineOptions = new PolylineOptions();
-        for (Vector point : path){
-            polylineOptions.add(new LatLng(point.getY(), point.getX()));
-        }
-        Polyline polyline = mMap.addPolyline(polylineOptions);
+        PolylineOptions polylineOptions = new PolylineOptions()
+                .addAll(path)
+                .color(Color.BLUE)
+                .width(5);
+        mMap.addPolyline(polylineOptions);
 
         // Change the stops
         for (Stop stop : stops){
-            LatLng latLng = new LatLng(stop.getLocation().getX(), stop.getLocation().getY());
-
             MarkerOptions markerOptions = new MarkerOptions()
-                    .position(latLng)
+                    .position(stop.getLocation())
                     .title(stop.getName())
                     .draggable(false);
+
             mMap.addMarker(markerOptions);
         }
 
         // Change the camera
         CameraPosition newCameraPosition = new CameraPosition.Builder()
-                .target(new LatLng(curLocation.latitude, curLocation.longitude))
-                .zoom(20) // Show buildings
-                .tilt(65)
+                .target(curLocation)
+                .zoom(15) // Show streets
+                .tilt(0)
                 //.bearing() The direction
                 .build();
         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(newCameraPosition));

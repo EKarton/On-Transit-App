@@ -5,12 +5,21 @@ import com.ontransit.androidapp.models.Stop;
 
 public class StopDetailsListItemData {
     private final Stop stop;
-    private StopDetailsAdapter.OnAlarmCreatedListener onAlarmCreatedListener;
+    private OnAlarmCreatedListener onAlarmCreatedListener;
     private boolean isSelected = false;
+    private boolean isAlarmCreated = false;
 
-    StopDetailsListItemData(Stop stop, StopDetailsAdapter.OnAlarmCreatedListener onAlarmCreatedListener) {
+    public StopDetailsListItemData(Stop stop, OnAlarmCreatedListener onAlarmCreatedListener) {
         this.stop = stop;
         this.onAlarmCreatedListener = onAlarmCreatedListener;
+        this.isAlarmCreated = false;
+    }
+
+    public StopDetailsListItemData(Stop stop, OnAlarmCreatedListener onAlarmCreatedListener, boolean isSelected) {
+        this.stop = stop;
+        this.onAlarmCreatedListener = onAlarmCreatedListener;
+        this.isSelected = isSelected;
+        this.isAlarmCreated = false;
     }
 
     Stop getStop() {
@@ -25,7 +34,7 @@ public class StopDetailsListItemData {
         isSelected = selected;
     }
 
-    StopDetailsAdapter.OnAlarmCreatedListener getOnAlarmCreatedListener() {
+    OnAlarmCreatedListener getOnAlarmCreatedListener() {
         return onAlarmCreatedListener;
     }
 }

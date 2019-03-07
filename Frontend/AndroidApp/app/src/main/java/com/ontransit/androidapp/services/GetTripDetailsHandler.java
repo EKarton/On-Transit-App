@@ -4,9 +4,9 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.android.gms.maps.model.LatLng;
 import com.ontransit.androidapp.models.Stop;
 import com.ontransit.androidapp.models.Trip;
-import com.ontransit.androidapp.models.Vector;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -18,6 +18,12 @@ import java.util.List;
 import static com.ontransit.androidapp.services.OnTransitService.LOG_TAG;
 
 public abstract class GetTripDetailsHandler implements Response.Listener<JSONObject>, Response.ErrorListener {
+
+    private final String scheduleID;
+
+    public GetTripDetailsHandler(String scheduleID) {
+        this.scheduleID = scheduleID;
+    }
 
     @Override
     public void onErrorResponse(VolleyError error) {
@@ -45,14 +51,15 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
 
                 // Parse the shapes
                 JSONArray rawPathData = rawData.getJSONArray("path");
-                List<Vector> path = parsePath(rawPathData);
+                List<LatLng> path = parsePath(rawPathData);
 
                 // Create the trip object
                 Trip trip = new Trip(routeID);
                 trip.setTripShortName(shortName);
                 trip.setTripLongName(longName);
                 trip.setPath(path);
-                trip.setNextStops(stops);
+                trip.setStops(stops);
+                trip.setScheduleID(scheduleID);
 
                 this.onSuccess(trip);
             }
@@ -74,7 +81,7 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
 
             double latitude = Double.parseDouble(rawLatitude);
             double longitude = Double.parseDouble(rawLongitude);
-            Vector location = new Vector(latitude, longitude);
+            LatLng location = new LatLng(latitude, longitude);
 
             int arrivalTime = rawStopData.getInt("time");
 
@@ -85,8 +92,8 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
         return stops;
     }
 
-    private List<Vector> parsePath(JSONArray rawPathData) throws JSONException {
-        List<Vector> path = new ArrayList<>();
+    private List<LatLng> parsePath(JSONArray rawPathData) throws JSONException {
+        List<LatLng> path = new ArrayList<>();
         for (int i = 0; i < rawPathData.length(); i++){
             JSONObject rawPointData = rawPathData.getJSONObject(i);
 
@@ -95,8 +102,8 @@ public abstract class GetTripDetailsHandler implements Response.Listener<JSONObj
             String rawLongitude = rawPointData.getString("long");
             double latitude = Double.parseDouble(rawLatitude);
             double longitude = Double.parseDouble(rawLongitude);
-            Vector point = new Vector(latitude, longitude);
 
+            LatLng point = new LatLng(latitude, longitude);
             path.add(point);
         }
         return path;
