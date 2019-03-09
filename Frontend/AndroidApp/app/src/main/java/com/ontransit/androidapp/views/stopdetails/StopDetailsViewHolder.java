@@ -72,19 +72,20 @@ public class StopDetailsViewHolder extends RecyclerView.ViewHolder {
         itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            stop.setSelected(!stop.isSelected());
-            if (stop.isSelected()) {
-                getNotifyPanel().setVisibility(View.VISIBLE);
-            } else {
-                getNotifyPanel().setVisibility(View.GONE);
-            }
+                stop.setSelected(!stop.isSelected());
+
+                if (stop.isSelected()) {
+                    getNotifyPanel().setVisibility(View.VISIBLE);
+                } else {
+                    getNotifyPanel().setVisibility(View.GONE);
+                }
             }
         });
 
         notifyButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-            stop.getOnAlarmCreatedListener().createAlarm(stop.getStop());
+                stop.getOnAlarmCreatedListener().createAlarm(stop.getStop());
             }
         });
     }

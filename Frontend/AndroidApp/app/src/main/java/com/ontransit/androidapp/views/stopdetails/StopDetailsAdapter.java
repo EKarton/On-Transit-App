@@ -33,7 +33,6 @@ public class StopDetailsAdapter extends RecyclerView.Adapter<StopDetailsViewHold
     public StopDetailsViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int i) {
         Context context = viewGroup.getContext();
 
-        // Inflate the custom layout
         View stopDetailsView = LayoutInflater.from(context)
                 .inflate(R.layout.stop_detail_view, viewGroup, false);
 

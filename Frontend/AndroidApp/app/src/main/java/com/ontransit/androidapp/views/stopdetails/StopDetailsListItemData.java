@@ -15,13 +15,6 @@ public class StopDetailsListItemData {
         this.isAlarmCreated = false;
     }
 
-    public StopDetailsListItemData(Stop stop, OnAlarmCreatedListener onAlarmCreatedListener, boolean isSelected) {
-        this.stop = stop;
-        this.onAlarmCreatedListener = onAlarmCreatedListener;
-        this.isSelected = isSelected;
-        this.isAlarmCreated = false;
-    }
-
     Stop getStop() {
         return stop;
     }

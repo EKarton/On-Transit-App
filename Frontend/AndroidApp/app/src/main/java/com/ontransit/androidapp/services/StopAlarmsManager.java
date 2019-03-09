@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.NotificationManagerCompat;
+import android.widget.Toast;
 
 import com.ontransit.androidapp.R;
 import com.ontransit.androidapp.models.Stop;
@@ -57,8 +58,13 @@ public class StopAlarmsManager {
             throw new IllegalArgumentException("Stop already exists!");
         }
 
-        createNotification(stop);
+        displayToast(stop);
         createAlarmDispatchedView(stop, tripID, scheduleID);
+    }
+
+    private void displayToast(Stop stop) {
+        Toast.makeText(context, "Created alarm for your stop.", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "You will be notified 5 minutes before your stop", Toast.LENGTH_LONG).show();
     }
 
     private void createNotification(Stop stop) {

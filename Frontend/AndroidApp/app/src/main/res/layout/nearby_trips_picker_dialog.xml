@@ -3,7 +3,13 @@
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginStart="10dp"
+    android:layout_marginTop="10dp"
+    android:layout_marginEnd="10dp"
+    android:layout_marginBottom="10dp"
+    android:layout_marginLeft="10dp"
+    android:layout_marginRight="10dp">
 
     <android.support.constraint.ConstraintLayout
         android:id="@+id/loadingPanel"
@@ -25,6 +31,8 @@
             android:layout_marginTop="20dp"
             android:layout_marginEnd="16dp"
             android:layout_marginBottom="20dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="16dp"
             android:text="Getting nearby trips"
             android:textSize="20sp"
             app:layout_constraintBottom_toTopOf="@+id/progressBar"
@@ -53,17 +61,19 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:orientation="vertical"
+        android:visibility="visible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/a"
+            android:id="@+id/nearbyTripsHeader"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="15dp"
             android:layout_marginTop="8dp"
+            android:layout_marginLeft="15dp"
             android:text="Which bus or train are you on?"
             android:textSize="20sp"
             app:layout_constraintStart_toStartOf="parent"
@@ -71,11 +81,12 @@
 
         <ListView
             android:id="@+id/nearbyTripsListView"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:maxHeight="100dp"
             android:choiceMode="singleChoice"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/a">
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/nearbyTripsHeader">
 
         </ListView>
 

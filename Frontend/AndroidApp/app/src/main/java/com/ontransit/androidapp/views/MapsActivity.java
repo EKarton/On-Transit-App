@@ -1,18 +1,9 @@
 package com.ontransit.androidapp.views;
 
-import android.Manifest;
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.graphics.Color;
-import android.location.Criteria;
-import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.util.Log;
@@ -31,6 +22,7 @@ import com.ontransit.androidapp.models.NearbyTrip;
 import com.ontransit.androidapp.models.Stop;
 import com.ontransit.androidapp.models.Trip;
 import com.ontransit.androidapp.services.GetTripDetailsHandler;
+import com.ontransit.androidapp.services.LocationServices;
 import com.ontransit.androidapp.services.OnTransitMockedWebService;
 import com.ontransit.androidapp.services.OnTransitService;
 import com.ontransit.androidapp.services.StopAlarmsManager;
@@ -51,12 +43,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private StopDetailsRecyclerView stopsRecyclerView;
 
     private GoogleMap mMap;
-    private LocationManager locationManager;
-    private LocationListener locationListener;
 
     private TripDetailsView tripDetailsView;
     private StopAlarmsManager stopAlarmManager;
     private OnTransitService onTransitService;
+    private LocationServices locationServices;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,9 +56,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         stopAlarmManager = new StopAlarmsManager(this);
         onTransitService = OnTransitMockedWebService.getInstance(this);
+        locationServices = new LocationServices(this);
 
         setupUI();
-        setupLocationServices();
     }
 
     public void setupUI() {
@@ -89,39 +80,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         resetLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                requestLocation();
             }
         });
     }
-
-    public void setupLocationServices() {
-        this.locationManager = (LocationManager)
-                getSystemService(Context.LOCATION_SERVICE);
-
-        this.locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-
-            }
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-
-            }
-        };
-
-        requestLocation();
-    }
-
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -156,19 +117,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void onSuccess(Trip trip) {
 
-                String provider = locationManager.getBestProvider(new Criteria(), false);
-                if (handlePermissions()) {
+                LatLng curLocation = locationServices.getLastKnownLocation();
 
-                    // Suppress the warning as it is already handling the permission checking
-                    @SuppressLint("MissingPermission")
-                    Location location = locationManager.getLastKnownLocation(provider);
-
-                    if (location != null) {
-                        LatLng latLng = new LatLng(location.getLatitude(), location.getLongitude());
-                        updateTripDetailsUI(trip);
-                        updateStopsUI(trip);
-                        updateMapsUI(latLng, trip.getPath(), trip.getStops());
-                    }
+                if (curLocation != null) {
+                    updateTripDetailsUI(trip);
+                    updateStopsUI(trip);
+                    updateMapsUI(curLocation, trip.getPath(), trip.getStops());
                 }
             }
 
@@ -177,42 +131,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             }
         });
-    }
-
-    @SuppressLint("MissingPermission")
-    private void requestLocation(){
-        if (handlePermissions()){
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000, 5, locationListener);
-        }
-    }
-
-    private boolean handlePermissions(){
-        return handlePermissions(Manifest.permission.ACCESS_FINE_LOCATION) &&
-                handlePermissions(Manifest.permission.ACCESS_COARSE_LOCATION) &&
-                handlePermissions(Manifest.permission.INTERNET);
-    }
-
-    private boolean handlePermissions(String permission) {
-
-        // Check to see if the permission is already granted
-        if (ActivityCompat.checkSelfPermission(this, permission) != PackageManager.PERMISSION_GRANTED) {
-
-            // Check to see if the user has declined the permission already
-            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permission)) {
-
-                // We need to explain to the user why we need this permission
-                return false;
-            }
-            else {
-
-                // Ask the user to accept the permission
-                ActivityCompat.requestPermissions(this, new String[] { permission }, 1);
-                return handlePermissions();
-            }
-        }
-        else {
-            return true;
-        }
     }
 
     private void updateTripDetailsUI(Trip newTrip){
@@ -278,8 +196,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         // Change the camera
+        LatLng cameraLocation = curLocation;
+        if (stops.size() > 0) {
+
+            // Get the avg. latitude and longitude of all stop locations
+            double avgLatitudeOfStop = 0;
+            double avgLongitudeOfStop = 0;
+            for (Stop stop : stops) {
+                avgLatitudeOfStop += stop.getLocation().latitude;
+                avgLongitudeOfStop += stop.getLocation().longitude;
+            }
+            avgLatitudeOfStop /= stops.size();
+            avgLongitudeOfStop /= stops.size();
+
+            cameraLocation = new LatLng(avgLatitudeOfStop, avgLongitudeOfStop);
+        }
         CameraPosition newCameraPosition = new CameraPosition.Builder()
-                .target(curLocation)
+                .target(cameraLocation)
                 .zoom(15) // Show streets
                 .tilt(0)
                 //.bearing() The direction
