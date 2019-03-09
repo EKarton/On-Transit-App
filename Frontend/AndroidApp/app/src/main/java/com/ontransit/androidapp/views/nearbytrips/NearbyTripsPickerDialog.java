@@ -162,8 +162,8 @@ public class NearbyTripsPickerDialog extends Dialog {
 
                 if (nearbyTripArrayAdapter == null){
                     nearbyTripArrayAdapter = new NearbyTripsPickerAdapter(getContext(), localNearbyTrips);
-                }
-                else{
+
+                } else {
                     nearbyTripArrayAdapter.clear();
                     nearbyTripArrayAdapter.addAll(localNearbyTrips);
                 }
