@@ -86,7 +86,6 @@ public class NearbyTripsPickerDialog extends Dialog {
     }
 
     private void updateRoutes(LatLng curLocation) {
-
         SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss", Locale.CANADA);
         Date curTime = Calendar.getInstance().getTime();
         String formattedTime = format.format(curTime);
@@ -110,7 +109,6 @@ public class NearbyTripsPickerDialog extends Dialog {
 
             @Override
             public void onError(Exception exception) {
-                System.out.println("I AM HERE");
             }
         });
     }

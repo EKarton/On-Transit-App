@@ -250,12 +250,13 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
      * @param curLocation The user's current location
      */
     private void updateCurrentLocationPointer(LatLng curLocation) {
+        int color = Color.parseColor("#9971cce7");
         CircleOptions circleOptions = new CircleOptions()
                 .center(curLocation)
                 .radius(50)
-                .strokeColor(Color.BLUE)
-                .strokeWidth(2)
-                .fillColor(Color.TRANSPARENT);
+                .strokeWidth(0)
+                .strokeColor(color)
+                .fillColor(color);
         mMap.addCircle(circleOptions);
     }
 
