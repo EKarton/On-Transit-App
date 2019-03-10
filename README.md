@@ -1,11 +1,11 @@
 # On Transit App
 
 ### Description
-Always having trouble finding when your next stop will be? Do you want to be notified  when your stop is nearby? Are you tired of typing which bus / train you are on to get the information you need?
+Do you often miss your bus / train stop because you are sleeping or working during your commute? Are you frusterated in finding when and where your stop will take place during your commute? Do you want to be notified when your stop is coming?
 
-The On Transit app is the solution for you. Equipped with fast path detection algorithms, it predicts which train / bus you are taking based on your GPS location and time. Moreover, it automatically determines when your next stop (or future stops) will be and can notify you if your stop is nearby! 
+The On Transit app may be the solution for you. Equipped with fast trip detection algorithms and scalable microservices, it predicts which train / bus you are taking based on your GPS location and time. Moreover, you can create alarms for your bus / train stop, and notify you if your stop is approaching! 
 
-The On Transit project is a full stack software development project. It is comprised of several microservices, a Mongo DB database, a data aggregator, and an Android application.
+The On Transit project is a full stack software development project. It is comprised of several microservices, a Mongo DB database, a data collector, a React web app, and an Android app.
 
 ### Table of Contents
 - Overview
