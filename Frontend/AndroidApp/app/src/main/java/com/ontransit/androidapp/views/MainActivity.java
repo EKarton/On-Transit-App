@@ -148,7 +148,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void updateTripDetailsUI(Trip newTrip){
-        this.tripDetailsView.setRoute(newTrip);
+//        this.tripDetailsView.setRoute(newTrip);
     }
 
     private void updateStopsUI(Trip newTrip){
