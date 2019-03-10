@@ -9,6 +9,31 @@ The web app is a front-facing application that is used to display routes, predic
 - Credits
 - License
 
+## Overview of UI:
+When users land on the web page, the app detects which bus / train the user is on. If there is more than one possible bus / train the user is on, it will ask the user which bus / train they are on from the list of possible busses / trains obtained.
+
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/route-picker.png"/>
+    </p>
+</div>
+
+Once a route is selected, the route's path and its stops are shown on the webpage. It will also predict and display the vehicle's location. Furthermore, users can create a notification for a particular stop by clicking on one of the stops.
+
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-made-notification.png"/>
+    </p>
+</div>
+
+When the user is 5 minutes before reaching their stop, they will be notified:
+
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-dispatch-notification.png"/>
+    </p>
+</div>
+
 ## Installation
 
 #### Pre-requisites:
