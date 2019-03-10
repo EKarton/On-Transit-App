@@ -17,8 +17,10 @@
     Alternatively, follow the directions here:
     https://developers.google.com/maps/documentation/android/start#get-key
 
-    Once you have your key (it starts with "AIza"), replace the "google_maps_key"
-    string in this file.
+    Once you have your key (it starts with "AIza"), do the following steps:
+    1. Copy this file in the same directory, with the file name "google_maps_api.xml".
+    2. Replace the text "YOUR API KEY" in "google_maps_api.xml" with the api key you got.
+    3. Rename the text "google_maps_key_template" in "google_maps_api.xml" with "google_maps_key".
     -->
-    <string name="google_maps_key" templateMergeStrategy="preserve" translatable="false">AIzaSyAZo5lYLL0vzBj8AwomkF461zPsv1xdZ3k</string>
+    <string name="google_maps_key_template" templateMergeStrategy="preserve" translatable="false">YOUR API KEY</string>
 </resources>

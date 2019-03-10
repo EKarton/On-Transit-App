@@ -12,9 +12,9 @@ The Android app is used to help users understand which bus / train the user is o
 
 ### Overview
 When the user launches the app, it will fetch the nearby trips from their location and time:
-<div width="100%">
+<div width="50%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Trip%20Details%20Service/docs/Architecture.png" width="600px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-GettingTrips-View.jpg" width="600px"/>
     </p>
 </div>
 
@@ -30,19 +30,17 @@ When the alarm is dispatched, it will present them a screen giving them the opti
 
 ##### Required Programs and Tools:
 - Linux machine
-- Node JS v8.0+ with NPM
+- Android Studio
 
-##### Step 1: Install the packages
+##### Step 1: Open up Android Studio
 1. Open up the terminal and change the directory to the folder "Backend/Trip Details Service" relative to the project directory.
 2. Type the command `npm install`
 
-##### Step 2: Set up the config file
-1. Make a copy of the file "config_template.js" under the folder "Backend/Trip Details Service/src/res", name it "config.js", and save it in the same directory.
-2. Open up "config.js" and edit the port number for the app to use. Note that the port must be free to use. By default, the port number is 3003.
+##### Step 2: Set up Google Maps API Key
+1. Inside the directory `app/src/debug/res/values`, open the file `google_maps_api_template.xml` and follow the steps there. Don't skip this step!
 
 ##### Step 3: Run the app
-1. In the "Backend/Trip Details Service" folder of the project directory, type in the command `npm start`. It should launch N processes; one process as the master process, and N - 1 child processes (with N being the number of CPUs on your machine).
-2. It is done!
+1. In Android Studio, click on the `run` button. Select either an emulator or your Android device. It should then display the app.
 
 ### Usage
 Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
