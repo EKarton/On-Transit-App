@@ -1,7 +1,7 @@
 # On Transit App - Android App
 
 ### Description
-The Android app is used to help users understand which bus / train the user is on, and dispatch alerts when their stop is nearby. The goal of this app is to prevent users from missing their bus / train stop.
+The Android app is used to help users understand which bus the user is on, and dispatch alerts when their stop is nearby. The goal of this app is to prevent users from missing their bus stop.
 
 ### Table of Contents
 - Overview
@@ -11,7 +11,7 @@ The Android app is used to help users understand which bus / train the user is o
 - License
 
 ### Overview
-When the user launches the app, it will fetch the nearby trips from their location and time. If the user can be on more than one possible bus / train, it will ask the user to clarify which bus / train the user is on.
+When the user launches the app, it will fetch the nearby trips from their location and time. If the user can be on more than one possible bus, it will ask the user to clarify which bus the user is on.
 <div width="100%">
     <p align="center">
 <img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-GettingTrips-View.jpg" width="200px"/>

@@ -10,7 +10,7 @@ The web app is a front-facing application that is used to display routes, predic
 - License
 
 ## Overview of UI:
-When users land on the web page, the app detects which bus / train the user is on. If there is more than one possible bus / train the user is on, it will ask the user which bus / train they are on from the list of possible busses / trains obtained.
+When users land on the web page, the app detects which bus the user is on. If there is more than one possible bus the user is on, it will ask the user which bus they are on from the list of possible busses obtained.
 
 <div width="100%">
     <p align="center">

@@ -1,7 +1,7 @@
 # On Transit App - Trips Locator Microservice
 
 ### Description
-This microservice is used to obtain the closest possible trips based on a GPS location and a time.
+This microservice is used to obtain the closest possible bus route based on a GPS location and a time.
 
 ### Table of Contents
 - Overview

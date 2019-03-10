@@ -1,7 +1,7 @@
 # On Transit App - API Gateway Service
 
 ### Description
-This microservice is used to control the REST API requests to multiple microservices from one common endpoint. It is used for increased security and efficiency.
+This microservice is used to control the REST API requests to multiple microservices from one common endpoint. It is used for increased security.
 
 ### Table of Contents
 - Overview
