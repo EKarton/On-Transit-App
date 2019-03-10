@@ -11,20 +11,28 @@ The Android app is used to help users understand which bus / train the user is o
 - License
 
 ### Overview
-When the user launches the app, it will fetch the nearby trips from their location and time:
-<div width="50%">
+When the user launches the app, it will fetch the nearby trips from their location and time. If the user can be on more than one possible bus / train, it will ask the user to clarify which bus / train the user is on.
+<div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-GettingTrips-View.jpg" width="600px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-GettingTrips-View.jpg" width="200px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-Choices-View.jpg" width="200px"/>
     </p>
 </div>
 
-When it detects that the user can be on more than one possible bus / train, it will present with them an option to choose which bus / train the user is on:
-
 Once the user selects a trip, it will fetch the trip details including their stop details:
-
-Users can swipe up and select which stop to create the alarm:
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-Route-View.jpg" width="200px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-StopDetails-View.jpg" width="200px"/>
+    </p>
+</div>
 
 When the alarm is dispatched, it will present them a screen giving them the option to dismiss the alarm or snooze the alarm:
+<div width="100%">
+    <p align="center">
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-AlarmDispatched-View.jpg" width="200px"/>
+    </p>
+</div>
 
 ### Installation
 
