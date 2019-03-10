@@ -1,9 +1,9 @@
 # On Transit App
 
 ### Description
-Do you often miss your bus / train stop because you are sleeping or working during your commute? Are you frusterated in finding when and where your stop will take place during your commute? Do you want to be notified when your stop is coming?
+Do you often miss your bus stop because you are sleeping or working during your commute? Are you frusterated in finding when and where your stop will take place during your commute? Do you want to be notified when your stop is coming?
 
-The On Transit app may be the solution for you. Equipped with fast trip detection algorithms and scalable microservices, it predicts which train / bus you are taking based on your GPS location and time. Moreover, you can create alarms for your bus / train stop, and notify you if your stop is approaching! 
+The On Transit app may be the solution for you. Equipped with fast trip detection algorithms and scalable microservices, it predicts which bus you are taking based on your GPS location and time. Moreover, you can create alarms for your bus stop, and notify you if your stop is approaching! 
 
 The On Transit project is a full stack software development project. It is comprised of several microservices, a Mongo DB database, a data collector, a React web app, and an Android app.
 
@@ -30,7 +30,7 @@ This project is comprised of several components that work together to make the p
 - Data Aggregator Service: Publishes clean data to the database for the microservices to efficiently use by obtaining raw data from the World Wide Web and passing it through a series of data filters / data aggregations.
 
 ### Overview of Web App
-Users are able to determine which bus / train they are on, as well as dispatch alerts when their stop is nearby via a web browser. The notification is dispatched via the computer's notification panel. The UI looks like this:
+Users are able to determine which bus they are on, and dispatch alerts when their stop is approaching via a web browser. The notification is dispatched via the computer's notification panel. The UI looks like this:
 
 <div width="100%">
     <p align="center">
@@ -41,7 +41,7 @@ Users are able to determine which bus / train they are on, as well as dispatch a
 More details on the UI can be seen in the [README file](https://github.com/EKarton/On-Transit-App/tree/master/Frontend/Web%20App)
 
 ### Overview of Android App
-Users can also use the Android app to be notified when their bus / train is coming to a stop. More details in the [README file](https://github.com/EKarton/On-Transit-App/tree/master/Frontend/Android%20App)
+Users can also use the Android app to know which bus they is on, and be notified when their stop is approaching.
 
 <div width="100%">
     <p align="center">
@@ -50,6 +50,8 @@ Users can also use the Android app to be notified when their bus / train is comi
 <img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-AlarmDispatched-View.jpg" width="200px"/>
     </p>
 </div>
+
+ More details on the UI can be seen in the [README file](https://github.com/EKarton/On-Transit-App/tree/master/Frontend/Android%20App)
 
 ### Installation
 
