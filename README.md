@@ -39,36 +39,13 @@ Users are able to determine which bus / train they are on, as well as dispatch a
 </div>
 
 More details on the UI can be seen in the [README file](https://github.com/EKarton/On-Transit-App/tree/master/Frontend/Web%20App)
-<!-- Users are also able to get notified when their transit route is coming to a stop. Like the Android app, in the app's homepage, they do not need to type in their transit route - it will be determined based on their GPS location and time. Since there might be multiple transit routes, it gives users an option to select which transit route they are on.
-
-<div width="100%">
-    <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/route-picker.png"/>
-    </p>
-</div>
-
-Once a route is selected, the route's path and its next schedules are presented on the webpage. It will also predict and display the vehicle's location. Furthermore, users can create a notification for a particular stop.
-
-<div width="100%">
-    <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-made-notification.png"/>
-    </p>
-</div>
-
-When the time comes, the OS' notification is dispatched.
-
-<div width="100%">
-    <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/images/webapp-dispatch-notification.png"/>
-    </p>
-</div> -->
 
 ### Overview of Android App
 Users can also use the Android app to be notified when their bus / train is coming to a stop. More details in the [README file](https://github.com/EKarton/On-Transit-App/tree/master/Frontend/Android%20App)
 
 <div width="100%">
     <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Documentation/App%20Home%20Page.jpg" width="200px"/>
+<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-Route-View.jpg" width="200px"/>
 <img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-StopDetails-View.jpg" width="200px"/>
 <img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Frontend/Android%20App/docs/AndroidApp-AlarmDispatched-View.jpg" width="200px"/>
     </p>
