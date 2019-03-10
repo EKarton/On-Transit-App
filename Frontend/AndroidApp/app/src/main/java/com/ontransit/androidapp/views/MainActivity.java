@@ -148,7 +148,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void updateTripDetailsUI(Trip newTrip){
-//        this.tripDetailsView.setRoute(newTrip);
+        this.tripDetailsView.setRoute(newTrip);
     }
 
     private void updateStopsUI(Trip newTrip){
@@ -309,7 +309,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
     private void zoomIntoCurrentLocation(LatLng curLocation) {
         CameraPosition newCameraPosition = new CameraPosition.Builder()
                 .target(curLocation)
-                .zoom(17)
+                .zoom(15)
                 .tilt(0)
                 .build();
         mMap.animateCamera(CameraUpdateFactory.newCameraPosition(newCameraPosition), 1000, null);
