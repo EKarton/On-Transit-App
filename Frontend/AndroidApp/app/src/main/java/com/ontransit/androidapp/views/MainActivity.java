@@ -29,6 +29,7 @@ import com.ontransit.androidapp.services.GetTripDetailsHandler;
 import com.ontransit.androidapp.services.LocationServices;
 import com.ontransit.androidapp.services.OnTransitMockedWebService;
 import com.ontransit.androidapp.services.OnTransitService;
+import com.ontransit.androidapp.services.OnTransitWebService;
 import com.ontransit.androidapp.services.StopAlarmsManager;
 import com.ontransit.androidapp.views.nearbytrips.NearbyTripsPickerDialog;
 import com.ontransit.androidapp.views.nearbytrips.NearbyTripsPickerDialogListener;
@@ -60,7 +61,7 @@ public class MainActivity extends FragmentActivity implements OnMapReadyCallback
         setContentView(R.layout.activity_main);
 
         stopAlarmManager = new StopAlarmsManager(this);
-        onTransitService = OnTransitMockedWebService.getInstance(this);
+        onTransitService = new OnTransitWebService(this);
         locationServices = new LocationServices(this);
 
         setupUI();

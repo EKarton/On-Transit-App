@@ -27,19 +27,9 @@ public class OnTransitWebService implements OnTransitService {
     // Trips
     private final static String TRIPS_LOCATOR_ROUTE = "/api/v1/trips";
     private final static String TRIP_DETAILS_ROUTE = "/api/v1/trips/%s/schedules/%s";
-
-    private static OnTransitService instance = null;
-
     private final RequestQueue requestQueue;
 
-    public static OnTransitService getInstance(Context context) {
-        if (instance == null) {
-            instance = new OnTransitWebService(context);
-        }
-        return instance;
-    }
-
-    private OnTransitWebService(Context context) {
+    public OnTransitWebService(Context context) {
         this.requestQueue = Volley.newRequestQueue(context);
     }
 
