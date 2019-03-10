@@ -13,7 +13,7 @@ import android.widget.TextView;
 import com.ontransit.androidapp.R;
 import com.ontransit.androidapp.utils.RemainingTimeFormatter;
 import com.ontransit.androidapp.utils.RemainingTime;
-import com.ontransit.androidapp.views.MapsActivity;
+import com.ontransit.androidapp.views.MainActivity;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -53,7 +53,7 @@ public class StopAlarmActivity extends AppCompatActivity {
         dismissButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent newIntent = new Intent(currentActivity, MapsActivity.class);
+                Intent newIntent = new Intent(currentActivity, MainActivity.class);
                 newIntent.putExtra("hasSelectedTrip", true);
                 newIntent.putExtra("tripID", tripID);
                 newIntent.putExtra("scheduleID", scheduleID);

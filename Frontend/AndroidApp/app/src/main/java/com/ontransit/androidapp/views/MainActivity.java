@@ -1,8 +1,11 @@
 package com.ontransit.androidapp.views;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.FragmentActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -14,6 +17,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -27,6 +31,7 @@ import com.ontransit.androidapp.services.OnTransitMockedWebService;
 import com.ontransit.androidapp.services.OnTransitService;
 import com.ontransit.androidapp.services.StopAlarmsManager;
 import com.ontransit.androidapp.views.nearbytrips.NearbyTripsPickerDialog;
+import com.ontransit.androidapp.views.nearbytrips.NearbyTripsPickerDialogListener;
 import com.ontransit.androidapp.views.stopdetails.OnAlarmCreatedListener;
 import com.ontransit.androidapp.views.stopdetails.StopDetailsAdapter;
 import com.ontransit.androidapp.views.stopdetails.StopDetailsListItemData;
@@ -38,7 +43,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.TimeZone;
 
-public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
+public class MainActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private StopDetailsRecyclerView stopsRecyclerView;
 
@@ -52,7 +57,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_maps);
+        setContentView(R.layout.activity_main);
 
         stopAlarmManager = new StopAlarmsManager(this);
         onTransitService = OnTransitMockedWebService.getInstance(this);
@@ -61,7 +66,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         setupUI();
     }
 
-    public void setupUI() {
+    private void setupUI() {
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
@@ -80,6 +85,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         resetLocationButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                LatLng curLocation = locationServices.getLastKnownLocation();
+                if (curLocation != null) {
+                    zoomIntoCurrentLocation(curLocation);
+                }
             }
         });
     }
@@ -99,17 +108,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             selectTripSchedule(nearbyTrip);
 
         } else {
-            NearbyTripsPickerDialog dialog = new NearbyTripsPickerDialog(this, onTransitService, new NearbyTripsPickerDialog.OnTripSelectedListener() {
-                @Override
-                public void onTripSelected(NearbyTrip nearbyTrip) {
-                    selectTripSchedule(nearbyTrip);
-                }
-            });
-            dialog.show();
+            showUserTripOptions();
         }
     }
 
-    public void selectTripSchedule(NearbyTrip trip) {
+    private void showUserTripOptions() {
+        NearbyTripsPickerDialog dialog = new NearbyTripsPickerDialog(this, onTransitService, locationServices, new NearbyTripsPickerDialogListener() {
+            @Override
+            public void onTripSelected(NearbyTrip nearbyTrip) {
+                selectTripSchedule(nearbyTrip);
+            }
+        });
+        dialog.show();
+    }
+
+
+    private void selectTripSchedule(NearbyTrip trip) {
         final String tripID = trip.getTripID();
         final String scheduleID = trip.getScheduleID();
 
@@ -145,7 +159,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         OnAlarmCreatedListener listener = new OnAlarmCreatedListener() {
             @Override
             public void createAlarm(Stop stop) {
-
                 if (stopAlarmManager.isAlarmCreated(stop)) {
                     stopAlarmManager.deleteAlarm(stop);
                 } else {
@@ -153,6 +166,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 }
             }
         };
+
+        final MainActivity mainActivity = this;
+        final StopDetailsRecyclerView.EventHandler stopsEventHandler = new StopDetailsRecyclerView.EventHandler() {
+            @Override
+            public void onTripEnds() {
+                AlertDialog dialog = new AlertDialog.Builder(mainActivity)
+                        .setMessage("You have reached the end of the trip.")
+                        .setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                showUserTripOptions();
+                                dialog.dismiss();
+                            }
+                        })
+                        .create();
+                dialog.show();
+            }
+        };
+        stopsRecyclerView.clearEventHandlers();
+        stopsRecyclerView.addEventHandler(stopsEventHandler);
 
         // Get the current time in seconds from midnight
         Calendar curTime = Calendar.getInstance(TimeZone.getDefault());
@@ -175,17 +208,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         stopsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
     }
 
-    private void updateMapsUI(LatLng curLocation, List<LatLng> path, List<Stop> stops){
+    private void updateMapsUI(final LatLng curLocation, List<LatLng> path, List<Stop> stops){
         mMap.clear();
 
-        // Change the path in google maps
+        updatePaths(path);
+        updateStops(stops);
+        updateCurrentLocationPointer(curLocation);
+        zoomIntoOverallPath(curLocation, stops);
+    }
+
+    /**
+     * Draws the path.
+     * @param path An ordered list of locations that define the path
+     */
+    private void updatePaths(List<LatLng> path) {
         PolylineOptions polylineOptions = new PolylineOptions()
                 .addAll(path)
                 .color(Color.BLUE)
                 .width(5);
         mMap.addPolyline(polylineOptions);
+    }
 
-        // Change the stops
+    /**
+     * Draws the stops
+     * @param stops A set of stops
+     */
+    private void updateStops(List<Stop> stops) {
         for (Stop stop : stops){
             MarkerOptions markerOptions = new MarkerOptions()
                     .position(stop.getLocation())
@@ -194,9 +242,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             mMap.addMarker(markerOptions);
         }
+    }
 
-        // Change the camera
-        LatLng cameraLocation = curLocation;
+    /**
+     * Draws where the user is at
+     * @param curLocation The user's current location
+     */
+    private void updateCurrentLocationPointer(LatLng curLocation) {
+        CircleOptions circleOptions = new CircleOptions()
+                .center(curLocation)
+                .radius(50)
+                .strokeColor(Color.BLUE)
+                .strokeWidth(2)
+                .fillColor(Color.TRANSPARENT);
+        mMap.addCircle(circleOptions);
+    }
+
+    /**
+     * Zoom in to see the overall stops, and then zoom into the current location.
+     * @param curLocation The current location
+     * @param stops A set of stops
+     */
+    private void zoomIntoOverallPath(final LatLng curLocation, List<Stop> stops) {
         if (stops.size() > 0) {
 
             // Get the avg. latitude and longitude of all stop locations
@@ -209,14 +276,42 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             avgLatitudeOfStop /= stops.size();
             avgLongitudeOfStop /= stops.size();
 
-            cameraLocation = new LatLng(avgLatitudeOfStop, avgLongitudeOfStop);
+            LatLng outerLocation = new LatLng(avgLatitudeOfStop, avgLongitudeOfStop);
+
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(outerLocation, 10), 2000, new GoogleMap.CancelableCallback() {
+                @Override
+                public void onFinish() {
+
+                    // Pause for 1 second
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            zoomIntoCurrentLocation(curLocation);
+                        }
+                    }, 500);
+                }
+
+                @Override
+                public void onCancel() {
+                    zoomIntoCurrentLocation(curLocation);
+                }
+            });
+        } else {
+            zoomIntoCurrentLocation(curLocation);
         }
+    }
+
+    /**
+     * Zoom into street-level to a specific location for a certain duration
+     * @param curLocation Current location
+     */
+    private void zoomIntoCurrentLocation(LatLng curLocation) {
         CameraPosition newCameraPosition = new CameraPosition.Builder()
-                .target(cameraLocation)
-                .zoom(15) // Show streets
+                .target(curLocation)
+                .zoom(17)
                 .tilt(0)
-                //.bearing() The direction
                 .build();
-        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(newCameraPosition));
+        mMap.animateCamera(CameraUpdateFactory.newCameraPosition(newCameraPosition), 1000, null);
     }
 }

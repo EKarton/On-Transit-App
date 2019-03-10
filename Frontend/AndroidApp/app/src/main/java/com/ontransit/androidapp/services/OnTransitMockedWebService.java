@@ -82,7 +82,7 @@ public class OnTransitMockedWebService implements OnTransitService {
                 JSONObject stop = stops.getJSONObject(i);
 
                 Calendar curTime = Calendar.getInstance();
-                curTime.add(Calendar.SECOND, i + 20);
+                curTime.add(Calendar.SECOND, i + 1);
 
                 int numHoursFromMidnight = curTime.get(Calendar.HOUR_OF_DAY);
                 int numMinutesFromHour = curTime.get(Calendar.MINUTE);

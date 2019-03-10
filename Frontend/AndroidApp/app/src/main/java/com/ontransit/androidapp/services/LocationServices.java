@@ -13,35 +13,49 @@ import android.support.v4.app.ActivityCompat;
 
 import com.google.android.gms.maps.model.LatLng;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class LocationServices {
 
     private final android.location.LocationManager locationManager;
     private final LocationListener locationListener;
     private final Activity activity;
+    private final Set<LocationListener> locationListenerList;
 
     public LocationServices(Activity activity) {
         this.activity = activity;
         this.locationManager = (android.location.LocationManager)
                 activity.getSystemService(Context.LOCATION_SERVICE);
+        this.locationListenerList = new HashSet<>();
 
         this.locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
+                for (LocationListener locationListener : locationListenerList) {
+                    locationListener.onLocationChanged(location);
+                }
 
             }
             @Override
             public void onStatusChanged(String provider, int status, Bundle extras) {
-
+                for (LocationListener locationListener : locationListenerList) {
+                    locationListener.onStatusChanged(provider, status, extras);
+                }
             }
 
             @Override
             public void onProviderEnabled(String provider) {
-
+                for (LocationListener locationListener : locationListenerList) {
+                    locationListener.onProviderEnabled(provider);
+                }
             }
 
             @Override
             public void onProviderDisabled(String provider) {
-
+                for (LocationListener locationListener : locationListenerList) {
+                    locationListener.onProviderDisabled(provider);
+                }
             }
         };
 
@@ -49,7 +63,7 @@ public class LocationServices {
     }
 
     @SuppressLint("MissingPermission")
-    private void requestLocation(){
+    public void requestLocation(){
         if (handlePermissions()){
             locationManager.requestLocationUpdates(android.location.LocationManager.GPS_PROVIDER, 5000, 5, locationListener);
         }
@@ -82,6 +96,14 @@ public class LocationServices {
         else {
             return true;
         }
+    }
+
+    public void addLocationListener(LocationListener locationListener) {
+        locationListenerList.add(locationListener);
+    }
+
+    public void deleteLocationListener(LocationListener locationListener) {
+        locationListenerList.remove(locationListener);
     }
 
     public LatLng getLastKnownLocation() {
