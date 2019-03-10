@@ -75,9 +75,6 @@ typings/
 # Google maps API key
 google_maps_api.xml
 
-# Built application files
-/*/build/
-
 # Crashlytics configuations
 com_crashlytics_export_strings.xml
 
@@ -123,11 +120,6 @@ transfers.txt
 feed_info.txt
 
 Deploy-to-Heroku.sh
-
-# Built application files
-*.apk
-*.ap_
-*.aab
 
 # Files for the ART/Dalvik VM
 *.dex
