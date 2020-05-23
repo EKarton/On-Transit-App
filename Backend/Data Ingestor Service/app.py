@@ -157,12 +157,12 @@ if __name__ == "__main__":
     # URL = "https://www.miapp.ca/GTFS/google_transit.zip"
     # RAW_ZIPFILE_PATH = "data/raw_data/miway_gtfs.zip"
     # EXTRACTED_GTFS_FILEPATH = "data/extracted_data/miway_gtfs"
-    # SOURCE_ID = 51
+    # DATABASE_NAME = "miway"
 
     URL = "https://www.gotransit.com/static_files/gotransit/assets/Files/GO_GTFS.zip"
     RAW_ZIPFILE_PATH = "data/raw_data/go_transit_gtfs.zip"
     EXTRACTED_GTFS_FILEPATH = "data/extracted_data/go_transit_gtfs"
-    SOURCE_ID = 52
+    DATABASE_NAME = "go_transit"
 
     # # Download and extract the GTFS data
     # download_gtfs_file(URL, RAW_ZIPFILE_PATH)
@@ -190,7 +190,6 @@ if __name__ == "__main__":
     shapes.show()
     stops.show()
     stop_times.show()
-    input()
 
     print("== Loaded data ==")
     # =====================================================================================================================
@@ -235,22 +234,17 @@ if __name__ == "__main__":
             num_min_from_hr = int(splitted_time[1])
             num_sec_from_min = int(splitted_time[2])
 
-            return num_sec_from_min + (num_min_from_hr * 60) + (num_hrs_from_noon * 3600)
+            return (
+                num_sec_from_min + (num_min_from_hr * 60) + (num_hrs_from_noon * 3600)
+            )
 
         else:
             return -1
 
     convert_time_to_integer_udf = F.udf(convert_time_to_integer, IntegerType())
 
-    stop_times = stop_times.withColumn("new_arrival_time", convert_time_to_integer_udf(stop_times.arrival_time))
-    stop_times = stop_times.withColumn("new_departure_time", convert_time_to_integer_udf(stop_times.departure_time))
-
-    # Add the source ID so that we can delete them later
-    trips = trips.withColumn("source_id", F.lit(SOURCE_ID))
-    routes = routes.withColumn("source_id", F.lit(SOURCE_ID))
-    stops = stops.withColumn("source_id", F.lit(SOURCE_ID))
-    stop_times = stop_times.withColumn("source_id", F.lit(SOURCE_ID))
-    shapes = shapes.withColumn("source_id", F.lit(SOURCE_ID))
+    stop_times = stop_times.withColumn("arrival_time", convert_time_to_integer_udf(stop_times.arrival_time))
+    stop_times = stop_times.withColumn("departure_time", convert_time_to_integer_udf(stop_times.departure_time))
 
     print("\n== Finished Step 0 ==")
     # =====================================================================================================================
@@ -289,8 +283,6 @@ if __name__ == "__main__":
     print("\n== Finished Step 1 ==")
     print("\n== Starting Step 2 ==")
 
-    trips.printSchema()
-
     def remove_duplicate_stops(stops, stop_times):
         """ Given a stops dataframe, it will remove the duplicated stop locations in `stops` and update the `stop_times`
             with the non-duplicated stop locations
@@ -303,17 +295,12 @@ if __name__ == "__main__":
             name = name if type(name) == str else ""
 
             return "{},{},{}".format(
-                name.strip(),
-                str(latitude).strip(),
-                str(longitude).strip(),
+                name.strip(), str(latitude).strip(), str(longitude).strip(),
             )
 
         compute_hash_udf = F.udf(compute_hash, StringType())
         stops = stops.withColumn(
-            "hash",
-            compute_hash_udf(
-                stops.stop_name, stops.latitude, stops.longitude,
-            ),
+            "hash", compute_hash_udf(stops.stop_name, stops.latitude, stops.longitude,),
         )
 
         # Drop the duplicate stop locations
@@ -517,7 +504,7 @@ if __name__ == "__main__":
     def make_tuple(start_time, end_time):
         return [start_time, end_time]
 
-    make_tuple_udf = F.udf(make_tuple, ArrayType(StringType(), False))
+    make_tuple_udf = F.udf(make_tuple, ArrayType(IntegerType(), False))
     stop_times = (
         stop_times.withColumn(
             "time", make_tuple_udf(stop_times.arrival_time, stop_times.departure_time),
@@ -571,17 +558,17 @@ if __name__ == "__main__":
     # =====================================================================================================================
 
     stops.write.format("com.mongodb.spark.sql.DefaultSource").option(
-        "database", "51"
+        "database", DATABASE_NAME
     ).option("collection", "stop_locations").mode("append").save()
 
     stop_times.write.format("com.mongodb.spark.sql.DefaultSource").option(
-        "database", "51"
+        "database", DATABASE_NAME
     ).option("collection", "schedules").mode("append").save()
 
     paths_data.write.format("com.mongodb.spark.sql.DefaultSource").option(
-        "database", "51"
+        "database", DATABASE_NAME
     ).option("collection", "paths").mode("append").save()
 
     trips.write.format("com.mongodb.spark.sql.DefaultSource").option(
-        "database", "51"
+        "database", DATABASE_NAME
     ).option("collection", "trips").mode("append").save()
