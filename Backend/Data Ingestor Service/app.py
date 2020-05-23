@@ -27,88 +27,11 @@ def extract_zip_file(file_path, target_dir):
 
 def load_gtfs_data(spark, dir_):
 
-    # The schemas for the necessary GTFS file
-    TRIPS_RECORD = StructType(
-        [
-            StructField("route_id", StringType(), False),
-            StructField("service_id", StringType(), False),
-            StructField("trip_id", StringType(), False),
-            StructField("trip_headsign", StringType(), True),
-            StructField("trip_short_name", StringType(), True),
-            StructField("direction_id", StringType(), True),
-            StructField("block_id", StringType(), True),
-            StructField("shape_id", StringType(), True),
-            StructField("wheelchair_accessible", StringType(), True),
-            StructField("bikes_allowed", StringType(), True),
-        ]
-    )
-
-    ROUTES_RECORD = StructType(
-        [
-            StructField("route_id", StringType(), False),
-            StructField("agency_id", StringType(), True),
-            StructField("route_short_name", StringType(), True),
-            StructField("route_long_name", StringType(), True),
-            StructField("route_desc", StringType(), True),
-            StructField("route_type", StringType(), False),
-            StructField("route_url", StringType(), True),
-            StructField("route_color", StringType(), True),
-            StructField("route_text_color", StringType(), True),
-        ]
-    )
-
-    SHAPES_RECORD = StructType(
-        [
-            StructField("shape_id", StringType(), False),
-            StructField("shape_pt_lat", DoubleType(), False),
-            StructField("shape_pt_lon", DoubleType(), False),
-            StructField("shape_pt_sequence", IntegerType(), False),
-            StructField("shape_dist_traveled", DoubleType(), True),
-        ]
-    )
-
-    STOPS_RECORD = StructType(
-        [
-            StructField("stop_id", StringType(), False),
-            StructField("stop_code", StringType(), True),
-            StructField("stop_name", StringType(), True),
-            StructField("stop_desc", StringType(), True),
-            StructField("stop_lat", DoubleType(), True),
-            StructField("stop_lon", DoubleType(), True),
-            StructField("zone_id", StringType(), True),
-            StructField("stop_url", StringType(), True),
-            StructField("location_type", StringType(), True),
-            StructField("parent_station", StringType(), True),
-            StructField("stop_timezone", StringType(), True),
-            StructField("wheelchair_boarding", StringType(), True),
-            StructField("level_id", StringType(), True),
-            StructField("platform_code", StringType(), True),
-        ]
-    )
-
-    STOP_TIMES_RECORD = StructType(
-        [
-            StructField("trip_id", StringType(), False),
-            StructField("arrival_time", StringType(), False),
-            StructField("departure_time", StringType(), False),
-            StructField("stop_id", StringType(), False),
-            StructField("stop_sequence", IntegerType(), False),
-            StructField("stop_headsign", StringType(), True),
-            StructField("pickup_type", StringType(), True),
-            StructField("drop_off_type", StringType(), True),
-            StructField("continuous_pickup", StringType(), True),
-            StructField("continuous_drop_off", StringType(), True),
-            StructField("shape_dist_traveled", DoubleType(), True),
-            StructField("timepoint", StringType(), True),
-        ]
-    )
-
     # Load the dataframe
     trips_data = (
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        # .schema(TRIPS_RECORD)
         .option("inferSchema", "true")
         .load(os.path.join(dir_, "trips.txt"))
     )
@@ -117,7 +40,6 @@ def load_gtfs_data(spark, dir_):
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        # .schema(ROUTES_RECORD)
         .option("inferSchema", "true")
         .load(os.path.join(dir_, "routes.txt"))
     )
@@ -126,7 +48,6 @@ def load_gtfs_data(spark, dir_):
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        # .schema(SHAPES_RECORD)
         .option("inferSchema", "true")
         .load(os.path.join(dir_, "shapes.txt"))
     )
@@ -135,7 +56,6 @@ def load_gtfs_data(spark, dir_):
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        # .schema(STOPS_RECORD)
         .option("inferSchema", "true")
         .load(os.path.join(dir_, "stops.txt"))
     )
@@ -144,7 +64,6 @@ def load_gtfs_data(spark, dir_):
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        # .schema(STOP_TIMES_RECORD)
         .option("inferSchema", "true")
         .load(os.path.join(dir_, "stop_times.txt"))
     )
