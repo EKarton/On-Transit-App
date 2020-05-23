@@ -162,8 +162,12 @@ if __name__ == "__main__":
 
     convert_time_to_integer_udf = F.udf(convert_time_to_integer, IntegerType())
 
-    stop_times = stop_times.withColumn("arrival_time", convert_time_to_integer_udf(stop_times.arrival_time))
-    stop_times = stop_times.withColumn("departure_time", convert_time_to_integer_udf(stop_times.departure_time))
+    stop_times = stop_times.withColumn(
+        "arrival_time", convert_time_to_integer_udf(stop_times.arrival_time)
+    )
+    stop_times = stop_times.withColumn(
+        "departure_time", convert_time_to_integer_udf(stop_times.departure_time)
+    )
 
     print("\n== Finished Step 0 ==")
     # =====================================================================================================================
