@@ -45,64 +45,6 @@ class TripsLocator {
     }
 
     /**
-     * Determines a set of stops that the user might most recently visit based on the user's location.
-     * The 'locationIDs' must be in the format:
-     * [ S1, S2, ..., Sn ]
-     * 
-     * where S1 is the stop location ID for the first stop, S2 is the stop location ID for the second
-     * stop, ..., Sn is the stop location ID for the last stop.
-     * 
-     * It will return a set of indexes to locationIDs[] that could be the most recently visited stop
-     * 
-     * @param {String[]} locationIDs A list of stop location IDs
-     * @param {Location} location The current location
-     * @returns {Set} The stop locations
-     */
-    getRecentStopsVisitedByLocation(locationIDs, location) {
-        return new Promise(async (resolve, reject) => {
-
-            let jobs = [];
-            for (let i = 0; i < locationIDs.length - 1; i++) {
-                let newJob = new Promise(async (resolveJob, rejectJob) => {
-                    let locationID_1 = locationIDs[i];
-                    let locationID_2 = locationIDs[i + 1];
-
-                    let request1 = this.database.getObject("stop_locations", { "stop_id": locationID_1 });
-                    let request2 = this.database.getObject("stop_locations", { "stop_id": locationID_2 });
-                    let locations = await Promise.all([request1, request2]);
-
-                    let location_1 = locations[0];
-                    let location_2 = locations[1];
-
-                    // Calculate the distance of the line segments
-                    let dx = location_1.longitude - location_2.longitude;
-                    let dy = location_1.latitude - location_2.latitude;
-                    let lengthOfLine = Math.sqrt(dx * dx + dy * dy);
-
-                    // Scalar project the current location to the line segment from (location_1 to location_2) and
-                    let dot = (location.longitude - location_1.longitude) * dx + (location.latitude - location_1.latitude) * dy;
-                    let scalarProj = dot / lengthOfLine;
-
-                    let isProjectionInLine = 0 <= scalarProj && scalarProj <= lengthOfLine;
-
-                    if (isProjectionInLine) {
-                        resolveJob(i);
-                    }
-                    else {
-                        resolveJob(null);
-                    }
-                });
-                jobs.push(newJob);
-            }
-            let possibleStops = await Promise.all(jobs);
-            possibleStops = possibleStops.filter(a => a !== null);
-            let possibleStopsSet = new Set(possibleStops);
-
-            resolve(possibleStopsSet);
-        });
-    }
-
-    /**
      * Get a list of possible schedules the user might be on based on
      * the user's location, trip_id, and current time.
      * 
@@ -171,6 +113,7 @@ class TripsLocator {
 
     /**
      * Given a path of points, it will return a line segment closest to the location
+     * 
      * @param {List[Location]} path_locations 
      * @param {Location} location 
      */
