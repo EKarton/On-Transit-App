@@ -1,6 +1,5 @@
 const express = require("express");
 const process = require("process");
-const Location = require("on-transit").Location;
 const Config = require("./res/config");
 
 const TripsLocator = require("./trips-locator");
@@ -12,7 +11,7 @@ const TripsLocator = require("./trips-locator");
 module.exports = async function(){
 
     let app = express();
-    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.WEB_APP_DEFAULT_PORT;
+    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.WEB_APP_DEFAULT_PORT || 5000;
     let server_host = process.env.YOUR_HOST || '0.0.0.0';
 
     TripsLocator.run();
@@ -37,7 +36,10 @@ module.exports = async function(){
 
         console.log("Request to get nearby trips received by process ", process.pid);
 
-        let location = new Location(latitude, longitude);
+        let location = {
+            latitude: latitude,
+            longitude: longitude
+        };
         console.log("Current time: " + (new Date()));
         
         TripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight, radius)

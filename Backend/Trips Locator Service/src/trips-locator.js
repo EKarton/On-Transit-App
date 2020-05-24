@@ -1,5 +1,6 @@
-const Database = require("on-transit").Database;
-const Location = require("on-transit").Location;
+"use strict";
+
+const Database = require("./database");
 const Config = require("./res/config");
 
 var database = undefined;
@@ -19,16 +20,18 @@ var database = undefined;
  * @param {Integer} curTime The current time
  * @returns {Integer} Index to the most recently visited stop.
  */
-function getRecentStopsVisitedByTime(times, curTime){
+function getRecentStopsVisitedByTime(times, curTime) {
     let possibleStop = -1;
-    for (let i = 0; i < times.length - 1; i++){
+    for (let i = 0; i < times.length - 1; i++) {
         let stopA = times[i];
         let stopB = times[i + 1];
 
-        if (stopA[1] <= curTime && curTime <= stopB[0]){
+        // console.log(stopA, stopB);
+
+        if (stopA <= curTime && curTime <= stopB) {
             possibleStop = i;
             break;
-        } 
+        }
     }
     return possibleStop;
 }
@@ -47,17 +50,17 @@ function getRecentStopsVisitedByTime(times, curTime){
  * @param {Location} location The current location
  * @returns {Set} The stop locations
  */
-function getRecentStopsVisitedByLocation(locationIDs, location){
+function getRecentStopsVisitedByLocation(locationIDs, location) {
     return new Promise(async (resolve, reject) => {
 
         let jobs = [];
-        for (let i = 0; i < locationIDs.length - 1; i++){
+        for (let i = 0; i < locationIDs.length - 1; i++) {
             let newJob = new Promise(async (resolveJob, rejectJob) => {
                 let locationID_1 = locationIDs[i];
                 let locationID_2 = locationIDs[i + 1];
-                
-                let request1 = database.getObject("stop-locations", { "_id": locationID_1 });
-                let request2 = database.getObject("stop-locations", { "_id": locationID_2 });
+
+                let request1 = database.getObject("stop_locations", { "stop_id": locationID_1 });
+                let request2 = database.getObject("stop_locations", { "stop_id": locationID_2 });
                 let locations = await Promise.all([request1, request2]);
 
                 let location_1 = locations[0];
@@ -66,15 +69,15 @@ function getRecentStopsVisitedByLocation(locationIDs, location){
                 let dx = location_1.longitude - location_2.longitude;
                 let dy = location_1.latitude - location_2.latitude;
                 let lengthOfLineSquared = (dx * dx + dy * dy);
-                let innerProduct = (location.longitude - location_2.longitude) * dx + 
-                                    (location.latitude - location_2.latitude) * dy;
-                
+                let innerProduct = (location.longitude - location_2.longitude) * dx +
+                    (location.latitude - location_2.latitude) * dy;
+
                 let isProjectionInLine = 0 <= innerProduct && innerProduct <= lengthOfLineSquared;
 
-                if (isProjectionInLine){
+                if (isProjectionInLine) {
                     resolveJob(i);
                 }
-                else{
+                else {
                     resolveJob(null);
                 }
             });
@@ -83,72 +86,50 @@ function getRecentStopsVisitedByLocation(locationIDs, location){
         let possibleStops = await Promise.all(jobs);
         possibleStops = possibleStops.filter(a => a !== null);
         let possibleStopsSet = new Set(possibleStops);
+
         resolve(possibleStopsSet);
     });
 }
 
 /**
- * Get a subset from the list of possible schedules the user might be on based on
- * the user's location and current time.
+ * Get a list of possible schedules the user might be on based on
+ * the user's location, trip_id, and current time.
  * 
  * It will return a subset of the 'schedules' list as a set. 
- * @param {String[]} schedules A list of possible schedules
+ * @param {String} tripId A trip ID
  * @param {Integer} time The time in seconds from midnight
  * @param {Location} location The location
  * @returns {Set} A set of schedules the user might be in.
  */
-function getPossibleSchedules(tripScheduleIDs, time, location){
+function getPossibleSchedules(tripId, time, location) {
     return new Promise(async (resolve, reject) => {
 
-        let possibleSchedules = new Set();
-        let schedulesAggregatorCursor = await database.getAggregatedObjects("schedules", [
-            {
-                $match: {
-                    $and: [
-                        { _id: { $in: tripScheduleIDs } },
-                        { startTime: { $lte: time } },
-                        { endTime: { $gte: time } } 
-                    ]
-                }
-            },
-            {
-                $group: {
-                    _id: {
-                        "headsigns": "$headsigns",
-                        "locationIDs": "$locationIDs"
-                    },
-                    times: { $push: "$times" },
-                    scheduleIDs: { $push: "$_id" }
-                }
-            }
-        ]);
-        while (await schedulesAggregatorCursor.hasNext()){
-            let aggregatedSchedule = await schedulesAggregatorCursor.next();
+        console.log("HEHE", tripId, time, typeof(time), location);
 
-            let times = aggregatedSchedule.times;
-            let locationIDs = aggregatedSchedule._id.locationIDs;
-            let scheduleIDs = aggregatedSchedule.scheduleIDs;
+        let possibleSchedules = new Set();
+        let schedulesCursor = await database.getInstance().collection("schedules").find({
+            $and: [
+                { trip_id: { $eq: tripId } },
+                { start_time: { $lte: time } },
+                { end_time: { $gte: time } }
+            ]
+        });
+
+        while (await schedulesCursor.hasNext()) {
+            let schedule = await schedulesCursor.next();
+
+            let times = schedule.times;
+            let locationIDs = schedule.locations;
+            let scheduleID = schedule._id;
 
             let stopRangesByLocation = await getRecentStopsVisitedByLocation(locationIDs, location);
+            let recentStopVisitedByTime = getRecentStopsVisitedByTime(times, time);
 
-            for (let i = 0; i < times.length; i++){
-                let tripSchedule = times[i];
-                let tripScheduleID = scheduleIDs[i];
-                let recentStopVisitedByTime = getRecentStopsVisitedByTime(tripSchedule, time);
-
-                if (recentStopVisitedByTime >= 0){
-                    if (stopRangesByLocation.has(recentStopVisitedByTime)){
-                        possibleSchedules.add(tripScheduleID);
-                    }
-                    else if (stopRangesByLocation.has(recentStopVisitedByTime - 1)){
-                        possibleSchedules.add(tripScheduleID);
-                    }
-                    else if (stopRangesByLocation.has(recentStopVisitedByTime + 1)){
-                        possibleSchedules.add(tripScheduleID);
-                    }
-                }
+            if (stopRangesByLocation.has(recentStopVisitedByTime)) {
+                possibleSchedules.add(scheduleID);
             }
         }
+        console.log("DONE");
 
         resolve(possibleSchedules);
     });
@@ -158,11 +139,11 @@ function getPossibleSchedules(tripScheduleIDs, time, location){
 module.exports = {
 
     /**
-     * Makes a connection to the Redis instance, as well as
+     * Makes a connection to the database instance, as well as
      * other miscillaneous jobs to ensure successful shutdown and launch
      * of the app.
      */
-    async run(){
+    async run() {
         database = new Database();
         await database.connectToDatabase(Config.DATABASE_URI, Config.DATABASE_NAME);
 
@@ -170,7 +151,7 @@ module.exports = {
             await database.closeDatabase();
             process.exit(-1);
         });
-        
+
         process.on("exit", async () => {
             await database.closeDatabase();
         });
@@ -185,7 +166,7 @@ module.exports = {
      *  When successful, it will pass the found trip IDs to the .resolve(); 
      *  else it will pass the error to .reject().
      */
-    getTripIDsNearLocation(location, time, radius){
+    getTripIDsNearLocation(location, time, radius) {
         return new Promise(async (resolve, reject) => {
             let latitude = location.latitude;
             let longitude = location.longitude;
@@ -196,37 +177,37 @@ module.exports = {
 
             let responseObj = {};
 
-            let nearbyPathsCursor = await database.getInstance().collection("paths").find({ 
-                location: { 
-                    $nearSphere: { 
-                        $geometry: { 
-                            type: "Point", 
-                            coordinates: [ longitude, latitude ] 
-                        }, 
-                        $maxDistance: radius 
-                    } 
-                } 
+            let nearbyPathsCursor = await database.getInstance().collection("paths").find({
+                location: {
+                    $nearSphere: {
+                        $geometry: {
+                            type: "Point",
+                            coordinates: [longitude, latitude]
+                        },
+                        $maxDistance: radius
+                    }
+                }
             });
 
-            while (await nearbyPathsCursor.hasNext()){
+            while (await nearbyPathsCursor.hasNext()) {
                 let nearbyPath = await nearbyPathsCursor.next();
-                let pathID = nearbyPath._id;
+                let pathID = nearbyPath.path_id;
 
                 let tripsCursor = await database.getObjects("trips", {
-                    "pathID": pathID
+                    "path_id": pathID
                 });
-                while (await tripsCursor.hasNext()){
+                while (await tripsCursor.hasNext()) {
                     let trip = await tripsCursor.next();
+                    
+                    let tripId = trip.trip_id;
+                    let possibleScheduleIDs = await getPossibleSchedules(tripId, time, location);
 
-                    let schedules = trip.schedules;
-                    let possibleScheduleIDs = await getPossibleSchedules(schedules, time, location);
+                    if (possibleScheduleIDs.size > 0) {
 
-                    if (possibleScheduleIDs.size > 0){
-
-                        responseObj[trip._id] = {
-                            shortname: trip.shortName,
-                            longname: trip.longName,
-                            headsign: trip.headSign,
+                        responseObj[tripId] = {
+                            shortname: trip.short_name,
+                            longname: trip.long_name,
+                            headsign: trip.headsign,
                             type: trip.type,
                             schedules: Array.from(possibleScheduleIDs)
                         }

@@ -395,10 +395,10 @@ def build_geospatial_paths(paths):
             location: {
                 type: "LineString",
                 coordinates: [
-                    [<LAT_1>, <LONG_1>],
-                    [<LAT_2>, <LONG_2>],
+                    [<LONG_1>, <LAT_1>],
+                    [<LONG_2>, <LAT_2>],
                     ...
-                    [<LAT_N>, <LONG_N>]
+                    [<LONG_N>, <LAT_N>]
                 ]
             }
         }
@@ -410,7 +410,7 @@ def build_geospatial_paths(paths):
         location = {
             "type": "LineString",
             "coordinates": [
-                [latitudes[i], longitudes[i]] for i, _ in enumerate(latitudes)
+                [longitudes[i], latitudes[i]] for i, _ in enumerate(latitudes)
             ],
         }
         return location
