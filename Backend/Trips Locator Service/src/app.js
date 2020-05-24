@@ -1,3 +1,5 @@
+"use strict";
+
 const express = require("express");
 const process = require("process");
 const Config = require("./res/config");
@@ -8,7 +10,7 @@ const TripsLocator = require("./trips-locator");
  * A class used to represent the entire application with handling and responding to 
  * HTTP requests.
  */
-module.exports = async function(){
+module.exports = async function () {
 
     let app = express();
     let server_port = process.env.YOUR_PORT || process.env.PORT || Config.WEB_APP_DEFAULT_PORT || 5000;
@@ -41,7 +43,7 @@ module.exports = async function(){
             longitude: longitude
         };
         console.log("Current time: " + (new Date()));
-        
+
         TripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight, radius)
             .then(tripIDs => {
                 let jsonResponse = {
@@ -52,7 +54,7 @@ module.exports = async function(){
                 };
 
                 response.setHeader('Content-Type', 'application/json');
-                response.send(JSON.stringify(jsonResponse));  
+                response.send(JSON.stringify(jsonResponse));
                 console.log("Finish time: " + (new Date()));
             })
             .catch(error => {
@@ -63,7 +65,7 @@ module.exports = async function(){
                 };
 
                 response.setHeader('Content-Type', 'application/json');
-                response.send(JSON.stringify(responseBody));   
+                response.send(JSON.stringify(responseBody));
             });
     });
 
@@ -71,7 +73,7 @@ module.exports = async function(){
         res.status(200).send("OK");
     });
 
-    app.listen(server_port, server_host, function() {
+    app.listen(server_port, server_host, function () {
         console.log('Listening on port %d', server_port);
     });
 }

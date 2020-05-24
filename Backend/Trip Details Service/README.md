@@ -23,11 +23,11 @@ On startup, it will launch N clusters (with N being the number of CPUs on the cu
 ##### Getting vehicles based on GPS location:
 Clients needs to make HTTP requests to the application in order to get trip details.
 
-**URL**: api/v1/trip/:tripID
+**URL**: api/v1/trips/:tripID/schedules/:scheduleID
 
 **Method**: GET
 
-**URL Params:** tripID=[string]
+**URL Params:** tripID=[string], scheduleID=[string]
 
 **Sample Success Response:**
 ```
@@ -59,7 +59,7 @@ Clients needs to make HTTP requests to the application in order to get trip deta
 ```
 **Sample Call:**
 ```
-$ curl http://localhost:3003/api/v1/trips/12131321231
+$ curl http://localhost:3003/api/v1/trips/20069937/schedules/5ec9ead97e3a460ba0492c89
 ```
 
 ### Installation

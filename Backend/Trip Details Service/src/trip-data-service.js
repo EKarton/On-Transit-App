@@ -1,6 +1,5 @@
 "use strict";
 
-const Database = require("on-transit").Database;
 const ObjectID = require('mongodb').ObjectID;
 const ErrorCodes = require("./constants").ERROR_CODES;
 const MongoDB_ErrorMessages = require("./constants").MONGODB_ERROR_MESSAGES;
@@ -9,13 +8,13 @@ const MongoDB_ErrorMessages = require("./constants").MONGODB_ERROR_MESSAGES;
 /**
  * A class used to obtain the complete Trip details given a trip ID.
  */
-class TripDataService{
+class TripDataService {
 
     /**
      * Initializes the TripDataService
      * @param {Database} database The database to the transit data
      */
-    constructor(database){
+    constructor(database) {
         this.database = database;
     }
 
@@ -30,10 +29,10 @@ class TripDataService{
      * @param {string} pathID The _id to a path in the database's path-tree collection.
      * @return {object[]} A list of path locations in an object format specified above.
      */
-    getPathDetails(pathID){
+    getPathDetails(pathID) {
         return new Promise(async (resolve, reject) => {
             try {
-                let path = await this.database.getObject("paths", { "_id": new ObjectID(pathID) });
+                let path = await this.database.getObject("paths", { "path_id": pathID });
                 let coordinates = path.location.coordinates;
                 let pathLocations = coordinates.map(coord => {
                     return {
@@ -44,7 +43,7 @@ class TripDataService{
 
                 resolve(pathLocations);
             }
-            catch(error) {
+            catch (error) {
                 reject(error);
             }
         });
@@ -61,31 +60,27 @@ class TripDataService{
      * }
      * @param {String} tripID The trip ID
      */
-    getTripDetails(tripID){
+    getTripDetails(tripID) {
         return new Promise(async (resolve, reject) => {
             try {
-                let trip = await this.database.getObject("trips", { "_id": new ObjectID(tripID) });
-                if (trip === null){
+                console.log(tripID, typeof(tripID));
+                
+                let trip = await this.database.getObject("trips", { "trip_id": tripID });
+                if (trip === null) {
                     reject(ErrorCodes.TRIP_NOT_FOUND);
                 }
 
-                let shortName = trip.shortName;
-                let longName = trip.longName;
-                let headSign = trip.headSign;
-                let type = trip.type;
-                let pathID = trip.pathID;
-
                 let tripObj = {
-                    shortName: shortName,
-                    longName: longName,
-                    headSign: headSign,
-                    type: type,
-                    pathID: pathID
+                    shortName: trip.short_name,
+                    longName: trip.long_name,
+                    headSign: trip.headsign,
+                    type: trip.type,
+                    pathID: trip.path_id
                 };
                 resolve(tripObj);
             }
-            catch(error) {
-                if (error.message === MongoDB_ErrorMessages.OBJECT_ID_ERROR){
+            catch (error) {
+                if (error.message === MongoDB_ErrorMessages.OBJECT_ID_ERROR) {
                     reject(ErrorCodes.TRIP_NOT_FOUND);
                 }
                 reject(error);
@@ -108,21 +103,21 @@ class TripDataService{
      * @param {string} scheduleID The _id to a schedule in the database's schedules collection.
      * @return {object[]} Returns an array of stop schedules as shown above.
      */
-    getScheduleDetails(scheduleID){
+    getScheduleDetails(scheduleID) {
         return new Promise(async (resolve, reject) => {
             try {
                 let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
-                if (schedule === null){
+                if (schedule === null) {
                     reject(ErrorCodes.SCHEDULE_NOT_FOUND);
                 }
 
                 let times = schedule.times;
                 let headsigns = schedule.headsigns;
-                let locationIDs = schedule.locationIDs;
+                let locationIDs = schedule.locations;
 
                 let locationPromises = locationIDs.map((locationID, index) => {
                     return new Promise(async (resolveJob, rejectJob) => {
-                        let stopLocation = await this.database.getObject("stop-locations", { "_id": new ObjectID(locationID) });
+                        let stopLocation = await this.database.getObject("stop_locations", { "stop_id": locationID });
                         let latitude = stopLocation.latitude;
                         let longitude = stopLocation.longitude;
                         let description = stopLocation.description;
@@ -136,7 +131,7 @@ class TripDataService{
                             long: longitude,
                             description: description,
                             name: name,
-                            time: time[0],
+                            time: time,
                             headsign: headsign
                         };
                         resolveJob(stop);
@@ -145,11 +140,11 @@ class TripDataService{
                 let locations = await Promise.all(locationPromises);
                 resolve(locations);
             }
-            catch(error) {
-                if (error.message === MongoDB_ErrorMessages.OBJECT_ID_ERROR){
+            catch (error) {
+                if (error.message === MongoDB_ErrorMessages.OBJECT_ID_ERROR) {
                     reject(ErrorCodes.SCHEDULE_NOT_FOUND);
                 }
-                reject(error);                
+                reject(error);
             }
         });
     }
@@ -176,9 +171,9 @@ class TripDataService{
      * @param {string} tripID The _id to a trip in the database's trips collection.
      * @return {object} Returns the trip details in an object as shown above.
      */
-    getTripScheduleData(tripID, scheduleID){
+    getTripScheduleData(tripID, scheduleID) {
         return new Promise(async (resolve, reject) => {
-            try{        
+            try {
                 let tripPromise = this.getTripDetails(tripID);
                 let schedulePromise = this.getScheduleDetails(scheduleID);
                 let results = await Promise.all([tripPromise, schedulePromise]);
@@ -198,7 +193,7 @@ class TripDataService{
                 };
                 resolve(completeTripSchedule);
             }
-            catch(error){
+            catch (error) {
                 console.error(error);
                 reject(error);
             }

@@ -104,7 +104,7 @@ function getRecentStopsVisitedByLocation(locationIDs, location) {
 function getPossibleSchedules(tripId, time, location) {
     return new Promise(async (resolve, reject) => {
 
-        console.log("HEHE", tripId, time, typeof(time), location);
+        console.log("HEHE", tripId, time, typeof (time), location);
 
         let possibleSchedules = new Set();
         let schedulesCursor = await database.getInstance().collection("schedules").find({
@@ -198,7 +198,7 @@ module.exports = {
                 });
                 while (await tripsCursor.hasNext()) {
                     let trip = await tripsCursor.next();
-                    
+
                     let tripId = trip.trip_id;
                     let possibleScheduleIDs = await getPossibleSchedules(tripId, time, location);
 

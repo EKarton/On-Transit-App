@@ -1,6 +1,8 @@
+"use strict";
+
 const express = require("express");
 const process = require("process");
-const Database = require("on-transit").Database;
+const Database = require("./database");
 const ErrorCodes = require("./constants").ERROR_CODES;
 
 const TripDataService = require("./trip-data-service");

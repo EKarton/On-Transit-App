@@ -1,3 +1,5 @@
+"use strict";
+
 module.exports = {
     ERROR_CODES: {
         SCHEDULE_NOT_FOUND: "errorcodes/schedule_not_found",
