@@ -22,7 +22,7 @@ module.exports = async function () {
 
     let tripsLocator = new TripsLocator(database);
 
-    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.WEB_APP_DEFAULT_PORT || 5000;
+    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.PORT;
     let server_host = process.env.YOUR_HOST || '0.0.0.0';
 
     /**

@@ -23,7 +23,7 @@ module.exports = async function(){
 
     var tripDataService = new TripDataService(database);
 
-    var server_port = process.env.YOUR_PORT || process.env.PORT || config.DEFAULT_PORT;
+    var server_port = process.env.YOUR_PORT || process.env.PORT || config.PORT;
     var server_host = process.env.YOUR_HOST || '0.0.0.0';
 
     app.get("/api/v1/trips/:tripID/schedules/:scheduleID", (request, response) => {

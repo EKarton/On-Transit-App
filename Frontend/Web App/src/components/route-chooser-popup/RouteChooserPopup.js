@@ -27,8 +27,9 @@ class NearbyTripsChooserPopup extends React.Component {
                                   (this.props.radius !== nextProps.radius);
 
         if (isLocationChanged){
-            let currentTime = getCurrentTime().toLocaleTimeString();
-            this.props.getNearbyTrips(43.5540, -79.72208, currentTime, nextProps.radius);
+            let currentTime = getCurrentTime();
+            let formattedTime = `${currentTime.getHours()}:${currentTime.getMinutes()}:${currentTime.getSeconds()}`;
+            this.props.getNearbyTrips(nextProps.latitude, nextProps.longitude, formattedTime, nextProps.radius);
             return false;
         }
 

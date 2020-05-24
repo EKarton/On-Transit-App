@@ -118,19 +118,15 @@ class TripDataService {
                 let locationPromises = locationIDs.map((locationID, index) => {
                     return new Promise(async (resolveJob, rejectJob) => {
                         let stopLocation = await this.database.getObject("stop_locations", { "stop_id": locationID });
-                        let latitude = stopLocation.latitude;
-                        let longitude = stopLocation.longitude;
-                        let description = stopLocation.description;
-                        let name = stopLocation.name;
 
                         let time = times[index];
                         let headsign = headsigns[index];
 
                         let stop = {
-                            lat: latitude,
-                            long: longitude,
-                            description: description,
-                            name: name,
+                            lat: stopLocation.latitude,
+                            long: stopLocation.longitude,
+                            description: stopLocation.description,
+                            name: stopLocation.stop_name,
                             time: time,
                             headsign: headsign
                         };

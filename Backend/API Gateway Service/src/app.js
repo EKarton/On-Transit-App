@@ -31,8 +31,8 @@ class App{
                     message: JSON.stringify(error)
                 };
 
-                response.setHeader('Content-Type', 'application/json');
-                response.send(JSON.stringify(responseBody));    
+                res.setHeader('Content-Type', 'application/json');
+                res.send(JSON.stringify(responseBody));    
             });
     }
 
@@ -50,7 +50,7 @@ class App{
      */
     run(){
         var app = express();
-        var server_port = process.env.YOUR_PORT || process.env.PORT || config.DEFAULT_PORT;
+        var server_port = process.env.YOUR_PORT || process.env.PORT || config.PORT;
         var server_host = process.env.YOUR_HOST || '0.0.0.0';
 
         // Enable cors from anywhere
@@ -99,14 +99,16 @@ class App{
          * http://localhost:3000/api/v1/vehicles?lat=43&long=-73.6&radius=40
          */
         app.get("/api/v1/vehicles", (req, res) => {
-            var latitude = req.query.lat;
-            var longitude = req.query.long;
-            var radius = req.query.radius;
+            res.status(404).send("Unknown path");
 
-            console.log("API Gateway Service: Request for finding vehicle received on process #", process.pid);
+            // var latitude = req.query.lat;
+            // var longitude = req.query.long;
+            // var radius = req.query.radius;
 
-            var uri = `${config.VEHICLES_LOCATOR_URL}/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
-            this._handleRequest(req, res, uri);
+            // console.log("API Gateway Service: Request for finding vehicle received on process #", process.pid);
+
+            // var uri = `${config.VEHICLES_LOCATOR_URL}/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
+            // this._handleRequest(req, res, uri);
         });
 
         app.get("/api/v1/health", (req, res) => {

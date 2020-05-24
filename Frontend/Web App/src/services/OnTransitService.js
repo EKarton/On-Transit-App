@@ -1,9 +1,13 @@
 import Axios from "axios";
 Axios.defaults.timeout = 180000;
 
-const TRIPS_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/trips";
-const TRIP_DETAILS_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/trips";
-const VEHICLES_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/vehicles";
+// const TRIPS_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/trips";
+// const TRIP_DETAILS_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/trips";
+// const VEHICLES_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/vehicles";
+
+const TRIPS_LOCATOR_URL = "http://localhost:5000/api/v1/trips";
+const TRIP_DETAILS_URL = "http://localhost:5000/api/v1/trips";
+const VEHICLES_LOCATOR_URL = "http://localhost:5000/api/v1/vehicles";
 
 export async function getNearbyTrips(latitude, longitude, time, radius){
     try{

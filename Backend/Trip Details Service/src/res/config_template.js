@@ -1,7 +1,7 @@
 "use strict";
 
 module.exports = {
-	DEFAULT_PORT: 3003,
+	PORT: 3003,
 	DATABASE_URI: "<URI_TO_MONGODB_DATABASE>",
 	DATABASE_NAME: "<NAME_TO_MONGODB_DATABASE>"
 };
