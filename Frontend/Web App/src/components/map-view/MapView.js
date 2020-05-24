@@ -102,7 +102,7 @@ class MapView extends React.Component {
                 fill: null,
                 stroke: new Stroke({
                     color: "red",
-                    width: 1
+                    width: 1.5
                 })
             })
         });
