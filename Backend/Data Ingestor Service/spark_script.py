@@ -26,49 +26,45 @@ def extract_zip_file(file_path, target_dir):
 
 
 def load_gtfs_data(spark, dir_):
-
-    # Load the dataframe
-    trips_data = (
+    ''' Load the GTFS data
+        Note: all fields will have a String datatype
+    '''
+    trips = (
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        .option("inferSchema", "true")
         .load(os.path.join(dir_, "trips.txt"))
     )
 
-    routes_data = (
+    routes = (
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        .option("inferSchema", "true")
         .load(os.path.join(dir_, "routes.txt"))
     )
 
-    shapes_data = (
+    shapes = (
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        .option("inferSchema", "true")
         .load(os.path.join(dir_, "shapes.txt"))
     )
 
-    stops_data = (
+    stops = (
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        .option("inferSchema", "true")
         .load(os.path.join(dir_, "stops.txt"))
     )
 
-    stop_times_data = (
+    stop_times = (
         spark.read.format("csv")
         .option("sep", ",")
         .option("header", "true")
-        .option("inferSchema", "true")
         .load(os.path.join(dir_, "stop_times.txt"))
     )
 
-    return trips_data, routes_data, shapes_data, stops_data, stop_times_data
+    return trips, routes, shapes, stops, stop_times
 
 
 def reduce_geocoordinates_precision(dataframe):
@@ -120,6 +116,22 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
     )
     stops = rename_columns(stops, {"stop_lat": "latitude", "stop_lon": "longitude"})
 
+    # Convert the sequence IDs to integers
+    stop_times = stop_times.withColumn("stop_sequence", stop_times["stop_sequence"].cast(IntegerType()))
+    shapes = shapes.withColumn("shape_pt_sequence", shapes["shape_pt_sequence"].cast(IntegerType()))
+
+    # Convert latitude and longitude to doubles
+    stops = stops.withColumn("latitude", stops["latitude"].cast(DoubleType()))
+    stops = stops.withColumn("longitude", stops["longitude"].cast(DoubleType()))
+    shapes = shapes.withColumn("latitude", shapes["latitude"].cast(DoubleType()))
+    shapes = shapes.withColumn("longitude", shapes["longitude"].cast(DoubleType()))
+
+    shapes.printSchema()
+    routes.printSchema()
+    stops.printSchema()
+    stop_times.printSchema()
+    trips.printSchema()
+
     # Reduce the number of decimal places in lat/long coordinates to 5
     stops = reduce_geocoordinates_precision(stops)
     shapes = reduce_geocoordinates_precision(shapes)
@@ -148,36 +160,6 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
     stop_times = stop_times.withColumn(
         "departure_time", convert_time_to_integer_udf(stop_times.departure_time)
     )
-
-    # Convert the sequence IDs to integers
-    stop_times = stop_times.withColumn(
-        "stop_sequence", stop_times["stop_sequence"].cast(IntegerType())
-    )
-    shapes = shapes.withColumn(
-        "shape_pt_sequence", shapes["shape_pt_sequence"].cast(IntegerType())
-    )
-
-    # Convert shape_id, trip_id, route_id, stop_id to strings
-    shapes = shapes.withColumn("shape_id", shapes["shape_id"].cast(StringType()))
-    routes = routes.withColumn("route_id", routes["route_id"].cast(StringType()))
-    stops = stops.withColumn("stop_id", stops["stop_id"].cast(StringType()))
-
-    stop_times = stop_times.withColumn(
-        "stop_id", stop_times["stop_id"].cast(StringType())
-    )
-    stop_times = stop_times.withColumn(
-        "trip_id", stop_times["trip_id"].cast(StringType())
-    )
-
-    trips = trips.withColumn("trip_id", trips["trip_id"].cast(StringType()))
-    trips = trips.withColumn("shape_id", trips["shape_id"].cast(StringType()))
-    trips = trips.withColumn("route_id", trips["route_id"].cast(StringType()))
-
-    shapes.printSchema()
-    routes.printSchema()
-    stops.printSchema()
-    stop_times.printSchema()
-    trips.printSchema()
 
     return routes, trips, shapes, stops, stop_times
 

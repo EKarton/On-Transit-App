@@ -4,7 +4,10 @@ const express = require("express");
 const process = require("process");
 const Config = require("./res/config");
 
+const Database = require("./database");
 const TripsLocator = require("./trips-locator");
+
+var database = null;
 
 /**
  * A class used to represent the entire application with handling and responding to 
@@ -13,10 +16,14 @@ const TripsLocator = require("./trips-locator");
 module.exports = async function () {
 
     let app = express();
+
+    database = new Database();
+    await database.connectToDatabase(Config.DATABASE_URI, Config.DATABASE_NAME);
+
+    let tripsLocator = new TripsLocator(database);
+
     let server_port = process.env.YOUR_PORT || process.env.PORT || Config.WEB_APP_DEFAULT_PORT || 5000;
     let server_host = process.env.YOUR_HOST || '0.0.0.0';
-
-    TripsLocator.run();
 
     /**
      * Returns a set of trip IDs that are close to a location by a certain radius
@@ -44,7 +51,7 @@ module.exports = async function () {
         };
         console.log("Current time: " + (new Date()));
 
-        TripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight, radius)
+        tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight, radius)
             .then(tripIDs => {
                 let jsonResponse = {
                     status: "success",
@@ -78,3 +85,15 @@ module.exports = async function () {
     });
 }
 
+process.on("SIGINT", async () => {
+    if (database){
+        await database.closeDatabase();
+    }
+    process.exit(-1);
+});
+
+process.on("exit", async () => {
+    if (database){
+        await database.closeDatabase();
+    }
+});
