@@ -158,18 +158,26 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
     )
 
     # Convert shape_id, trip_id, route_id, stop_id to strings
+    shapes = shapes.withColumn("shape_id", shapes["shape_id"].cast(StringType()))
+    routes = routes.withColumn("route_id", routes["route_id"].cast(StringType()))
+    stops = stops.withColumn("stop_id", stops["stop_id"].cast(StringType()))
+
     stop_times = stop_times.withColumn(
         "stop_id", stop_times["stop_id"].cast(StringType())
     )
-    shapes = shapes.withColumn(
-        "shape_id", shapes["shape_id"].cast(StringType())
+    stop_times = stop_times.withColumn(
+        "trip_id", stop_times["trip_id"].cast(StringType())
     )
-    trips = trips.withColumn(
-        "trip_id", trips["trip_id"].cast(StringType())
-    )
-    routes = routes.withColumn(
-        "route_id", routes["route_id"].cast(StringType())
-    )
+
+    trips = trips.withColumn("trip_id", trips["trip_id"].cast(StringType()))
+    trips = trips.withColumn("shape_id", trips["shape_id"].cast(StringType()))
+    trips = trips.withColumn("route_id", trips["route_id"].cast(StringType()))
+
+    shapes.printSchema()
+    routes.printSchema()
+    stops.printSchema()
+    stop_times.printSchema()
+    trips.printSchema()
 
     return routes, trips, shapes, stops, stop_times
 
@@ -177,16 +185,16 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
 def build_trips(trips, routes):
     trips = (
         trips.join(routes, on=["route_id"])
-        .withColumnRenamed("shape_id", "path_id")
         .select(
             "trip_id",
-            "path_id",
+            "shape_id",
             "trip_headsign",
             "trip_short_name",
             "route_short_name",
             "route_long_name",
             "route_type",
         )
+        .withColumnRenamed("shape_id", "path_id")
         .withColumnRenamed("trip_headsign", "headsign")
         .withColumnRenamed("route_short_name", "short_name")
         .withColumnRenamed("route_long_name", "long_name")
@@ -215,31 +223,22 @@ def remove_duplicate_stops(stops, stop_times):
     # Compute the hash of all paths
     stops = stops.withColumn(
         "hash",
-        F.sha2(
-            F.concat_ws("||", stops.stop_name, stops.latitude, stops.longitude), 256
-        ),
+        F.sha2(F.concat_ws("|", stops.stop_name, stops.latitude, stops.longitude), 256),
     )
 
     # Drop the duplicate stop locations
     unique_stops = stops.dropDuplicates(["hash"])
 
     # Make a map mapping old stop IDs to unique stop IDs
-    stop_id_mappings = (
-        stops.withColumnRenamed("stop_id", "old_stop_id")
-        .join(unique_stops, on=["hash"])
-        .withColumnRenamed("stop_id", "new_stop_id")
-        .select("old_stop_id", "new_stop_id")
-    )
+    stop_id_mappings = stops.join(
+        unique_stops.withColumnRenamed("stop_id", "new_stop_id"),
+        on=["hash"],
+        how="leftouter",
+    ).select("stop_id", "new_stop_id")
 
     # Update all references from duplicated stop locations to unique stop locations
-    stop_times = (
-        stop_times.join(
-            stop_id_mappings, stop_times.stop_id == stop_id_mappings.old_stop_id
-        )
-        .drop("stop_id")
-        .drop("old_stop_id")
-        .withColumnRenamed("new_stop_id", "stop_id")
-    )
+    stop_times = stop_times.join(stop_id_mappings, on=["stop_id"], how="leftouter")
+    stop_times = stop_times.withColumn("stop_id", stop_times.new_stop_id)
 
     # Remove the hash columns
     unique_stops = unique_stops.drop("hash")
@@ -252,29 +251,24 @@ def remove_duplicated_paths(paths, trips):
         with the non-duplicated paths
     """
     # Compute the hash of all paths
-    paths = paths.withColumn(
+    hashed_paths = paths.withColumn(
         "hash",
         F.sha2(F.concat_ws("||", paths.path_latitudes, paths.path_longitudes), 256),
     )
 
     # Drop duplicated paths
-    unique_paths = paths.dropDuplicates(["hash"])
+    unique_paths = hashed_paths.dropDuplicates(["hash"])
 
     # Make a map mapping old path IDs to unique path IDs
-    path_id_mappings = (
-        paths.withColumnRenamed("path_id", "old_path_id")
-        .join(unique_paths, on=["hash"])
-        .withColumnRenamed("path_id", "new_path_id")
-        .select("old_path_id", "new_path_id")
-    )
+    path_id_mappings = hashed_paths.join(
+        unique_paths.withColumnRenamed("path_id", "new_path_id"),
+        on=["hash"],
+        how="leftouter",
+    ).select("path_id", "new_path_id")
 
     # Update all references form duplicated paths to unique paths
-    trips = (
-        trips.join(path_id_mappings, trips.path_id == path_id_mappings.old_path_id)
-        .drop("path_id")
-        .drop("old_path_id")
-        .withColumnRenamed("new_path_id", "path_id")
-    )
+    trips = trips.join(path_id_mappings, on=["path_id"], how="leftouter")
+    trips = trips.withColumn("path_id", trips.new_path_id)
 
     # Remove the hash columns
     unique_paths = unique_paths.drop("hash")
@@ -327,40 +321,42 @@ def remove_duplicate_trips(trips, schedules):
     # Compute the hash of all trips
     trips = trips.withColumn(
         "hash",
-        F.sha2(
-            F.concat_ws(
-                "||",
-                trips.path_id,
-                trips.short_name,
-                trips.long_name,
-                trips.trip_short_name,
-                trips.headsign,
-                trips.type,
-            ),
-            256,
+        F.concat_ws(
+            "|",
+            trips.path_id,
+            trips.short_name,
+            trips.long_name,
+            trips.trip_short_name,
+            trips.headsign,
+            trips.type,
         ),
     )
+
+    trips.repartition(1).write.csv("trips.csv")
 
     # Drop duplicated paths
     unique_trips = trips.dropDuplicates(["hash"])
 
-    # Make a map mapping old path IDs to unique path IDs
-    trip_id_mappings = (
-        trips.withColumnRenamed("trip_id", "old_trip_id")
-        .join(unique_trips, on=["hash"])
-        .withColumnRenamed("trip_id", "new_trip_id")
-        .select("old_trip_id", "new_trip_id")
-    )
+    unique_trips.repartition(1).write.csv("unique_trips.csv")
+
+    unique_trips.printSchema()
+    trips.printSchema()
+
+    # Make a map mapping old trip IDs to unique trip IDs
+    trip_id_mappings = trips.join(
+        unique_trips.withColumnRenamed("trip_id", "new_trip_id"),
+        on=["hash"],
+        how="leftouter",
+    ).select("trip_id", "new_trip_id")
+
+    trip_id_mappings.repartition(1).write.csv("trip_id_mappings.csv")
+    schedules.repartition(1).select("trip_id").write.csv("schedules_tripid.csv")
 
     # Update all references form duplicated trips to unique trips
-    schedules = (
-        schedules.join(
-            trip_id_mappings, schedules.trip_id == trip_id_mappings.old_trip_id,
-        )
-        .drop("trip_id")
-        .drop("old_trip_id")
-        .withColumnRenamed("new_trip_id", "trip_id")
-    )
+    schedules = schedules.join(trip_id_mappings, on=["trip_id"], how="leftouter")
+    schedules = schedules.withColumn("trip_id", schedules.new_trip_id)
+
+    print(schedules.count())
 
     # Remove the hash columns
     unique_trips = unique_trips.drop("hash")
@@ -369,42 +365,28 @@ def remove_duplicate_trips(trips, schedules):
 
 
 def remove_duplicated_schedules(schedules):
-
-    # hehe = schedules.withColumn("bun", F.concat_ws(
-    #     "||",
-    #     schedules.trip_id,
-    #     schedules.times,
-    #     schedules.start_time,
-    #     schedules.end_time,
-    #     schedules.locations,
-    #     schedules.headsigns,
-    # ))
-    # print(hehe.first())
-    # input()
-
     # Compute the hash of each stop item
-    # schedules = schedules.withColumn(
-    #     "hash",
-    #     F.sha2(
-    #         F.concat_ws(
-    #             "||",
-    #             schedules.trip_id,
-    #             schedules.times,
-    #             schedules.start_time,
-    #             schedules.end_time,
-    #             schedules.locations,
-    #             schedules.headsigns,
-    #         ),
-    #         256,
-    #     ),
-    # )
+    schedules = schedules.withColumn(
+        "hash",
+        F.sha2(
+            F.concat_ws(
+                "||",
+                schedules.trip_id,
+                schedules.times,
+                schedules.start_time,
+                schedules.end_time,
+                schedules.locations,
+                schedules.headsigns,
+            ),
+            256,
+        ),
+    )
 
     # Drop duplicated paths
-    # unique_schedules = schedules.dropDuplicates(["hash"])
-    unique_schedules = schedules.dropDuplicates(["trip_id", "times", "start_time", "end_time", "locations", "headsigns"])
+    unique_schedules = schedules.dropDuplicates(["hash"])
 
     # Remove the hash columns
-    # unique_schedules = unique_schedules.drop("hash")
+    unique_schedules = unique_schedules.drop("hash")
 
     return unique_schedules
 
@@ -540,20 +522,17 @@ if __name__ == "__main__":
 
     print("== Finished Step 1 == \n== Starting Step 2 ==")
 
-    stops, stop_times = remove_duplicate_stops(stops, stop_times)
-    paths, trips = remove_duplicated_paths(paths, trips)
+    # stops, stop_times = remove_duplicate_stops(stops, stop_times)
+    # paths, trips = remove_duplicated_paths(paths, trips)
 
     print("== Finished Step 2 == \n== Starting Step 3 ==")
 
     schedules = build_schedule(stop_times)
-    print(schedules.count())
 
     print("== Finished Step 3 == \n== Starting Step 4 ==")
 
-    trips, schedules = remove_duplicate_trips(trips, schedules)
-    schedules = remove_duplicated_schedules(schedules)
-
-    print(schedules.count())
+    # trips, schedules = remove_duplicate_trips(trips, schedules)
+    # schedules = remove_duplicated_schedules(schedules)
 
     print("== Finished Step 4 == \n== Starting Step 5 ==")
 
