@@ -12,6 +12,9 @@ import os
 import sys
 import argparse
 
+import pymongo
+from pymongo import MongoClient
+
 
 def download_gtfs_file(url, file_path, chunk_size=128):
     r = requests.get(url, stream=True)
@@ -26,9 +29,9 @@ def extract_zip_file(file_path, target_dir):
 
 
 def load_gtfs_data(spark, dir_):
-    ''' Load the GTFS data
+    """ Load the GTFS data
         Note: all fields will have a String datatype
-    '''
+    """
     trips = (
         spark.read.format("csv")
         .option("sep", ",")
@@ -63,6 +66,13 @@ def load_gtfs_data(spark, dir_):
         .option("header", "true")
         .load(os.path.join(dir_, "stop_times.txt"))
     )
+
+    # Cache the results
+    trips.cache()
+    routes.cache()
+    shapes.cache()
+    stops.cache()
+    stop_times.cache()
 
     return trips, routes, shapes, stops, stop_times
 
@@ -117,8 +127,12 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
     stops = rename_columns(stops, {"stop_lat": "latitude", "stop_lon": "longitude"})
 
     # Convert the sequence IDs to integers
-    stop_times = stop_times.withColumn("stop_sequence", stop_times["stop_sequence"].cast(IntegerType()))
-    shapes = shapes.withColumn("shape_pt_sequence", shapes["shape_pt_sequence"].cast(IntegerType()))
+    stop_times = stop_times.withColumn(
+        "stop_sequence", stop_times["stop_sequence"].cast(IntegerType())
+    )
+    shapes = shapes.withColumn(
+        "shape_pt_sequence", shapes["shape_pt_sequence"].cast(IntegerType())
+    )
 
     # Convert latitude and longitude to doubles
     stops = stops.withColumn("latitude", stops["latitude"].cast(DoubleType()))
@@ -165,7 +179,7 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
 
 
 def build_trips(trips, routes):
-    trips = (
+    new_trips = (
         trips.join(routes, on=["route_id"])
         .select(
             "trip_id",
@@ -182,7 +196,7 @@ def build_trips(trips, routes):
         .withColumnRenamed("route_long_name", "long_name")
         .withColumnRenamed("route_type", "type")
     )
-    return trips
+    return new_trips
 
 
 def build_paths(shapes):
@@ -202,28 +216,32 @@ def remove_duplicate_stops(stops, stop_times):
     """ Given a stops dataframe, it will remove the duplicated stop locations in `stops` and update the `stop_times`
         with the non-duplicated stop locations
     """
-    # Compute the hash of all paths
-    stops = stops.withColumn(
-        "hash",
-        F.sha2(F.concat_ws("|", stops.stop_name, stops.latitude, stops.longitude), 256),
+    print("stops:", stops.count(), "stop_times:", stop_times.count())
+
+    # Group the stops that are the same
+    similar_stops = stops.groupBy("stop_name", "latitude", "longitude").agg(
+        F.min("stop_id").alias("new_stop_id"),
+        F.collect_list("stop_id").alias("old_stop_ids"),
     )
 
-    # Drop the duplicate stop locations
-    unique_stops = stops.dropDuplicates(["hash"])
+    # Make a map of the old stop IDs to the new stop IDs
+    # NOTE: the exploded column name is called 'col'
+    stop_id_mappings = similar_stops.select("new_stop_id", F.explode("old_stop_ids"))
 
-    # Make a map mapping old stop IDs to unique stop IDs
-    stop_id_mappings = stops.join(
-        unique_stops.withColumnRenamed("stop_id", "new_stop_id"),
-        on=["hash"],
-        how="leftouter",
-    ).select("stop_id", "new_stop_id")
-
-    # Update all references from duplicated stop locations to unique stop locations
-    stop_times = stop_times.join(stop_id_mappings, on=["stop_id"], how="leftouter")
+    stop_times = stop_times.join(
+        stop_id_mappings, stop_times.stop_id == stop_id_mappings.col, how="leftouter"
+    )
     stop_times = stop_times.withColumn("stop_id", stop_times.new_stop_id)
 
-    # Remove the hash columns
-    unique_stops = unique_stops.drop("hash")
+    # Get the unique stops
+    unique_stops = (
+        similar_stops.select("new_stop_id", "stop_name", "latitude", "longitude")
+        .withColumnRenamed("new_stop_id", "stop_id")
+        .drop("new_stop_id")
+    )
+
+    print("reduced stops:", stops.count(), "new stop_times:", stop_times.count())
+    print("Note: 'reduced stops' should be <= 'stops' and 'new stop_times' == 'stop_times'")
 
     return unique_stops, stop_times
 
@@ -232,28 +250,34 @@ def remove_duplicated_paths(paths, trips):
     """ Given a paths dataframe, it will remove the duplicated paths in `paths` and update the `trips`
         with the non-duplicated paths
     """
-    # Compute the hash of all paths
-    hashed_paths = paths.withColumn(
-        "hash",
-        F.sha2(F.concat_ws("||", paths.path_latitudes, paths.path_longitudes), 256),
+
+    print("paths:", paths.count(), "trips:", trips.count())
+
+    # Group the paths that are the same
+    similar_paths = paths.groupBy("path_latitudes", "path_longitudes").agg(
+        F.min("path_id").alias("new_path_id"),
+        F.collect_list("path_id").alias("old_path_ids"),
     )
 
-    # Drop duplicated paths
-    unique_paths = hashed_paths.dropDuplicates(["hash"])
+    # Make a map of the old path IDs to the new path IDs
+    # NOTE: the exploded column name is called 'col'
+    path_id_mappings = similar_paths.select("new_path_id", F.explode("old_path_ids"))
 
-    # Make a map mapping old path IDs to unique path IDs
-    path_id_mappings = hashed_paths.join(
-        unique_paths.withColumnRenamed("path_id", "new_path_id"),
-        on=["hash"],
-        how="leftouter",
-    ).select("path_id", "new_path_id")
-
-    # Update all references form duplicated paths to unique paths
-    trips = trips.join(path_id_mappings, on=["path_id"], how="leftouter")
+    # Update the trips' reference to path ids
+    trips = trips.join(
+        path_id_mappings, trips.path_id == path_id_mappings.col, how="leftouter"
+    )
     trips = trips.withColumn("path_id", trips.new_path_id)
 
-    # Remove the hash columns
-    unique_paths = unique_paths.drop("hash")
+    # Grab the unique paths
+    unique_paths = (
+        similar_paths.select("new_path_id", "path_latitudes", "path_longitudes",)
+        .withColumnRenamed("new_path_id", "path_id")
+        .drop("new_path_id")
+    )
+
+    print("reduced paths:", paths.count(), "new trips:", trips.count())
+    print("Note: 'reduced paths' should be <= 'paths' and 'new trips' == 'trips'")
 
     return unique_paths, trips
 
@@ -300,48 +324,40 @@ def build_schedule(stop_times):
 
 
 def remove_duplicate_trips(trips, schedules):
-    # Compute the hash of all trips
-    trips = trips.withColumn(
-        "hash",
-        F.concat_ws(
-            "|",
-            trips.path_id,
-            trips.short_name,
-            trips.long_name,
-            trips.trip_short_name,
-            trips.headsign,
-            trips.type,
-        ),
+    print("trips:", trips.count(), "schedules:", schedules.count())
+
+    # Group the stops that has the same hash value
+    similar_trips = trips.groupBy(
+        "path_id", "short_name", "long_name", "trip_short_name", "headsign", "type"
+    ).agg(
+        F.min("trip_id").alias("new_trip_id"),
+        F.collect_list("trip_id").alias("old_trip_ids"),
     )
 
-    trips.repartition(1).write.csv("trips.csv")
-
-    # Drop duplicated paths
-    unique_trips = trips.dropDuplicates(["hash"])
-
-    unique_trips.repartition(1).write.csv("unique_trips.csv")
-
-    unique_trips.printSchema()
-    trips.printSchema()
-
-    # Make a map mapping old trip IDs to unique trip IDs
-    trip_id_mappings = trips.join(
-        unique_trips.withColumnRenamed("trip_id", "new_trip_id"),
-        on=["hash"],
-        how="leftouter",
-    ).select("trip_id", "new_trip_id")
-
-    trip_id_mappings.repartition(1).write.csv("trip_id_mappings.csv")
-    schedules.repartition(1).select("trip_id").write.csv("schedules_tripid.csv")
+    # Make a map of the old trip IDs to the new trip IDs
+    trip_id_mappings = similar_trips.select("new_trip_id", F.explode("old_trip_ids"))
 
     # Update all references form duplicated trips to unique trips
-    schedules = schedules.join(trip_id_mappings, on=["trip_id"], how="leftouter")
+    schedules = schedules.join(
+        trip_id_mappings, schedules.trip_id == trip_id_mappings.col, how="leftouter"
+    )
     schedules = schedules.withColumn("trip_id", schedules.new_trip_id)
 
-    print(schedules.count())
+    # Grab the unique trips
+    unique_trips = similar_trips.select(
+        "new_trip_id",
+        "path_id",
+        "short_name",
+        "long_name",
+        "trip_short_name",
+        "headsign",
+        "type",
+    ).withColumnRenamed("new_trip_id", "trip_id")
 
-    # Remove the hash columns
-    unique_trips = unique_trips.drop("hash")
+    print("reduced trips:", unique_trips.count(), "new schedules:", schedules.count())
+    print(
+        "Note: 'reduced trips' should be <= 'trips' and 'new schedules' == 'schedules'"
+    )
 
     return unique_trips, schedules
 
@@ -426,7 +442,7 @@ def build_geospatial_paths(paths):
     return paths
 
 
-def save_to_database(trips, schedules, paths, stop_locations):
+def save_to_database(trips, schedules, paths, stop_locations, opts):
     print("Saving {} stop locations".format(stop_locations.count()))
 
     stop_locations.write.format("com.mongodb.spark.sql.DefaultSource").option(
@@ -451,7 +467,25 @@ def save_to_database(trips, schedules, paths, stop_locations):
         "collection", "trips"
     ).mode("overwrite").save()
 
-    print("Saved trips")
+    print("Saved trips \nBuilding indexes")
+
+    # Re-creating the indexes
+    parsed = pymongo.uri_parser.parse_uri(opts.mongodb_uri)
+    db_name = parsed["database"]
+    client = MongoClient(opts.mongodb_uri)
+    try:
+        
+        db = client[db_name]
+
+        db.trips.create_index([ ("trip_id", pymongo.ASCENDING) ])
+        db.stop_locations.create_index([ ("stop_id", pymongo.ASCENDING) ])
+        db.schedules.create_index([ ("trip_id", pymongo.ASCENDING) ])
+        db.paths.create_index([ ("path_id", pymongo.ASCENDING) ])
+        db.paths.create_index([ ("location", pymongo.GEOSPHERE) ])
+    except Exception:
+        client.close()
+
+    print("Built indexes")
 
 
 if __name__ == "__main__":
@@ -472,8 +506,8 @@ if __name__ == "__main__":
     RAW_ZIPFILE_PATH = "data/raw_data/gtfs.zip"
     EXTRACTED_GTFS_FILEPATH = "data/extracted_data/gtfs"
 
-    download_gtfs_file(opts.gtfs_url, RAW_ZIPFILE_PATH)
-    extract_zip_file(RAW_ZIPFILE_PATH, EXTRACTED_GTFS_FILEPATH)
+    # download_gtfs_file(opts.gtfs_url, RAW_ZIPFILE_PATH)
+    # extract_zip_file(RAW_ZIPFILE_PATH, EXTRACTED_GTFS_FILEPATH)
 
     print("== Loading data ==")
     spark = (
@@ -485,7 +519,6 @@ if __name__ == "__main__":
         )
         .getOrCreate()
     )
-    spark.catalog.clearCache()
 
     trips, routes, shapes, stops, stop_times = load_gtfs_data(
         spark, EXTRACTED_GTFS_FILEPATH
@@ -522,4 +555,4 @@ if __name__ == "__main__":
 
     print("== Finished Step 5 ==")
 
-    save_to_database(trips, schedules, paths, stops)
+    save_to_database(trips, schedules, paths, stops, opts)
