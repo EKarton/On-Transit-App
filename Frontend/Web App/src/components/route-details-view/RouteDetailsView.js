@@ -7,7 +7,7 @@ import {
 } from "../../actions/alarm-actions";
 import { createNotification } from "../../actions/notification-actions";
 import { getFormattedTime, getTimeInSeconds } from "../../services/TimeFormatter";
-import { getCurrentTime } from "../../services/TimeService";
+import { getCurrentTime } from "../../services/MockedTimeService";
 
 import "./RouteDetailsView.css";
 

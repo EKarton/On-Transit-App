@@ -2,24 +2,14 @@ import React from "react";
 import { connect } from "react-redux";
 
 import "./MapView.css";
-import { getCurrentTime } from "../../services/TimeService";
+import { getCurrentTime } from "../../services/MockedTimeService";
 import { getTimeInSeconds } from "../../services/TimeFormatter";
 import { getLocationOnPath } from "../../services/LocationTracker";
 
 // Imports for the map
-import "ol/ol.css";
-import {fromLonLat} from "ol/proj.js";
-import {Map as OlMap, View as OlView} from "ol";
-import {Tile as OlTileLayer, Vector as OlVectorLayer} from "ol/layer.js";
-import OlOSM from "ol/source/OSM.js";
+import MapboxGL from 'mapbox-gl/dist/mapbox-gl.js';
 
-// For drawing objects on the map
-import OlVectorSource from "ol/source/Vector.js";
-import OlGeoJSON from "ol/format/GeoJSON.js";
-import OlStroke from "ol/style/Stroke";
-import OlStyle from "ol/style/Style";
-import OlCircleStyle from "ol/style/Circle";
-import Stroke from "ol/style/Stroke";
+console.log(process.env.REACT_APP_MAPBOX_API_KEY);
 
 /**
  * A component which displays the map to the user
@@ -38,12 +28,9 @@ class MapView extends React.Component {
      * Constructs the component with initial properties
      * @param {Object} props Initial properties
      */
-    constructor(props){
+    constructor(props) {
         super(props);
-
-        this.olMap = null;
-        this.olPathLayer = null;
-        this.olStopsLayer = null;
+        this.mapbox = null;
     }
 
     /**
@@ -51,14 +38,14 @@ class MapView extends React.Component {
      * in regular intervals
      */
     startPredictedLocationWatch = () => {
-        if (this.liveLocationWatch){
+        if (this.liveLocationWatch) {
             this.stopLiveLocationWatch();
         }
 
         this.liveLocationWatch = setInterval(() => {
             let currentTimeInSeconds = getTimeInSeconds(getCurrentTime());
 
-            if (this.props.stops && this.props.stops.length > 1){
+            if (this.props.stops && this.props.stops.length > 1) {
                 let stops = this.props.stops;
                 let path = this.props.path;
                 let lastStop = stops[stops.length - 1];
@@ -84,7 +71,7 @@ class MapView extends React.Component {
      * Stops tracking the user's location on the path
      */
     stopLiveLocationWatch = () => {
-        if (this.liveLocationWatch){
+        if (this.liveLocationWatch) {
             clearInterval(this.liveLocationWatch);
             this.liveLocationWatch = null;
         }
@@ -96,27 +83,50 @@ class MapView extends React.Component {
      * @returns {OlVectorLayer} Returns a Vector Layer that will display the stops.
      */
     createStopsLayer = () => {
-        var stopsStyle = new OlStyle({
-            image: new OlCircleStyle({
-                radius: 5,
-                fill: null,
-                stroke: new Stroke({
-                    color: "red",
-                    width: 1.5
-                })
-            })
+        this.map.addSource('stops', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': []
+            }
+        });
+        // this.map.addLayer({
+        //     'id': 'stops',
+        //     'source': 'stops',
+        //     'type': 'symbol',
+        //     'layout': {
+        //         // get the icon name from the source's "icon" property
+        //         // concatenate the name to get an icon from the style's sprite sheet
+        //         'icon-image': ['concat', ['get', 'icon'], '-15'],
+        //         // get the title name from the source's "title" property
+        //         'text-field': ['get', 'title'],
+        //         'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        //         'text-offset': [0, 0.6],
+        //         'text-anchor': 'top',
+                
+        //     }
+        // });
+
+        this.map.addLayer({
+            'id': 'stops',
+            'source': 'stops',
+            'type': 'circle',
+            'layout': {
+                // get the icon name from the source's "icon" property
+                // concatenate the name to get an icon from the style's sprite sheet
+                // 'icon-image': ['concat', ['get', 'icon'], '-15'],
+                // get the title name from the source's "title" property
+                'text-field': ['get', 'title'],
+                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+                'text-offset': [0, 0.6],
+                'text-anchor': 'top',
+            },
+            'paint': {
+                'circle-radius': 10,
+                'circle-color': '#007cbf'
+            }
         });
 
-        var stopsStyleFunction = function(feature){
-            return stopsStyle;
-        };
-
-        var stopsLayer = new OlVectorLayer({
-            source: new OlVectorSource(),
-            style: stopsStyleFunction
-        });
-
-        return stopsLayer;
     }
 
     /**
@@ -129,36 +139,20 @@ class MapView extends React.Component {
      * @param {Object} newStops The new stops
      */
     updateStopsLayer = (newStops) => {
-        let stopsGeoJsonObjects = newStops.map(item => {
-            return {
-                "type": "Feature",
-                "geometry": {
-                    "type": "Point",
-                    "coordinates": fromLonLat([item.long, item.lat])
-                }
-            };
-        });
-
         let geoJsonObject = {
             "type": "FeatureCollection",
-            "crs": {
-                "type": "name",
-                "properties": {
-                    "name": "EPSG:3857"
+            "features": newStops.map(stop => {
+                return {
+                    'type': 'Feature',
+                    'geometry': {
+                        'type': 'Point',
+                        'coordinates': [stop.long, stop.lat]
+                    }
                 }
-            },
-            "features": stopsGeoJsonObjects
+            })
         };
 
-        if (this.olStopsLayer){
-            let source = this.olStopsLayer.getSource();
-
-            if (source){
-                source.clear();
-                source.addFeatures((new OlGeoJSON()).readFeatures(geoJsonObject));
-                source.refresh();
-            }
-        }
+        this.map.getSource("stops").setData(geoJsonObject);
     }
 
     /**
@@ -167,56 +161,50 @@ class MapView extends React.Component {
      * @returns {OlVectorLayer} Returns a Vector Layer that will display the path of the trip.
      */
     createPathLayer = () => {
-        var pathStyle = new OlStyle({
-            stroke: new OlStroke({
-                color: "green",
-                width: 3
-            })
+        this.map.addSource('path', {
+            'type': 'geojson',
+            'data': {
+                'type': 'Feature',
+                'properties': {},
+                'geometry': {
+                    'type': 'LineString',
+                    'coordinates': []
+                }
+            }
         });
 
-        var pathStyleFunction = function(feature) {
-            return pathStyle;
-        };
-
-        var pathLayer = new OlVectorLayer({
-            source: new OlVectorSource(),
-            style: pathStyleFunction
+        this.map.addLayer({
+            'id': 'path',
+            'source': 'path',
+            'type': 'line',
+            'layout': {
+                'line-join': 'round',
+                'line-cap': 'round'
+            },
+            'paint': {
+                'line-color': 'green',
+                'line-width': 8
+            }
         });
-
-        return pathLayer;
     }
 
     /**
      * Updates the path layer with a new path.
      * It will clear the existing path and render the new path.
      * 
-     * If this.olPathLayer is not set, it will not render the new path.
-     * It will render the path on this.olPathLayer.
-     * 
      * @param {Object} newPath The new path
      */
     updatePathLayer = (newPath) => {
-        let pathCoordinates = newPath.map(item => {
-            return fromLonLat([item.long, item.lat]);
-        });
 
         let geoJsonObject = {
             "type": "Feature",
             "geometry": {
                 "type": "LineString",
-                "coordinates": pathCoordinates
+                "coordinates": newPath.map(item => [item.long, item.lat])
             }
         };
 
-        if (this.olPathLayer){
-            let source = this.olPathLayer.getSource();
-
-            if (source){
-                source.clear();
-                source.addFeature((new OlGeoJSON()).readFeature(geoJsonObject));
-                source.refresh();
-            }
-        }
+        this.map.getSource('path').setData(geoJsonObject);
     }
 
     /**
@@ -224,26 +212,24 @@ class MapView extends React.Component {
      * for the OLMap
      */
     createLiveLocationLayer = () => {
-        var liveLocationStyle = new OlStyle({
-            image: new OlCircleStyle({
-                radius: 10,
-                fill: null,
-                stroke: new Stroke({
-                    color: "blue",
-                    width: 2
-                })
-            })
-        });
-        var liveLocationStyleFunction = function(feature) {
-            return liveLocationStyle;
-        };
 
-        var liveLocationLayer = new OlVectorLayer({
-            source: new OlVectorSource(),
-            style: liveLocationStyleFunction
+        this.map.addSource('user-location', {
+            'type': 'geojson',
+            'data': {
+                'type': 'FeatureCollection',
+                'features': []
+            }
         });
-
-        return liveLocationLayer;
+         
+        this.map.addLayer({
+            'id': 'user-location',
+            'source': 'user-location',
+            'type': 'circle',
+            'paint': {
+                'circle-radius': 10,
+                'circle-color': '#007cbf'
+            }
+        });
     }
 
     /**
@@ -256,55 +242,44 @@ class MapView extends React.Component {
             "type": "Feature",
             "geometry": {
                 "type": "Point",
-                "coordinates": fromLonLat([newLongitude, newLatitude])
+                "coordinates": [newLongitude, newLatitude]
             }
         };
 
-        if (this.olLiveLocationLayer){
-            let source = this.olLiveLocationLayer.getSource();
+        this.map.getSource('user-location').setData(geoJsonObject);
+    }
 
-            if (source){
-                source.clear();
-                source.addFeature((new OlGeoJSON()).readFeature(geoJsonObject));
-                source.refresh();
-            }
-        }
+    /**
+     * Updates the map's view
+     */
+    updateMapView = (viewOptions) => {
+        this.map.flyTo({
+            center: viewOptions.center,
+            essential: true,
+            zoom: viewOptions.zoom
+        })
     }
 
     /**
      * This method gets called whenever the HTML elements in this component is already 
      * in the DOM.
      * 
-     * It will create an initial view of the OpenLayers map as well as setting up
+     * It will create an initial view of the MapBox map as well as setting up
      * the required layers.
      */
-    componentDidMount(){               
-        // Create the view for the map
-        let initialLatitude = 0;
-        let initialLongitude = 0;
-        let mapZoom = 2;
-        this.olView = new OlView({
-            center: fromLonLat([initialLongitude, initialLatitude]),
-            zoom: mapZoom
+    componentDidMount() {
+        MapboxGL.accessToken = process.env.REACT_APP_MAPBOX_API_KEY;
+        this.map = new MapboxGL.Map({
+            container: 'map',
+            style: 'mapbox://styles/mapbox/light-v10',
+            center: [0, 0],
+            zoom: 0,
         });
 
-        this.olPathLayer = this.createPathLayer();
-        this.olStopsLayer = this.createStopsLayer();
-        this.olLiveLocationLayer = this.createLiveLocationLayer();
-
-        // Initialize the map
-        this.olMap = new OlMap({
-            target: "map",
-            layers: [
-                new OlTileLayer({
-                    source: new OlOSM()
-                }),
-                this.olPathLayer,
-                this.olStopsLayer,
-                this.olLiveLocationLayer
-            ],
-            loadTilesWhileAnimating: true,
-            view: this.olView
+        this.map.on('load', () => {
+            this.createPathLayer();
+            this.createStopsLayer();
+            this.createLiveLocationLayer();
         });
 
         this.startPredictedLocationWatch();
@@ -313,18 +288,17 @@ class MapView extends React.Component {
     /**
      * This method gets called right before the component becomes dismounted.
      */
-    componentWillMount(){
+    componentWillMount() {
         this.stopLiveLocationWatch();
     }
-    
+
     /**
      * This method gets called whenever the component updates.
      * 
      * @param {Object} nextProps The new set of properties
      * @param {Object} nextState The new set of states
      */
-    componentWillUpdate(nextProps, nextState){
-        this.updateDimensions();
+    componentWillUpdate(nextProps, nextState) {
         this.updateMap(this.props, nextProps, this.state, nextState);
     }
 
@@ -339,46 +313,49 @@ class MapView extends React.Component {
      * @param {Object} newState The component's new set of states
      */
     updateMap = (oldProps, newProps, oldState, newState) => {
-        if (this.olMap){
+        if (this.map) {
+            let hasNewViewOptions = false;
             let newViewOptions = {};
 
             let tripDetailsAdded = oldProps && newProps && oldProps.path === null && newProps.path !== null;
             let tripDetailsRemoved = oldProps && newProps && oldProps.path !== null && newProps.path === null;
             let predictedLocationAdded = oldState.location.latitude === null && newState.location.latitude !== null;
-            let predictedLocationChanged = oldState.location.latitude !== newState.location.latitude 
-                                        && oldState.location.longitude !== newState.location.longitude;
-            
+            let predictedLocationChanged = oldState.location.latitude !== newState.location.latitude
+                && oldState.location.longitude !== newState.location.longitude;
+
             if (predictedLocationAdded) {
-                newViewOptions.center = fromLonLat([
-                    newState.location.longitude, 
+                console.log("Predicted location found!");
+
+                hasNewViewOptions = true;
+                newViewOptions.center = [
+                    newState.location.longitude,
                     newState.location.latitude
-                ]);
-                newViewOptions.duration = 2000;
+                ];
                 newViewOptions.zoom = 13;
             }
-            else if (tripDetailsAdded){
+            else if (tripDetailsAdded) {
                 let sumOfAllPathLatitudes = newProps.path.reduce((curSum, item) => curSum + item.lat, 0);
                 let sumOfAllPathLongitudes = newProps.path.reduce((curSum, item) => curSum + item.long, 0);
                 let midPathLatitude = sumOfAllPathLatitudes / newProps.path.length;
                 let midPathLongitude = sumOfAllPathLongitudes / newProps.path.length;
 
-                newViewOptions.center = fromLonLat([midPathLongitude, midPathLatitude]);
-                newViewOptions.duration = 2000;
+                hasNewViewOptions = true;
+                newViewOptions.center = [midPathLongitude, midPathLatitude];
                 newViewOptions.zoom = 10;
-                
-            }
-            else if (tripDetailsRemoved){
-                newViewOptions.center = fromLonLat([0, 0]);
-                newViewOptions.duration = 2000;
-                newViewOptions.zoom = 2;
-            }
 
-
-            if (newViewOptions !== {}){
-                this.olView.animate(newViewOptions);
+            }
+            else if (tripDetailsRemoved) {
+                hasNewViewOptions = true;
+                newViewOptions.center = [0, 0];
+                newViewOptions.zoom = 1;
             }
 
-            if (newProps && newProps.path && newProps.stops){
+
+            if (hasNewViewOptions) {
+                this.updateMapView(newViewOptions);
+            }
+
+            if (newProps && newProps.path && newProps.stops) {
                 this.updatePathLayer(newProps.path);
                 this.updateStopsLayer(newProps.stops);
             }
@@ -390,19 +367,6 @@ class MapView extends React.Component {
             }
         }
     };
-
-    /**
-     * This method is called whenever the component's dimensions changes.
-     * Specifically, it will re-compute the size for the OpenLayers map.
-     */
-    updateDimensions() {
-
-        // Reason for creating a timeout was described at:
-        // https://gis.stackexchange.com/questions/31409/openlayers-redrawing-map-after-container-resize
-        setTimeout(() => { 
-            this.olMap.updateSize();
-        }, 200);
-    }
 
     /**
      * This method gets called whenever React wants to re-render the component.

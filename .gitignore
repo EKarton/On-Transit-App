@@ -326,3 +326,6 @@ dmypy.json
 
 # Data files
 **/data/
+
+# API keys
+.env
