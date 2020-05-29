@@ -1,4 +1,4 @@
-# On Transit App - Data Aggregation Service
+# On Transit App - Data Ingestion Service
 
 ### Description
 This application is used to discover transit feeds, download, parse, and aggregate large GTFS data into a database. It utilizes Apache Spark to process the data efficiently. It also uses transitfeeds.com to discover transit feeds.
