@@ -41,7 +41,7 @@ Steps:
 2. Discover feeds based on a location
     * For example, if we want to find all feeds in Toronto, run the command:
         ```
-        python3 discover_transit_agencies.py -o feeds.json
+        python3 discover_transit_agencies.py "Toronto, ON, Canada" -o feeds.json
         ```
     * It will save the feeds to a file (in the example above, to a file named ```feeds.json```)
 
