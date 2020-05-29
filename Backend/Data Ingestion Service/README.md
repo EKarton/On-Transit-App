@@ -31,6 +31,12 @@ Steps:
         pip3 install -r requirements.txt
         source bin/activate
         ```
+    * Then, go to ```https://transitfeeds.com/``` and get an API key
+    * Next, make a new file called ```.env``` and fill in the properties:
+        ```
+        TRANSIT_FEEDS_API_KEY=<YOUR API KEY>
+        MONGO_DB_TRANSITS_URI=<URL TO YOUR MONGO DB WITH DB NAME>
+        ```
 
 2. Discover feeds based on a location
     * For example, if we want to find all feeds in Toronto, run the command:
