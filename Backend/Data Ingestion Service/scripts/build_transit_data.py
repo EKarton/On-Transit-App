@@ -308,7 +308,8 @@ def remove_duplicate_stops(stops, stop_times):
     """ Given a stops dataframe, it will remove the duplicated stop locations in `stops` and update the `stop_times`
         with the non-duplicated stop locations
     """
-    print("stops:", stops.count(), "stop_times:", stop_times.count())
+    old_stops_count = stops.count()
+    old_stop_times_count = stop_times.count()
 
     # Group the stops that are the same
     similar_stops = stops.groupBy("stop_name", "latitude", "longitude").agg(
@@ -332,10 +333,10 @@ def remove_duplicate_stops(stops, stop_times):
         .drop("new_stop_id")
     )
 
-    print("reduced stops:", stops.count(), "new stop_times:", stop_times.count())
-    print(
-        "Note: 'reduced stops' should be <= 'stops' and 'new stop_times' == 'stop_times'"
-    )
+    new_stops_count = stops.count()
+    new_stop_times_count = stop_times.count()
+
+    assert new_stops_count <= old_stops_count and old_stop_times_count == new_stop_times_count
 
     return unique_stops, stop_times
 
@@ -344,8 +345,8 @@ def remove_duplicated_paths(paths, trips):
     """ Given a paths dataframe, it will remove the duplicated paths in `paths` and update the `trips`
         with the non-duplicated paths
     """
-
-    print("paths:", paths.count(), "trips:", trips.count())
+    old_paths_count = paths.count()
+    old_trips_count = trips.count()
 
     # Group the paths that are the same
     similar_paths = paths.groupBy("path_latitudes", "path_longitudes").agg(
@@ -370,8 +371,10 @@ def remove_duplicated_paths(paths, trips):
         .drop("new_path_id")
     )
 
-    print("reduced paths:", paths.count(), "new trips:", trips.count())
-    print("Note: 'reduced paths' should be <= 'paths' and 'new trips' == 'trips'")
+    new_paths_count = unique_paths.count()
+    new_trips_count = trips.count()
+
+    assert new_paths_count <= old_paths_count and new_trips_count == old_trips_count
 
     return unique_paths, trips
 
@@ -418,7 +421,8 @@ def build_schedule(stop_times):
 
 
 def remove_duplicate_trips(trips, schedules):
-    print("trips:", trips.count(), "schedules:", schedules.count())
+    old_trips_count = trips.count()
+    old_schedules_count = schedules.count()
 
     # Group the stops that has the same hash value
     similar_trips = trips.groupBy(
@@ -448,10 +452,9 @@ def remove_duplicate_trips(trips, schedules):
         "type",
     ).withColumnRenamed("new_trip_id", "trip_id")
 
-    print("reduced trips:", unique_trips.count(), "new schedules:", schedules.count())
-    print(
-        "Note: 'reduced trips' should be <= 'trips' and 'new schedules' == 'schedules'"
-    )
+    new_trips_count = unique_trips.count()
+    new_schedules_count = schedules.count()
+    assert new_trips_count <= old_trips_count and new_schedules_count == old_schedules_count
 
     return unique_trips, schedules
 
@@ -564,9 +567,16 @@ def save_gtfs_to_database(trips, schedules, paths, stop_locations):
     print("Saved trips")
 
 
-def save_bounding_box_to_database(bounding_box):
+def save_bounding_box_to_database(bounding_box, database, transit_id):
+    # Delete the old bounding box
+    database["bounding_boxes"].remove({"transit_id": transit_id})
+
+    # Save the new bounding box
+    host, port = database.client.address
+    db_uri = "mongodb://{}:{}/{}".format(host, port, database.name)
+
     bounding_box.write.format("com.mongodb.spark.sql.DefaultSource").option(
-        "uri", get_mongodb_uri_to_transits()
+        "uri", db_uri
     ).option("collection", "bounding_boxes").mode("append").save()
 
 
@@ -673,7 +683,14 @@ if __name__ == "__main__":
     save_gtfs_to_database(trips, schedules, paths, stops)
 
     # Save the bounding box to a database
-    save_bounding_box_to_database(bounding_box)
+    with MongoClient(get_mongodb_uri_to_transits()) as client:
+        parsed = pymongo.uri_parser.parse_uri(get_mongodb_uri_to_transits())
+        db_name = parsed["database"]
+        database = client[db_name]
+
+        save_bounding_box_to_database(
+            bounding_box, database, transit_info["transit_id"]
+        )
 
     # Create the indexes for the GTFS data
     with MongoClient(transit_info["mongodb_uri"]) as client:
