@@ -329,3 +329,6 @@ dmypy.json
 
 # API keys
 .env
+
+# Discovered GTFS files
+feed.json
