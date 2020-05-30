@@ -51,13 +51,11 @@ module.exports = async function () {
         };
         console.log("Current time: " + (new Date()));
 
-        tripsLocator.getTripIDsNearLocation(location, numSecondsFromMidnight, radius)
-            .then(tripIDs => {
+        tripsLocator.getTransitIDsNearLocation(location, numSecondsFromMidnight, radius)
+            .then(results => {
                 let jsonResponse = {
                     status: "success",
-                    data: {
-                        tripIDs: tripIDs
-                    }
+                    data: results
                 };
 
                 response.setHeader('Content-Type', 'application/json');

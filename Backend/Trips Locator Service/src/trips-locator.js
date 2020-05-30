@@ -5,7 +5,7 @@ class TripsLocator {
 
     /**
      * Constructs the TripsLocator object
-     * @param {Database} database 
+     * @param {MongoClient} database 
      */
     constructor(database) {
         this.database = database;
@@ -36,7 +36,7 @@ class TripsLocator {
             let stopB = times[i + 1];
 
             if (stopA <= curTime && curTime <= stopB) {
-                
+
                 minStopIndex = Math.min(minStopIndex, i);
                 maxStopIndex = Math.max(maxStopIndex, i + 1);
             }
@@ -54,17 +54,11 @@ class TripsLocator {
      * @param {Location} location The location
      * @returns {Set} A set of schedules the user might be in.
      */
-    getPossibleSchedules(tripId, time, location, pathLocations, pathInterval) {
+    getPossibleSchedules(databaseName, tripId, time, location, pathLocations, pathInterval) {
         return new Promise(async (resolve, reject) => {
 
             let possibleSchedules = new Set();
-            let schedulesCursor = await this.database.getInstance().collection("schedules").find({
-                $and: [
-                    { trip_id: { $eq: tripId } },
-                    { start_time: { $lte: time } },
-                    { end_time: { $gte: time } }
-                ]
-            });
+            let schedulesCursor = await this.database.findSchedules(databaseName, tripId, time);
 
             while (await schedulesCursor.hasNext()) {
                 let schedule = await schedulesCursor.next();
@@ -74,7 +68,7 @@ class TripsLocator {
                 let scheduleID = schedule._id;
 
                 // console.log("schedule_id:", scheduleID);
-                
+
                 // Get the range of stops that the user could be in
                 let stopIntervals = this.getNearestStopIntervalsByTime(times, time);
                 // console.log("stopIntervals:", stopIntervals);
@@ -83,7 +77,7 @@ class TripsLocator {
                     continue;
                 }
 
-                console.log(times, time, stopIntervals);
+                // console.log(times, time, stopIntervals);
 
                 // Get the range of path intervals based on the range of stops the user could be in
                 let minPathIndex = Infinity;
@@ -91,10 +85,10 @@ class TripsLocator {
                 for (let i = stopIntervals[0]; i <= stopIntervals[1]; i++) {
 
                     let locationID = locationIDs[i];
-                    let stopLocation = await this.database.getObject("stop_locations", { "stop_id": locationID });
+                    let stopLocation = await this.database.findStopLocation(databaseName, locationID);
 
                     let pathInterval = this.getNearestPathSegmentsFromLocation(pathLocations, stopLocation);
-                    console.log("stop", i, ":", pathInterval);
+                    // console.log("stop", i, ":", pathInterval);
                     minPathIndex = Math.min(minPathIndex, pathInterval[0]);
                     maxPathIndex = Math.max(maxPathIndex, pathInterval[1]);
                 }
@@ -162,46 +156,29 @@ class TripsLocator {
      *  When successful, it will pass the found trip IDs to the .resolve(); 
      *  else it will pass the error to .reject().
      */
-    getTripIDsNearLocation(location, time, radius) {
+    getTripIDsNearLocation(databaseName, location, time, radius) {
         return new Promise(async (resolve, reject) => {
             let latitude = location.latitude;
             let longitude = location.longitude;
 
-            console.log("Current time:" + time);
-            console.log("Location: " + JSON.stringify(location));
-            console.log("Radius: " + radius);
-
             let responseObj = {};
 
-            let nearbyPathsCursor = await this.database.getInstance().collection("paths").find({
-                location: {
-                    $nearSphere: {
-                        $geometry: {
-                            type: "Point",
-                            coordinates: [longitude, latitude]
-                        },
-                        $maxDistance: radius
-                    }
-                }
-            });
+            let nearbyPathsCursor = await this.database.findNearestPaths(databaseName, latitude, longitude, radius);
 
             while (await nearbyPathsCursor.hasNext()) {
                 let nearbyPath = await nearbyPathsCursor.next();
                 let pathID = nearbyPath.path_id;
                 let pathLocations = nearbyPath.location.coordinates;
 
-                let tripsCursor = await this.database.getObjects("trips", {
-                    "path_id": pathID
-                });
+                let tripsCursor = await this.database.findTripsFromPathID(databaseName, pathID);
 
                 let pathInterval = this.getNearestPathSegmentsFromLocation(pathLocations, location);
-                // console.log("pathInterval:", pathInterval, "pathId:", pathID);
 
                 while (await tripsCursor.hasNext()) {
                     let trip = await tripsCursor.next();
 
                     let tripId = trip.trip_id;
-                    let possibleScheduleIDs = await this.getPossibleSchedules(tripId, time, location, pathLocations, pathInterval);
+                    let possibleScheduleIDs = await this.getPossibleSchedules(databaseName, tripId, time, location, pathLocations, pathInterval);
 
                     if (possibleScheduleIDs.size > 0) {
 
@@ -217,6 +194,38 @@ class TripsLocator {
             }
             resolve(responseObj);
         });
+    }
+
+    getTransitIDsNearLocation(location, time, radius) {
+        return new Promise(async (resolve, reject) => {
+            let latitude = location.latitude;
+            let longitude = location.longitude;
+
+            console.log("Current time:" + time);
+            console.log("Location: " + JSON.stringify(location));
+            console.log("Radius: " + radius);
+
+            let transitBoundingBoxCursor = await this.database.findNearestTransitAgencies(latitude, longitude);
+
+            let responseObj = {};
+
+            while (await transitBoundingBoxCursor.hasNext()) {
+                let transitBoundingBox = await transitBoundingBoxCursor.next();
+                let transitID = transitBoundingBox["transit_id"];
+
+                let transitInfo = await this.database.getTransitInfo(transitID);
+                let transitName = transitInfo["name"];
+                let databaseName = transitName.replace(/[\s\\/$.\"]/g, "_");
+
+                let results = await this.getTripIDsNearLocation(databaseName, location, time, radius);
+                responseObj[databaseName] = {
+                    name: transitName,
+                    trips: results
+                };
+            }
+
+            resolve(responseObj);
+        })
     }
 }
 
