@@ -96,7 +96,7 @@ def get_latest_transit_info_details(transit_id):
 def inject_default_mongodb_uri_to_transit_info(transit_info):
     # Add the default mongo db instance
     database_name = re.sub('[\s\\/$."]', "_", transit_info["name"])
-    transit_info["mongodb_uri"] = "mongodb://localhost:27017/{}".format(database_name)
+    transit_info["db_name"] = database_name
 
     return transit_info
 
