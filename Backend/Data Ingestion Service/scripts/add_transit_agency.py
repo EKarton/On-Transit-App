@@ -14,7 +14,7 @@ from pymongo import MongoClient
 
 
 def get_mongodb_uri():
-    return os.environ.get("MONGO_DB_TRANSITS_URI")
+    return os.environ.get("MONGO_DB_TRANSITS_URL")
 
 
 def does_transit_exist_in_database(database, transit_id):
@@ -32,7 +32,8 @@ def add_transit_details_to_database(database, transit_info):
         {
             transit_id: <THE-TRANSIT-ID>,
             gtfs_url: <URL-TO-GTFS-ZIPFILE>,
-            last_updated: <TIMESTAMP>
+            last_updated: <TIMESTAMP>,
+            db_name: <DATABASE_NAME>,
         }
     """
     database["transits"].insert_one(transit_info)
@@ -50,11 +51,8 @@ if __name__ == "__main__":
     load_dotenv()
 
     # Make a connection to the MongoDB database
-    parsed = pymongo.uri_parser.parse_uri(get_mongodb_uri())
-    db_name = parsed["database"]
-
     with MongoClient(get_mongodb_uri()) as client:
-        database = client[db_name]
+        database = client["transits"]
 
         # Read the file
         with open(opts.input) as feed_file:

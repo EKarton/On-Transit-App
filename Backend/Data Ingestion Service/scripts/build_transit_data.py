@@ -18,8 +18,8 @@ from pymongo import MongoClient
 from dotenv import load_dotenv
 
 
-def get_mongodb_uri_to_transits():
-    return os.environ.get("MONGO_DB_TRANSITS_URI")
+def get_mongodb_url():
+    return os.environ.get("MONGO_DB_TRANSITS_URL")
 
 
 def get_transit_info(transit_id, database):
@@ -195,7 +195,7 @@ def normalize_data(routes, trips, shapes, stops, stop_times):
     return routes, trips, shapes, stops, stop_times
 
 
-def build_bounding_box(shapes, transit_id, last_updated):
+def build_bounding_box(shapes, transit_id):
     """ Given a list of path locations, it will return a bounding box 
         with this format:
         {
@@ -262,10 +262,11 @@ def build_bounding_box(shapes, transit_id, last_updated):
     )
 
     # Add the transit ID to each record
-    bounding_box.withColumn("transit_id", F.lit(transit_id))
+    transit_info_df = spark.createDataFrame([(transit_id, )], ["transit_id"])
 
-    # Add the timestamp to each record
-    bounding_box.withColumn("last_updated", F.lit(last_updated))
+    bounding_box = bounding_box.withColumn("temp_key", F.lit(0))
+    transit_info_df = transit_info_df.withColumn("temp_key", F.lit(0))
+    bounding_box = bounding_box.crossJoin(transit_info_df).drop("temp_key")
 
     return bounding_box
 
@@ -336,7 +337,10 @@ def remove_duplicate_stops(stops, stop_times):
     new_stops_count = stops.count()
     new_stop_times_count = stop_times.count()
 
-    assert new_stops_count <= old_stops_count and old_stop_times_count == new_stop_times_count
+    assert (
+        new_stops_count <= old_stops_count
+        and old_stop_times_count == new_stop_times_count
+    )
 
     return unique_stops, stop_times
 
@@ -454,7 +458,10 @@ def remove_duplicate_trips(trips, schedules):
 
     new_trips_count = unique_trips.count()
     new_schedules_count = schedules.count()
-    assert new_trips_count <= old_trips_count and new_schedules_count == old_schedules_count
+    assert (
+        new_trips_count <= old_trips_count
+        and new_schedules_count == old_schedules_count
+    )
 
     return unique_trips, schedules
 
@@ -602,11 +609,8 @@ if __name__ == "__main__":
 
     # Get the transit info
     transit_info = None
-    with MongoClient(get_mongodb_uri_to_transits()) as client:
-        parsed = pymongo.uri_parser.parse_uri(get_mongodb_uri_to_transits())
-        db_name = parsed["database"]
-        database = client[db_name]
-
+    with MongoClient(get_mongodb_url()) as client:
+        database = client["transits"]
         transit_info = get_transit_info(opts.transit_id, database)
 
     print("Transit agency info to pre-process GTFS data:")
@@ -634,7 +638,10 @@ if __name__ == "__main__":
     spark = (
         SparkSession.builder.master("local")
         .appName("My App")
-        .config("spark.mongodb.output.uri", transit_info["mongodb_uri"])
+        .config(
+            "spark.mongodb.output.uri",
+            "{}/{}".format(get_mongodb_url(), transit_info["db_name"]),
+        )
         .config(
             "spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.11:2.3.1"
         )
@@ -655,9 +662,7 @@ if __name__ == "__main__":
 
     trips = build_trips(trips, routes)
     paths = build_paths(shapes)
-    bounding_box = build_bounding_box(
-        shapes, transit_info["transit_id"], transit_info["last_updated"]
-    )
+    bounding_box = build_bounding_box(shapes, transit_info["transit_id"])
 
     print("== Finished Step 1 == \n== Starting Step 2 ==")
 
@@ -683,19 +688,15 @@ if __name__ == "__main__":
     save_gtfs_to_database(trips, schedules, paths, stops)
 
     # Save the bounding box to a database
-    with MongoClient(get_mongodb_uri_to_transits()) as client:
-        parsed = pymongo.uri_parser.parse_uri(get_mongodb_uri_to_transits())
-        db_name = parsed["database"]
-        database = client[db_name]
+    with MongoClient(get_mongodb_url()) as client:
+        database = client["transits"]
 
         save_bounding_box_to_database(
             bounding_box, database, transit_info["transit_id"]
         )
 
     # Create the indexes for the GTFS data
-    with MongoClient(transit_info["mongodb_uri"]) as client:
-        parsed = pymongo.uri_parser.parse_uri(transit_info["mongodb_uri"])
-        db_name = parsed["database"]
-        database = client[db_name]
+    with MongoClient(get_mongodb_url()) as client:
+        database = client[transit_info["db_name"]]
 
         build_database_indexes(database)

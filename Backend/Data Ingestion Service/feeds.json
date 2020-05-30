@@ -1,0 +1,23 @@
+[
+    {
+        "transit_id": "go-transit/543",
+        "name": "UP Express GTFS",
+        "gtfs_url": "https://www.gotransit.com/static_files/gotransit/assets/Files/UP-GTFS.zip",
+        "last_updated": 1587775526,
+        "db_name": "UP_Express_GTFS"
+    },
+    {
+        "transit_id": "go-transit/32",
+        "name": "GO Transit GTFS",
+        "gtfs_url": "https://www.gotransit.com/static_files/gotransit/assets/Files/GO_GTFS.zip",
+        "last_updated": 1590060207,
+        "db_name": "GO_Transit_GTFS"
+    },
+    {
+        "transit_id": "ttc/33",
+        "name": "TTC GTFS",
+        "gtfs_url": "http://opendata.toronto.ca/TTC/routes/OpenData_TTC_Schedules.zip",
+        "last_updated": 1588164086,
+        "db_name": "TTC_GTFS"
+    }
+]

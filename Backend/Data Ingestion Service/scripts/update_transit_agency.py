@@ -19,7 +19,7 @@ from pymongo import MongoClient
 
 
 def get_mongodb_uri():
-    return os.environ.get("MONGO_DB_TRANSITS_URI")
+    return os.environ.get("MONGO_DB_TRANSITS_URL")
 
 
 def get_transit_feeds_api_key():
@@ -165,9 +165,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     with MongoClient(get_mongodb_uri()) as client:
-        parsed = pymongo.uri_parser.parse_uri(get_mongodb_uri())
-        db_name = parsed["database"]
-        database = client[db_name]
+        database = client["transits"]
 
         if opts.all:
             update_all_transit_info(database)
