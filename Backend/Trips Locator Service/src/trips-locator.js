@@ -214,12 +214,13 @@ class TripsLocator {
                 let transitID = transitBoundingBox["transit_id"];
 
                 let transitInfo = await this.database.getTransitInfo(transitID);
+                let transitObjectID = transitInfo._id;
                 let transitName = transitInfo["name"];
                 let databaseName = transitName.replace(/[\s\\/$.\"]/g, "_");
 
                 let results = await this.getTripIDsNearLocation(databaseName, location, time, radius);
-                responseObj[databaseName] = {
-                    name: transitName,
+                responseObj[transitObjectID] = {
+                    name: transitInfo.name,
                     trips: results
                 };
             }
