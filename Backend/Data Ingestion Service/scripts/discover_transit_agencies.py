@@ -4,14 +4,12 @@
 import os
 import sys
 import argparse
+import json
+import re
 
 from dotenv import load_dotenv
 
 import requests
-
-import json
-
-import re
 
 
 def get_transit_feeds_api_key():
@@ -120,7 +118,9 @@ if __name__ == "__main__":
 
     # Add the default mongo db instance
     for transit_agency in transit_agencies:
-        database_name = re.sub("[\s\\/$.\"]", "_", transit_agency["name"])
-        transit_agency["mongodb_uri"] = "mongodb://localhost:27017/{}".format(database_name)
+        database_name = re.sub('[\s\\/$."]', "_", transit_agency["name"])
+        transit_agency["mongodb_uri"] = "mongodb://localhost:27017/{}".format(
+            database_name
+        )
 
     print(json.dumps(transit_agencies))
