@@ -1,6 +1,5 @@
 "use strict";
 
-const ObjectID = require('mongodb').ObjectID;
 const ErrorCodes = require("./constants").ERROR_CODES;
 const MongoDB_ErrorMessages = require("./constants").MONGODB_ERROR_MESSAGES;
 
@@ -17,6 +16,27 @@ class TripDataService {
     constructor(database) {
         this.database = database;
     }
+    
+    getTransitDetails(transitID) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                let transit = await this.database.getTransit(transitID);
+                let transitName = transit.name;
+                let databaseName = transitName.replace(/[\s\\/$.\"]/g, "_");
+
+                resolve({
+                    transitID: transitID,
+                    name: transitName,
+                    databaseName: databaseName,
+                    lastUpdated: transit.last_updated
+                });
+
+            }
+            catch (error) {
+                reject(error);
+            }
+        });
+    }
 
     /**
      * Returns a list of path locations in order of sequence from a path.
@@ -29,10 +49,10 @@ class TripDataService {
      * @param {string} pathID The _id to a path in the database's path-tree collection.
      * @return {object[]} A list of path locations in an object format specified above.
      */
-    getPathDetails(pathID) {
+    getPathDetails(databaseName, pathID) {
         return new Promise(async (resolve, reject) => {
             try {
-                let path = await this.database.getObject("paths", { "path_id": pathID });
+                let path = await this.database.getPath(databaseName, pathID);
                 let coordinates = path.location.coordinates;
                 let pathLocations = coordinates.map(coord => {
                     return {
@@ -60,12 +80,12 @@ class TripDataService {
      * }
      * @param {String} tripID The trip ID
      */
-    getTripDetails(tripID) {
+    getTripDetails(databaseName, tripID) {
         return new Promise(async (resolve, reject) => {
             try {
                 console.log(tripID, typeof(tripID));
                 
-                let trip = await this.database.getObject("trips", { "trip_id": tripID });
+                let trip = await this.database.getTrip(databaseName, tripID);
                 if (trip === null) {
                     reject(ErrorCodes.TRIP_NOT_FOUND);
                 }
@@ -103,10 +123,10 @@ class TripDataService {
      * @param {string} scheduleID The _id to a schedule in the database's schedules collection.
      * @return {object[]} Returns an array of stop schedules as shown above.
      */
-    getScheduleDetails(scheduleID) {
+    getScheduleDetails(databaseName, scheduleID) {
         return new Promise(async (resolve, reject) => {
             try {
-                let schedule = await this.database.getObject("schedules", { "_id": new ObjectID(scheduleID) });
+                let schedule = await this.database.getSchedule(databaseName, scheduleID);
                 if (schedule === null) {
                     reject(ErrorCodes.SCHEDULE_NOT_FOUND);
                 }
@@ -117,7 +137,7 @@ class TripDataService {
 
                 let locationPromises = locationIDs.map((locationID, index) => {
                     return new Promise(async (resolveJob, rejectJob) => {
-                        let stopLocation = await this.database.getObject("stop_locations", { "stop_id": locationID });
+                        let stopLocation = await this.database.getStopLocation(databaseName, locationID);
 
                         let time = times[index];
                         let headsign = headsigns[index];
@@ -167,19 +187,22 @@ class TripDataService {
      * @param {string} tripID The _id to a trip in the database's trips collection.
      * @return {object} Returns the trip details in an object as shown above.
      */
-    getTripScheduleData(tripID, scheduleID) {
+    getTripScheduleData(transitID, tripID, scheduleID) {
         return new Promise(async (resolve, reject) => {
             try {
-                let tripPromise = this.getTripDetails(tripID);
-                let schedulePromise = this.getScheduleDetails(scheduleID);
+                let transitDetails = await this.getTransitDetails(transitID);
+                let databaseName = transitDetails.databaseName;
+
+                let tripPromise = this.getTripDetails(databaseName, tripID);
+                let schedulePromise = this.getScheduleDetails(databaseName, scheduleID);
                 let results = await Promise.all([tripPromise, schedulePromise]);
 
                 let tripDetails = results[0];
                 let scheduleDetails = results[1];
-                let pathDetails = await this.getPathDetails(tripDetails.pathID);
+                let pathDetails = await this.getPathDetails(databaseName, tripDetails.pathID);
 
                 let completeTripSchedule = {
-                    id: tripID,
+                    transitName: transitDetails.name,
                     shortName: tripDetails.shortName,
                     longName: tripDetails.longName,
                     headSign: tripDetails.headSign,
