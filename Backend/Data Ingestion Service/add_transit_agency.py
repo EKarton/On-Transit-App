@@ -5,6 +5,8 @@ import os
 import sys
 import argparse
 
+import json
+
 from dotenv import load_dotenv
 
 import pymongo
@@ -40,18 +42,7 @@ if __name__ == "__main__":
     # Make the parser
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "transit_id", type=str, help="The transit id",
-    )
-    parser.add_argument(
-        "name", type=str, help="The name of the transit agency",
-    )
-    parser.add_argument(
-        "gtfs_url", type=str, help="The URL to the GTFS file",
-    )
-    parser.add_argument(
-        "last_updated",
-        type=int,
-        help="The timestamp to when the GTFS file was updated",
+        "-i", "--input", type=str, help="The file path to the JSON file"
     )
     opts = parser.parse_args(sys.argv[1:])
 
@@ -65,15 +56,13 @@ if __name__ == "__main__":
     with MongoClient(get_mongodb_uri()) as client:
         database = client[db_name]
 
-        transit_info = {
-            "transit_id": opts.transit_id,
-            "name": opts.name,
-            "gtfs_url": opts.gtfs_url,
-            "last_updated": opts.last_updated,
-        }
+        # Read the file
+        with open(opts.input) as feed_file:
+            transit_agencies = json.load(feed_file)
 
-        if not does_transit_exist_in_database(database, transit_info["transit_id"]):
-            print("Adding new transit %s" % transit_info["transit_id"])
-            add_transit_details_to_database(database, transit_info)
+            for transit_info in transit_agencies:
+                if not does_transit_exist_in_database(database, transit_info["transit_id"]):
+                    print("Adding new transit %s" % transit_info["transit_id"])
+                    add_transit_details_to_database(database, transit_info)
 
-            print("Added new transit %s" % transit_info["transit_id"])
+                    print("Added new transit %s" % transit_info["transit_id"])

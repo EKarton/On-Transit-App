@@ -41,7 +41,7 @@ Steps:
 2. Discover feeds based on a location
     * For example, if we want to find all feeds in Toronto, run the command:
         ```
-        python3 discover_transit_agencies.py "Toronto, ON, Canada" -o feeds.json
+        python3 discover_transit_agencies.py "Toronto, ON, Canada" > feeds.json
         ```
     * It will save the feeds to a file (in the example above, to a file named ```feeds.json```)
 
@@ -55,13 +55,14 @@ Steps:
 4. Download and parse GTFS data:
     * Run the command:
         ```
-        python3 build_transit_data.py <TRANSIT_ID> <OUTPUT_MONGO_URL>
+        python3 build_transit_data.py <TRANSIT_ID>
         ```
 
-        where ```<TRANSIT_ID>``` is the ID of your transit agency, and ```<OUTPUT_MONGO_DB>``` is the mongo db uri to store the parsed GTFS data
+        where ```<TRANSIT_ID>``` is the ID of your transit agency
 
     * Note: 
         * You can find the transit ID in the ```feeds.json``` file
+        * You might need to wrap <TRANSIT_ID> in double quotations
 
 5. Updating the transit data [optional]
     * Run the commands:
@@ -73,6 +74,7 @@ Steps:
 
     * Note:
         * You can find the transit ID in your database
+        * You might need to wrap <TRANSIT_ID> in double quotations
 
 
 ### Usage

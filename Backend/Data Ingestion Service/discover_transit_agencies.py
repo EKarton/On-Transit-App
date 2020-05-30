@@ -9,6 +9,10 @@ from dotenv import load_dotenv
 
 import requests
 
+import json
+
+import re
+
 
 def get_transit_feeds_api_key():
     return os.environ.get("TRANSIT_FEEDS_API_KEY")
@@ -114,4 +118,9 @@ if __name__ == "__main__":
     location_id = find_location_id(opts.location)
     transit_agencies = find_transit_agencies_by_location_id(location_id)
 
-    print(transit_agencies)
+    # Add the default mongo db instance
+    for transit_agency in transit_agencies:
+        database_name = re.sub("[\s\\/$.\"]", "_", transit_agency["name"])
+        transit_agency["mongodb_uri"] = "mongodb://localhost:27017/{}".format(database_name)
+
+    print(json.dumps(transit_agencies))

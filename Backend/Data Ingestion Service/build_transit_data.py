@@ -203,11 +203,13 @@ def build_bounding_box(shapes, transit_id, last_updated):
             location: {
                 type: "Polygon",
                 coordinates: [
-                    [<LONG_1>, <LAT_1>],
-                    [<LONG_2>, <LAT_2>],
-                    [<LONG_3>, <LAT_3>],
-                    [<LONG_4>, <LAT_4>],
-                    [<LONG_1>, <LAT_1>]
+                    [
+                        [<LONG_1>, <LAT_1>],
+                        [<LONG_2>, <LAT_2>],
+                        [<LONG_3>, <LAT_3>],
+                        [<LONG_4>, <LAT_4>],
+                        [<LONG_1>, <LAT_1>]
+                    ]
                 ]
             }
         }
@@ -227,11 +229,13 @@ def build_bounding_box(shapes, transit_id, last_updated):
         location = {
             "type": "Polygon",
             "coordinates": [
-                [min_longitude, min_latitude],
-                [max_longitude, min_latitude],
-                [max_longitude, max_latitude],
-                [min_longitude, max_latitude],
-                [min_longitude, min_latitude],
+                [
+                    [min_longitude, min_latitude],
+                    [max_longitude, min_latitude],
+                    [max_longitude, max_latitude],
+                    [min_longitude, max_latitude],
+                    [min_longitude, min_latitude],
+                ]
             ],
         }
         return location
@@ -240,7 +244,9 @@ def build_bounding_box(shapes, transit_id, last_updated):
         [
             StructField("type", StringType(), False),
             StructField(
-                "coordinates", ArrayType(ArrayType(DoubleType(), False), False), False,
+                "coordinates",
+                ArrayType(ArrayType(ArrayType(DoubleType(), False), False), False),
+                False,
             ),
         ]
     )
@@ -530,7 +536,7 @@ def build_geospatial_paths(paths):
     return paths
 
 
-def save_to_database(trips, schedules, paths, stop_locations):
+def save_gtfs_to_database(trips, schedules, paths, stop_locations):
     print("Saving {} stop locations".format(stop_locations.count()))
 
     stop_locations.write.format("com.mongodb.spark.sql.DefaultSource").option(
@@ -558,17 +564,26 @@ def save_to_database(trips, schedules, paths, stop_locations):
     print("Saved trips")
 
 
+def save_bounding_box_to_database(bounding_box):
+    bounding_box.write.format("com.mongodb.spark.sql.DefaultSource").option(
+        "uri", get_mongodb_uri_to_transits()
+    ).option("collection", "bounding_boxes").mode("append").save()
+
+
+def build_database_indexes(database):
+    database.trips.create_index([("trip_id", pymongo.ASCENDING)])
+    database.stop_locations.create_index([("stop_id", pymongo.ASCENDING)])
+    database.schedules.create_index([("trip_id", pymongo.ASCENDING)])
+    database.paths.create_index([("path_id", pymongo.ASCENDING)])
+    database.paths.create_index([("location", pymongo.GEOSPHERE)])
+
+
 if __name__ == "__main__":
 
     # Make the parser
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "transit_id", type=str, help="The transit ID",
-    )
-    parser.add_argument(
-        "output_mongodb_uri",
-        type=str,
-        help="The URI connection string of your MongoDB instance to output the parsed GTFS data",
     )
     opts = parser.parse_args(sys.argv[1:])
 
@@ -584,18 +599,32 @@ if __name__ == "__main__":
 
         transit_info = get_transit_info(opts.transit_id, database)
 
+    print("Transit agency info to pre-process GTFS data:")
+    print(transit_info, "\n")
+
     # Download and extract the GTFS data
     RAW_ZIPFILE_PATH = "data/raw_data/gtfs.zip"
     EXTRACTED_GTFS_FILEPATH = "data/extracted_data/gtfs"
 
+    print(
+        "Downloading {} to {}".format(transit_info["gtfs_url"], EXTRACTED_GTFS_FILEPATH)
+    )
     download_gtfs_file(transit_info["gtfs_url"], RAW_ZIPFILE_PATH)
+
+    print(
+        "Finished downloading \nExtracting {} to {}".format(
+            RAW_ZIPFILE_PATH, EXTRACTED_GTFS_FILEPATH
+        )
+    )
+
     extract_zip_file(RAW_ZIPFILE_PATH, EXTRACTED_GTFS_FILEPATH)
+    print("Finished extracting")
 
     print("== Loading data ==")
     spark = (
         SparkSession.builder.master("local")
         .appName("My App")
-        .config("spark.mongodb.output.uri", opts.output_mongodb_uri)
+        .config("spark.mongodb.output.uri", transit_info["mongodb_uri"])
         .config(
             "spark.jars.packages", "org.mongodb.spark:mongo-spark-connector_2.11:2.3.1"
         )
@@ -616,7 +645,9 @@ if __name__ == "__main__":
 
     trips = build_trips(trips, routes)
     paths = build_paths(shapes)
-    bounding_box = build_bounding_box(shapes, transit_info["transit_id"], transit_info["last_updated"])
+    bounding_box = build_bounding_box(
+        shapes, transit_info["transit_id"], transit_info["last_updated"]
+    )
 
     print("== Finished Step 1 == \n== Starting Step 2 ==")
 
@@ -639,21 +670,15 @@ if __name__ == "__main__":
     print("== Finished Step 5 ==")
 
     # Save the GTFS data to a database
-    save_to_database(trips, schedules, paths, stops)
+    save_gtfs_to_database(trips, schedules, paths, stops)
 
     # Save the bounding box to a database
-    bounding_box.write.format("com.mongodb.spark.sql.DefaultSource").option(
-        "uri", get_mongodb_uri_to_transits()
-    ).option("collection", "bounding_boxes").mode("append").save()
+    save_bounding_box_to_database(bounding_box)
 
-    # Re-creating the indexes
-    with MongoClient(opts.output_mongodb_uri) as client:
-        parsed = pymongo.uri_parser.parse_uri(opts.output_mongodb_uri)
+    # Create the indexes for the GTFS data
+    with MongoClient(transit_info["mongodb_uri"]) as client:
+        parsed = pymongo.uri_parser.parse_uri(transit_info["mongodb_uri"])
         db_name = parsed["database"]
         database = client[db_name]
 
-        database.trips.create_index([("trip_id", pymongo.ASCENDING)])
-        database.stop_locations.create_index([("stop_id", pymongo.ASCENDING)])
-        database.schedules.create_index([("trip_id", pymongo.ASCENDING)])
-        database.paths.create_index([("path_id", pymongo.ASCENDING)])
-        database.paths.create_index([("location", pymongo.GEOSPHERE)])
+        build_database_indexes(database)
