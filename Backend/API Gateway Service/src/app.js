@@ -83,32 +83,15 @@ class App{
         * Example of HTTP GET request:
         * http://localhost:3000/api/v1/trips/123456
         */
-        app.get("/api/v1/trips/:tripID/schedules/:scheduleID", (req, res) => {
-            var tripID = req.params.tripID;
-            var scheduleID = req.params.scheduleID;
+        app.get("/api/v1/transits/:transitID/:tripID/schedules/:scheduleID", (req, res) => {
+            let transitID = req.params.transitID;
+            let tripID = req.params.tripID;
+            let scheduleID = req.params.scheduleID;
 
             console.log("API Gateway Service: Request for getting trip details received on process #", process.pid);
 
-            var uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/trips/${tripID}/schedules/${scheduleID}`;
+            let uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/transits/${transitID}trips/${tripID}/schedules/${scheduleID}`;
             this._handleRequest(req, res, uri);
-        });
-
-        /**
-         * Returns the vehicles and its position close to a location by a certain radius
-         * Example of HTTP request:
-         * http://localhost:3000/api/v1/vehicles?lat=43&long=-73.6&radius=40
-         */
-        app.get("/api/v1/vehicles", (req, res) => {
-            res.status(404).send("Unknown path");
-
-            // var latitude = req.query.lat;
-            // var longitude = req.query.long;
-            // var radius = req.query.radius;
-
-            // console.log("API Gateway Service: Request for finding vehicle received on process #", process.pid);
-
-            // var uri = `${config.VEHICLES_LOCATOR_URL}/api/v1/vehicles?lat=${latitude}&long=${longitude}&radius=${radius}`;            
-            // this._handleRequest(req, res, uri);
         });
 
         app.get("/api/v1/health", (req, res) => {
