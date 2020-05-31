@@ -90,40 +90,17 @@ class MapView extends React.Component {
                 'features': []
             }
         });
-        // this.map.addLayer({
-        //     'id': 'stops',
-        //     'source': 'stops',
-        //     'type': 'symbol',
-        //     'layout': {
-        //         // get the icon name from the source's "icon" property
-        //         // concatenate the name to get an icon from the style's sprite sheet
-        //         'icon-image': ['concat', ['get', 'icon'], '-15'],
-        //         // get the title name from the source's "title" property
-        //         'text-field': ['get', 'title'],
-        //         'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-        //         'text-offset': [0, 0.6],
-        //         'text-anchor': 'top',
-                
-        //     }
-        // });
 
         this.map.addLayer({
             'id': 'stops',
             'source': 'stops',
-            'type': 'circle',
+            'type': 'symbol',
             'layout': {
-                // get the icon name from the source's "icon" property
-                // concatenate the name to get an icon from the style's sprite sheet
-                // 'icon-image': ['concat', ['get', 'icon'], '-15'],
-                // get the title name from the source's "title" property
-                'text-field': ['get', 'title'],
-                'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-                'text-offset': [0, 0.6],
-                'text-anchor': 'top',
-            },
-            'paint': {
-                'circle-radius': 10,
-                'circle-color': '#007cbf'
+                'text-field': ['get', 'description'],
+                'text-variable-anchor': ['top', 'bottom', 'left', 'right'],
+                'text-radial-offset': 1,
+                'text-justify': 'auto',
+                'icon-image': ['get', 'icon']
             }
         });
 
@@ -147,7 +124,11 @@ class MapView extends React.Component {
                     'geometry': {
                         'type': 'Point',
                         'coordinates': [stop.long, stop.lat]
-                    }
+                    },
+                    'properties': {
+                        'description': stop.name,
+                        'icon': 'bus'
+                    },
                 }
             })
         };
@@ -220,7 +201,7 @@ class MapView extends React.Component {
                 'features': []
             }
         });
-         
+
         this.map.addLayer({
             'id': 'user-location',
             'source': 'user-location',
