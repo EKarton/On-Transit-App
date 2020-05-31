@@ -110,9 +110,6 @@ class MapView extends React.Component {
      * Updates the stops layer with new stops.
      * It will clear the existing stops and render the new stops.
      * 
-     * If this.olStopsLayer is not set, it will not render the new stops.
-     * It will render the path on this.olStopsLayer.
-     * 
      * @param {Object} newStops The new stops
      */
     updateStopsLayer = (newStops) => {
@@ -258,6 +255,7 @@ class MapView extends React.Component {
         });
 
         this.map.on('load', () => {
+            this.map.resize();
             this.createPathLayer();
             this.createStopsLayer();
             this.createLiveLocationLayer();
