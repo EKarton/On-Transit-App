@@ -6,7 +6,7 @@ Axios.defaults.timeout = 180000;
 // const VEHICLES_LOCATOR_URL = "https://on-transit-app-api-gateway.herokuapp.com/api/v1/vehicles";
 
 const TRIPS_LOCATOR_URL = "http://localhost:5000/api/v1/trips";
-const TRIP_DETAILS_URL = "http://localhost:5000/api/v1/trips";
+const TRIP_DETAILS_URL = "http://localhost:5000/api/v1/transits";
 const VEHICLES_LOCATOR_URL = "http://localhost:5000/api/v1/vehicles";
 
 export async function getNearbyTrips(latitude, longitude, time, radius){
@@ -29,9 +29,9 @@ export async function getNearbyTrips(latitude, longitude, time, radius){
     }
 }
 
-export async function getTripDetails(tripID, scheduleID){
+export async function getTripDetails(transitID, tripID, scheduleID){
     try{
-        let url = TRIP_DETAILS_URL + "/" + tripID + "/schedules/" + scheduleID;
+        let url = TRIP_DETAILS_URL + "/" + transitID + "/trips/" + tripID + "/schedules/" + scheduleID;
         let rawData = await Axios.get(url);
         return rawData.data.data;
     }

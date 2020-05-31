@@ -18,7 +18,7 @@ const onSuccess = (state, { payload }) => {
     return {
         ...state,
         inProgress: false,
-        tripIDs: payload.tripIDs,
+        tripIDs: payload,
         error: null
     };
 };

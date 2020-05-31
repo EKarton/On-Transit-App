@@ -83,14 +83,14 @@ class App{
         * Example of HTTP GET request:
         * http://localhost:3000/api/v1/trips/123456
         */
-        app.get("/api/v1/transits/:transitID/:tripID/schedules/:scheduleID", (req, res) => {
+        app.get("/api/v1/transits/:transitID/trips/:tripID/schedules/:scheduleID", (req, res) => {
             let transitID = req.params.transitID;
             let tripID = req.params.tripID;
             let scheduleID = req.params.scheduleID;
 
             console.log("API Gateway Service: Request for getting trip details received on process #", process.pid);
 
-            let uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/transits/${transitID}trips/${tripID}/schedules/${scheduleID}`;
+            let uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/transits/${transitID}/trips/${tripID}/schedules/${scheduleID}`;
             this._handleRequest(req, res, uri);
         });
 

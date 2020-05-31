@@ -41,10 +41,11 @@ class NearbyTripsChooserPopup extends React.Component {
 
         let checkboxValue = event.target.route.value;
         let tokenizedCheckboxValue = checkboxValue.split("/");
-        let selectedTripID = tokenizedCheckboxValue[0];
-        let selectedScheduleID = tokenizedCheckboxValue[1];
+        let selectedTransitID = tokenizedCheckboxValue[0];
+        let selectedTripID = tokenizedCheckboxValue[1];
+        let selectedScheduleID = tokenizedCheckboxValue[2];
 
-        this.props.selectTrip(selectedTripID, selectedScheduleID);
+        this.props.selectTrip(selectedTransitID, selectedTripID, selectedScheduleID);
     }
 
     renderLoadingSign = () => (
@@ -84,35 +85,41 @@ class NearbyTripsChooserPopup extends React.Component {
                     </div>
                     <form onSubmit={this.handleSubmit}>
                         <div className="popup-contents">{
-                            Object.keys(this.props.nearbyTrips).map(tripID => {
-                                let trip = this.props.nearbyTrips[tripID];
-                                let shortName = trip.shortname;
-                                let longName = trip.longname;
-                                let headsign = trip.headsign;
-                                let schedules = trip.schedules;
+                            Object.keys(this.props.nearbyTrips).map(transitID => {
+                                console.log(this.props.nearbyTrips[transitID]);
+                                let transitName = this.props.nearbyTrips[transitID].name;
+                                let trips = this.props.nearbyTrips[transitID].trips;
 
-                                return schedules.map(scheduleID => {
-                                    let display = "";
-                                    if (shortName){
-                                        display += shortName + " ";
-                                    }
-                                    if (headsign){
-                                        display += headsign + " ";
-                                    }
-                                    if (longName){
-                                        display += "(" + longName + ")";
-                                    }
-                                    display.trim();
+                                return Object.keys(trips).map(tripID => {
+                                    let trip = trips[tripID];
+                                    let shortName = trip.shortname;
+                                    let longName = trip.longname;
+                                    let headsign = trip.headsign;
+                                    let schedules = trip.schedules;
 
-                                    let checkboxValue = tripID + "/" + scheduleID;
-            
-                                    return (
-                                        <div key={checkboxValue}>
-                                            <input type="radio" name="route" value={checkboxValue}/>
-                                            <div className="tripInfo">{display}</div>
-                                        </div>
-                                    );
-                                });
+                                    return schedules.map(scheduleID => {
+                                        let display = "";
+                                        if (shortName){
+                                            display += shortName + " ";
+                                        }
+                                        if (headsign){
+                                            display += headsign + " ";
+                                        }
+                                        if (longName){
+                                            display += "(" + longName + ")";
+                                        }
+                                        display.trim();
+
+                                        let checkboxValue = transitID + "/" + tripID + "/" + scheduleID;
+                
+                                        return (
+                                            <div key={checkboxValue}>
+                                                <input type="radio" name="route" value={checkboxValue}/>
+                                                <div className="tripInfo">{display}</div>
+                                            </div>
+                                        );
+                                    }).flat();
+                                }).flat();
                             })
                         }</div>
                         <div className="popup-actions-container">
@@ -127,6 +134,7 @@ class NearbyTripsChooserPopup extends React.Component {
     );
 
     render() {
+        console.log("heh", this.props.nearbyTrips);
         if (this.props.nearbyTripsInProgress || this.props.selectedTripsInProgress){
             return this.renderLoadingSign();         
         } 

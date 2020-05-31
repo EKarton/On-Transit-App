@@ -3,6 +3,7 @@ import { types } from "../constants/select-trip-constants";
 
 const initialState = {
     inProgress: false,
+    transitID: null,
     tripID: null,
     scheduleID: null,
     tripDetails: null
@@ -20,6 +21,7 @@ const onSuccess = (state, { payload }) => {
         ...state,
         inProgress: false,
         error: null,
+        transitID: payload.transitID,
         tripID: payload.tripID,
         scheduleID: payload.scheduleID,
         tripDetails: payload.tripDetails
