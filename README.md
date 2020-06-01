@@ -22,13 +22,6 @@ This project is comprised of several components that work together to make the p
     </p>
 </div>
 
-- Android / Web App: Calls the API Gateway to obtain nearby transit routes and vehicles based on the device's GPS location and time.
-- API Gateway Microservice: Makes HTTP requests to the microservices to get the resources the client needs.
-- Trips Locator Microservice: Performs parallel computations to predict the possible transit routes based on a GPS location and time.
-- Trip Details Microservice: Given a trip ID, it returns the trip details such as its route name, route number, next stops, etc.
-- Vehicles Locator Microservice: Predicts the possible vehicles the user may be on given the user's GPS location and time.
-- Data Aggregator Service: Publishes clean data to the database for the microservices to efficiently use by obtaining raw data from the World Wide Web and passing it through a series of data filters / data aggregations.
-
 ### Overview of Web App
 Users are able to determine which bus they are on, and dispatch alerts when their stop is approaching via a web browser. The notification is dispatched via the computer's notification panel. The UI looks like this:
 
