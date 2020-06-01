@@ -11,6 +11,7 @@ RUN npm install
 COPY . ./
 
 # Make an optimized version of this build
+RUN mkdir build
 RUN npm run build
 
 # Serve the optimized version of this build
