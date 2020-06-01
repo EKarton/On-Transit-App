@@ -12,35 +12,35 @@ The web app is a front-facing application that is used to display routes, predic
 ## Overview of UI:
 When users land on the web page, the app asks for geolocation and notification permissions. Grant them. Then, the app detects which bus the user is on. If there is more than one possible bus the user is on, it will ask the user which bus they are on from the list of possible busses obtained.
 
-<div width="100%">
+<div width="60%">
     <p align="center">
 <img src="docs/route-picker.png"/>
     </p>
 </div>
 
 If there are no busses / trains available, the screen will look like:
-<div width="100%">
+<div width="60%">
     <p align="center">
 <img src="docs/no-transit-nearby.png"/>
     </p>
 </div>
 
 Once a route is selected, the route's path and its stops are shown on the webpage. It will also predict and display the vehicle's location:
-<div width="100%">
+<div width="60%">
     <p align="center">
 <img src="docs/main-screen.png"/>
     </p>
 </div>
 
 Furthermore, users can create a notification for a particular stop by going to the left nav bar, hoving on top of your stop, and selecting "Notify Me":
-<div width="100%">
+<div width="60%">
     <p align="center">
 <img src="docs/set-notification.png"/>
     </p>
 </div>
 
 When the user is 5 minutes before reaching their stop, they will be notified.
-<div width="100%">
+<div width="60%">
     <p align="center">
 <img src="docs/notification-dispatched.png"/>
     </p>
