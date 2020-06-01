@@ -178,15 +178,10 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 #### Getting the health of current service and other microservices
 * Request requirements:
     * URL:
-        * Format: ```api/v1/trips?lat=LATITUDE&long=LONGITUDE&time=TIME&radius=RADIUS```
-        * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
+        * Format: ```api/v1/health```
+        * Example: ```http://localhost:5000/api/v1/health```
     * Method:
         * GET
-    * URL Query Params:
-        * lat=[double],
-        * long=[double], 
-        * radius=[double], 
-        * time=[HH:mm:ss]
 
 * Sample Success Response:
     ```

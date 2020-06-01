@@ -1,19 +1,44 @@
 # On Transit App - Trips Locator Microservice
 
 ### Description
-This microservice is used to obtain the closest possible bus route based on a GPS location and a time.
+This microservice tries to find the most possible bus route a user could be based on the user's GPS location and time.
 
 ### Table of Contents
 - How it works
 - Installation
 - Usage
+- Deploying on Heroku
 - Credits
 - License
 
 ### How it works:
-- ...
+* Suppose we have the user's GPS location and time
+* We first find all transit agencies the user could be based on the transit agencies' bounding box
+* Next, for each transit agency, we find the nearest paths to the user
+* For each nearest path, we find all the trip schedules associated with that path
+    * We also find which two path locations the user could be based on the user's GPS location (by finding which line segment in the path yields the minimum projection to the user's GPS location)
+* For each trip schedule, we try to find which two stops the user could be based on the user's time
+* For the two stops, we find which two path locations each stop could be based on the stop's GPS location (similar to how we used it to the user's GPS location)
+* Then, if the two path locations of the user's GPS location is sandwitched between the two path locations of their stops
 
-##### Getting possible trips from a GPS location and time
+### Installation
+
+##### Required Programs and Tools:
+- Linux / Unix machine
+- Node JS v8.0+ with NPM
+
+##### Steps:
+1. Open the terminal and run the command ```npm install```
+2. Make a copy of ```.env-template```, name it ```.env```, and save it
+3. Change the parameters in ```.env``` file
+4. Run the command ```npm start```
+
+### Usage
+Once the server is up, you are able to make many HTTP requests to the server, including:
+* Getting trips based on GPS location
+* Viewing the health of microservices
+
+##### Getting trips based on GPS location
 Clients needs to make HTTP requests to the application in order to get the trips based on their GPS location and time
 
 **URL**: api/v1/trips
@@ -89,24 +114,28 @@ For instance, "13:04:55" means 55 seconds after 1:04PM
 $ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&time=11:50:00&radius=10
 ```
 
-### Installation
+#### Getting the health of current service and other microservices
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/trips?lat=LATITUDE&long=LONGITUDE&time=TIME&radius=RADIUS```
+        * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
+    * Method:
+        * GET
+    * URL Query Params:
+        * lat=[double],
+        * long=[double], 
+        * radius=[double], 
+        * time=[HH:mm:ss]
 
-##### Required Programs and Tools:
-- Unix machine
-- Node JS v8.0+ with NPM
+* Sample Success Response:
+    ```
+    OK
+    ```
 
-##### Step 1: Install the packages
-1. Open up the terminal and change the directory to the folder "Backend/Trips Locator Service" relative to the project directory.
-2. Type the command `npm install`
-
-##### Step 2: Set up the config file
-1. Make a copy of the file "config_template.js" under the folder "Backend/Trips Locator Service/src/res", name it "config.js", and save it in the same directory.
-2. Open up "config.js" and edit the port number for the app to use. Note that the port must be free to use. By default, the port number is 3001.
-3. Add the Mongo DB url and credentials to "config.js".
-
-##### Step 3: Run the app
-1. In the "Backend/Trips Locator Service" folder of the project directory, type in the command `npm start`.
-2. It is done!
+* Sample Failure Response:**
+    ```
+    FAILURE
+    ```
 
 ### Deployment to Heroku
 
