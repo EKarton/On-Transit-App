@@ -183,6 +183,21 @@ $ curl http://localhost:3000/api/v1/trips/12131321231
 $ curl http://localhost:3000/api/v1/vehicles?lat=43.5540929&long=-79.7220238&radius=10
 ```
 
+### Deploying on Heroku
+1. Authenticate with Heroku:
+    ```
+    heroku auth:login
+    heroku container:login
+    ```
+
+2. Run the following:
+    ```
+    docker build -t api_gateway_service .
+    docker tag api_gateway_service registry.heroku.com/on-transit-app-api-gateway/web
+    docker push registry.heroku.com/on-transit-app-api-gateway/web
+    heroku container:release web --app on-transit-app-api-gateway
+    ```
+
 ### Credits
 Emilio Kartono, the sole creator of this project.
 

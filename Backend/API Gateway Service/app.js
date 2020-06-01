@@ -2,13 +2,13 @@ const express = require("express");
 const request = require("request-promise-native");
 const process = require("process");
 
-const config = require("./res/config");
+require('dotenv').config();
 
 /**
  * A class used to represent the entire application with handling and responding to 
  * HTTP requests.
  */
-class App{
+class App {
 
     /**
      * Obtains the resource from a microservice through its url and 
@@ -17,11 +17,11 @@ class App{
      * @param {express.Response} res The client's response object
      * @param {string} uri The url to get the resource via microservices
      */
-    _handleRequest(req, res, uri){
+    _handleRequest(req, res, uri) {
         request(uri)
             .then(message => {
                 res.setHeader('Content-Type', 'application/json');
-                res.send(message);  
+                res.send(message);
             })
             .catch(error => {
                 console.log(error);
@@ -32,11 +32,11 @@ class App{
                 };
 
                 res.setHeader('Content-Type', 'application/json');
-                res.send(JSON.stringify(responseBody));    
+                res.send(JSON.stringify(responseBody));
             });
     }
 
-    _obtainServiceHealth(uri){
+    _obtainServiceHealth(uri) {
         let options = {
             method: "GET",
             uri: uri,
@@ -48,13 +48,13 @@ class App{
     /**
      * Runs the application
      */
-    run(){
+    run() {
         var app = express();
-        var server_port = process.env.YOUR_PORT || process.env.PORT || config.PORT;
+        var server_port = process.env.YOUR_PORT || process.env.PORT || 5000;
         var server_host = process.env.YOUR_HOST || '0.0.0.0';
 
         // Enable cors from anywhere
-        app.use(function(req, res, next) {
+        app.use(function (req, res, next) {
             res.header('Access-Control-Allow-Origin', '*');
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             next();
@@ -74,14 +74,14 @@ class App{
             console.log("API Gateway Service: Request for finding nearby trips received on process #", process.pid);
             console.log(`lat:${latitude},long:${longitude},time:${time},radius:${radius}`);
 
-            var uri = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${time}&radius=${radius}`;
+            var uri = `${process.env.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${time}&radius=${radius}`;
             this._handleRequest(req, res, uri);
         });
 
         /**
         * Returns the trip details given its trip ID.
         * Example of HTTP GET request:
-        * http://localhost:3000/api/v1/trips/123456
+        * http://localhost:3000/api/v1/transits/1234/trips/123456/schedules/1234
         */
         app.get("/api/v1/transits/:transitID/trips/:tripID/schedules/:scheduleID", (req, res) => {
             let transitID = req.params.transitID;
@@ -90,25 +90,26 @@ class App{
 
             console.log("API Gateway Service: Request for getting trip details received on process #", process.pid);
 
-            let uri = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/transits/${transitID}/trips/${tripID}/schedules/${scheduleID}`;
+            let uri = `${process.env.TRIP_DETAILS_SERVICE_URL}/api/v1/transits/${transitID}/trips/${tripID}/schedules/${scheduleID}`;
             this._handleRequest(req, res, uri);
         });
 
         app.get("/api/v1/health", (req, res) => {
-            let tripsLocatorUrl = `${config.TRIPS_LOCATOR_SERVICE_URL}/api/v1/health`;
-            let tripDetailsUrl = `${config.TRIP_DETAILS_SERVICE_URL}/api/v1/health`;
+            let tripsLocatorUrl = `${process.env.TRIPS_LOCATOR_SERVICE_URL}/api/v1/health`;
+            let tripDetailsUrl = `${process.env.TRIP_DETAILS_SERVICE_URL}/api/v1/health`;
 
             let tripsLocatorRequest = this._obtainServiceHealth(tripsLocatorUrl);
             let tripDetailsRequest = this._obtainServiceHealth(tripDetailsUrl);
+
             Promise.all([tripsLocatorRequest, tripDetailsRequest])
-                .then(results => {                    
+                .then(results => {
                     let isTripsLocatorOk = results[0].statusCode == 200;
                     let isTripDetailsOk = results[1].statusCode == 200;
 
-                    if (isTripsLocatorOk && isTripDetailsOk){
+                    if (isTripsLocatorOk && isTripDetailsOk) {
                         res.status(200).send("OK");
                     }
-                    else{
+                    else {
                         res.status(501).send("FAILURE");
                     }
                 })
@@ -117,7 +118,7 @@ class App{
                 });
         });
 
-        app.listen(server_port, server_host, function() {
+        app.listen(server_port, server_host, function () {
             console.log('Listening on port %d', server_port);
         });
     }
