@@ -49,9 +49,8 @@ class App {
      * Runs the application
      */
     run() {
-        var app = express();
-        var server_port = process.env.YOUR_PORT || process.env.PORT || 5000;
-        var server_host = process.env.YOUR_HOST || '0.0.0.0';
+        let app = express();
+        let server_port = process.env.PORT || 5000;
 
         // Enable cors from anywhere
         app.use(function (req, res, next) {
@@ -66,15 +65,15 @@ class App {
          * https://localhost:3000/api/v1/trips?lat=43&long=-73.6&time=17:50:00&radius=50
          */
         app.get("/api/v1/trips", (req, res) => {
-            var latitude = req.query.lat;
-            var longitude = req.query.long;
-            var time = req.query.time;
-            var radius = req.query.radius;
+            let latitude = req.query.lat;
+            let longitude = req.query.long;
+            let time = req.query.time;
+            let radius = req.query.radius;
 
             console.log("API Gateway Service: Request for finding nearby trips received on process #", process.pid);
             console.log(`lat:${latitude},long:${longitude},time:${time},radius:${radius}`);
 
-            var uri = `${process.env.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${time}&radius=${radius}`;
+            let uri = `${process.env.TRIPS_LOCATOR_SERVICE_URL}/api/v1/trips?lat=${latitude}&long=${longitude}&time=${time}&radius=${radius}`;
             this._handleRequest(req, res, uri);
         });
 
@@ -118,7 +117,7 @@ class App {
                 });
         });
 
-        app.listen(server_port, server_host, function () {
+        app.listen(server_port, function () {
             console.log('Listening on port %d', server_port);
         });
     }
