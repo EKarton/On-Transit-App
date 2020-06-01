@@ -1,19 +1,13 @@
 # On Transit App - Data Ingestion Service
 
 ### Description
-This application is used to discover transit feeds, download, parse, and aggregate large GTFS data into a database. It utilizes Apache Spark to process the data efficiently. It also uses transitfeeds.com to discover transit feeds.
+This CLI tool is used to manage GTFS transit data for the On-Transit-App. Using [transitfeeds.com][https://transitfeeds.com/], the CLI tool discovers, downloads, and updates GTFS transit to a Mongo DB database. It also utilizes Apache Spark to process raw GTFS data efficiently.
 
 ### Table of Contents
-- Overview
 - Installation
 - Usage
 - Credits
 - License
-
-### Overview
-Below is a diagram of how data gets processed from the source to the data used in production.
-Data moves from the source to production in order from left to right in the diagram below.
-
 
 ### Installation
 Required Programs and Tools:
@@ -21,7 +15,7 @@ Required Programs and Tools:
 - Python 3
 - Pip3
 - Apache Spark
-- MongoDB (optional)
+- MongoDB
 
 Steps:
 1. Set up the environment
