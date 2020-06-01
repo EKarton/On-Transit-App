@@ -14,35 +14,35 @@ When users land on the web page, the app asks for geolocation and notification p
 
 <div width="100%">
     <p align="center">
-<img src="docs/route-picker.png" width="600px"/>
+<img src="docs/route-picker.png" width="80%"/>
     </p>
 </div>
 
 If there are no busses / trains available, the screen will look like:
 <div width="100%">
     <p align="center">
-<img src="docs/no-transit-nearby.png" width="600px"/>
+<img src="docs/no-transit-nearby.png" width="80%"/>
     </p>
 </div>
 
 Once a route is selected, the route's path and its stops are shown on the webpage. It will also predict and display the vehicle's location:
 <div width="100%">
     <p align="center">
-<img src="docs/main-screen.png" width="600px"/>
+<img src="docs/main-screen.png" width="80%"/>
     </p>
 </div>
 
 Furthermore, users can create a notification for a particular stop by going to the left nav bar, hoving on top of your stop, and selecting "Notify Me":
 <div width="100%">
     <p align="center">
-<img src="docs/set-notification.png" width="600px"/>
+<img src="docs/set-notification.png" width="80%"/>
     </p>
 </div>
 
 When the user is 5 minutes before reaching their stop, they will be notified.
 <div width="100%">
     <p align="center">
-<img src="docs/notification-dispatched.png" width="600px"/>
+<img src="docs/notification-dispatched.png" width="80%"/>
     </p>
 </div>
 
