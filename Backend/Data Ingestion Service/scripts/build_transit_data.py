@@ -619,6 +619,9 @@ if __name__ == "__main__":
     if transit_info["gtfs_url"] is None:
         raise ValueError("transit_info[\"gtfs_url\"] cannot be NULL!")
 
+    if transit_info["db_name"] is None:
+        raise ValueError("transit_info[\"db_name\"] cannot be NULL!")
+
     # Download and extract the GTFS data
     RAW_ZIPFILE_PATH = "data/raw_data/gtfs.zip"
     EXTRACTED_GTFS_FILEPATH = "data/extracted_data/gtfs"
