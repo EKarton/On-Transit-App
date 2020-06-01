@@ -38,81 +38,97 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 * Getting trips based on GPS location
 * Viewing the health of microservices
 
-##### Getting trips based on GPS location
-Clients needs to make HTTP requests to the application in order to get the trips based on their GPS location and time
+#### Getting trips based on GPS location:
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/trips?lat=LATITUDE&long=LONGITUDE&time=TIME&radius=RADIUS```
+        * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
+    * Method:
+        * GET
+    * URL Query Params:
+        * lat=[double],
+        * long=[double], 
+        * radius=[double], 
+        * time=[HH:mm:ss]
 
-**URL**: api/v1/trips
-
-**Method**: GET
-
-**URL Query Params:** lat=[double], long=[double], radius=[double], time=[HH:mm:ss]
-
-- Note that the format [HH:mm:ss] means to specify the time in 24-hour format.
-For instance, "13:04:55" means 55 seconds after 1:04PM 
-
-**Sample Success Response Code:**
-- Status code: 200 (Ok)
-
-**Sample Success Response Body:**
-```
-{
-    status: "success",
-    data: {
-        "tripIDs": {
-            "5c4e158f3b9294327663817b": {
-                "shortname": "46",
-                "longname": "Tenth Line-Osprey",
-                "headsign": "Northbound",
-                "type": "3",
-                "schedules": [
-                    "5c4e15153b92943276631d19",
-                    "5c4e15153b92943276631d20",
-                    "5c4e15153b92943276631d21"
-                ]
-            },
-            "5c4e158f3b9294327663817f": {
-                "shortname": "46",
-                "longname": "Tenth Line-Osprey",
-                "headsign": "Southbound",
-                "type": "3",
-                "schedules": [
-                    "5c4e15163b92943276631dd1"
-                ]
+* Sample Success Response with Nearby Trips:
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "5ed1e9d7ffe1942ce10ffea6": {
+                "name": "TTC GTFS",
+                "trips": {
+                    "40150630": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "SOUTH - 510B SPADINA towards QUEENS QUAY",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f624f3f68636608e4d6e",
+                            "5ed1f627f3f68636608eaeb1"
+                        ]
+                    },
+                    "40150637": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "SOUTH - 510A SPADINA towards UNION STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f625f3f68636608e613f",
+                            "5ed1f625f3f68636608e6d61",
+                            "5ed1f62af3f68636608f12c2"
+                        ]
+                    },
+                    "40150824": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f625f3f68636608e68f7",
+                            "5ed1f625f3f68636608e71fe"
+                        ]
+                    },
+                    "40150828": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f628f3f68636608edfbc"
+                        ]
+                    },
+                    "40150892": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f62af3f68636608f281e"
+                        ]
+                    }
+                }
             }
         }
     }
-}
-```
+    ```
 
-- Note that a trip can contain multiple trip schedules. For instance, a trip is a route (such as route 109 Northbound) while a schedule for route 109 Northbound represents a bus on that route.
+* Sample Success Response with No Nearby Trips:
+    ```json
+    {
+        "status": "success",
+        "data": {}
+    }
+    ```
 
-**Sample Bad Request Failure Response Code:**
-- Status code: 400 (Server Error)
-
-**Sample Bad Request Failure Response Body:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-
-**Sample Server Failure Response Code:**
-- Status code: 500 (Server Error)
-
-**Sample Server Failure Response Body:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-**Sample Call:**
-```
-$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&time=11:50:00&radius=10
-```
+* Sample Failure Response:**
+    ```json
+    {
+        "status": "failure",
+        "message": "Cannot read property 'name' of null"
+    }
+    ```
 
 #### Getting the health of current service and other microservices
 * Request requirements:
@@ -137,28 +153,6 @@ $ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&time=1
     FAILURE
     ```
 
-### Deployment to Heroku
-
-##### Required Programs and Tools:
-- Unix machine
-- Node JS v8.0+ with NPM
-- Heroku CLI
-
-##### Step 1: Create a new service on Heroku
-1. On Heroku, make a new service with a new service name.
-
-##### Step 2: Set up the config file
-1. Make a copy of the file "Deploy-to-Heroku-Template.sh" under the folder "Backend/Trips Locator Service/scripts", name it "Deploy-to-Heroku.sh", and save it in the same directory.
-2. Open up "Deploy-to-Heroku.sh", edit the Heroku App name to the name you specified to the new service, and the temp folder.
-3. Save the file
-
-##### Step 3: Deploy on Heroku
-1. On the terminal, change the directory to "Backend/Trips Locator Service/scripts" and run the command ```./Deploy-To-Heroku.sh```.
-2. Follow the instructions on the terminal, and you should be done.
-
-### Usage
-Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
-
 ### Deploying on Heroku
 1. Authenticate with Heroku:
     ```
@@ -178,4 +172,5 @@ Please note that this project is used for educational purposes and is not to be 
 Emilio Kartono
 
 ### Licence
-This project is protected under the GNU Licence. Please refer to LICENCE.txt for further details.
+Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
+This project is protected under the GNU Licence. Please refer to LICENCE.txt in the root directory of this repository for further details.
