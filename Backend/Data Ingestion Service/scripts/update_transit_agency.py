@@ -17,13 +17,7 @@ import requests
 import pymongo
 from pymongo import MongoClient
 
-
-def get_mongodb_uri():
-    return os.environ.get("MONGO_DB_TRANSITS_URL")
-
-
-def get_transit_feeds_api_key():
-    return os.environ.get("TRANSIT_FEEDS_API_KEY")
+import utils
 
 
 def get_all_transit_ids_from_database(database):
@@ -52,47 +46,6 @@ def get_transit_info_from_database(database, transit_id):
         )
 
 
-def get_latest_transit_info_details(transit_id):
-    """ It fetches the latest transit info details given its transit ID
-
-        It returns details like:
-        {
-            transit_id: <TRANSIT_ID>
-            name: <NAME-OF-TRANSIT-AGENCY>,
-            gtfs_url: <LINK-TO-GTFS-ZIP-FILE>,
-            last_updated: <TIMESTAMP>
-        }
-    """
-    # Make API request
-    url = "https://api.transitfeeds.com/v1/getFeedVersions"
-    params = {
-        "key": get_transit_feeds_api_key(),
-        "feed": transit_id,
-    }
-
-    response = requests.get(url=url, params=params)
-    data = response.json()
-
-    # Get the first result
-    latest_version = data["results"]["versions"][0]
-
-    if "f" in latest_version:
-        feed_info = latest_version["f"]
-
-        name = feed_info["t"] if "t" in feed_info else None
-        gtfs_url = (
-            feed_info["u"]["d"] if "u" in feed_info and "d" in feed_info["u"] else None
-        )
-        last_updated = latest_version["ts"] if "ts" in latest_version else None
-
-    return {
-        "transit_id": transit_id,
-        "name": name,
-        "gtfs_url": gtfs_url,
-        "last_updated": last_updated,
-    }
-
-
 def inject_default_mongodb_uri_to_transit_info(transit_info):
     # Add the default mongo db instance
     database_name = re.sub('[\s\\/$."]', "_", transit_info["name"])
@@ -115,7 +68,7 @@ def update_all_transit_info(database):
     for transit_id in transit_ids:
         current_transit_info = get_transit_info_from_database(database, transit_id)
 
-        latest_transit_info = get_latest_transit_info_details(transit_id)
+        latest_transit_info = utils.get_latest_transit_info_details(transit_id)
         latest_transit_info = inject_default_mongodb_uri_to_transit_info(
             latest_transit_info
         )
@@ -132,7 +85,7 @@ def update_transit_info(transit_id):
 
     current_transit_info = get_transit_info_from_database(database, transit_id)
 
-    latest_transit_info = get_latest_transit_info_details(transit_id)
+    latest_transit_info = utils.get_latest_transit_info_details(transit_id)
     latest_transit_info = inject_default_mongodb_uri_to_transit_info(
         latest_transit_info
     )
@@ -164,7 +117,7 @@ if __name__ == "__main__":
     # Load the environment variables
     load_dotenv()
 
-    with MongoClient(get_mongodb_uri()) as client:
+    with MongoClient(utils.get_mongodb_uri()) as client:
         database = client["transits"]
 
         if opts.all:

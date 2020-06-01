@@ -262,7 +262,7 @@ def build_bounding_box(shapes, transit_id):
     )
 
     # Add the transit ID to each record
-    transit_info_df = spark.createDataFrame([(transit_id, )], ["transit_id"])
+    transit_info_df = spark.createDataFrame([(transit_id,)], ["transit_id"])
 
     bounding_box = bounding_box.withColumn("temp_key", F.lit(0))
     transit_info_df = transit_info_df.withColumn("temp_key", F.lit(0))

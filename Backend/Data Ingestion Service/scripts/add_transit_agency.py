@@ -12,9 +12,7 @@ from dotenv import load_dotenv
 import pymongo
 from pymongo import MongoClient
 
-
-def get_mongodb_uri():
-    return os.environ.get("MONGO_DB_TRANSITS_URL")
+import utils
 
 
 def does_transit_exist_in_database(database, transit_id):
@@ -51,7 +49,7 @@ if __name__ == "__main__":
     load_dotenv()
 
     # Make a connection to the MongoDB database
-    with MongoClient(get_mongodb_uri()) as client:
+    with MongoClient(utils.get_mongodb_uri()) as client:
         database = client["transits"]
 
         # Read the file
@@ -59,7 +57,9 @@ if __name__ == "__main__":
             transit_agencies = json.load(feed_file)
 
             for transit_info in transit_agencies:
-                if not does_transit_exist_in_database(database, transit_info["transit_id"]):
+                if not does_transit_exist_in_database(
+                    database, transit_info["transit_id"]
+                ):
                     print("Adding new transit %s" % transit_info["transit_id"])
                     add_transit_details_to_database(database, transit_info)
 

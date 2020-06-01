@@ -95,6 +95,7 @@ if __name__ == "__main__":
 
     # Add entries based on a location
     results = []
+    already_discovered_transit_ids = set([])
 
     for location in opts.locations:
         location_id = find_location_id(location)
@@ -102,8 +103,13 @@ if __name__ == "__main__":
 
         # Add the default mongo db instance
         for transit_agency in transit_agencies:
-            database_name = re.sub('[\s\\/$."]', "_", transit_agency["name"])
-            transit_agency["db_name"] = database_name
+            transit_id = transit_agency["transit_id"]
+
+            if transit_id not in already_discovered_transit_ids:
+                database_name = re.sub('[\s\\/$."]', "_", transit_agency["name"])
+                transit_agency["db_name"] = database_name
+
+                already_discovered_transit_ids.add(transit_id)
 
         results += transit_agencies
 
