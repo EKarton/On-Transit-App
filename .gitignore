@@ -329,6 +329,10 @@ dmypy.json
 
 # API keys
 .env
+.env.production
 
 # Discovered GTFS files
 feeds.json
+
+# Create-React-App build files
+**/build/

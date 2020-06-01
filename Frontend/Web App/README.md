@@ -90,7 +90,9 @@ You will need:
     heroku container:login
     ```
 
-2. Run the following:
+2. Make a file called ```.env.production``` and store your keys into this file
+
+3. Run the following:
     ```bash
     docker build -t on_transit_app .
     docker tag on_transit_app registry.heroku.com/on-transit-app/web
