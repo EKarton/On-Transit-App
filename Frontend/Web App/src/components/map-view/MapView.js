@@ -2,14 +2,12 @@ import React from "react";
 import { connect } from "react-redux";
 
 import "./MapView.css";
-import { getCurrentTime } from "../../services/MockedTimeService";
+import { getCurrentTime } from "../../services/TimeService";
 import { getTimeInSeconds } from "../../services/TimeFormatter";
 import { getLocationOnPath } from "../../services/LocationTracker";
 
 // Imports for the map
 import MapboxGL from 'mapbox-gl/dist/mapbox-gl.js';
-
-console.log(process.env.REACT_APP_MAPBOX_API_KEY);
 
 /**
  * A component which displays the map to the user
