@@ -4,63 +4,10 @@
 This microservice is used to obtain the details of a trip, including its stop schedules, stop locations, the path that the public transportation vehicle will take, route numbers, and route names.
 
 ### Table of Contents
-- Overview
 - Installation
 - Usage
 - Credits
 - License
-
-### Overview
-This microservice is comprised of several clusters that work together to make it very scalable.
-<div width="100%">
-    <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Trip%20Details%20Service/docs/Architecture.png" width="600px"/>
-    </p>
-</div>
-
-On startup, it will launch N clusters (with N being the number of CPUs on the current machine). Each cluster will be running an Express app that will handle client requests. More information can be found on https://nodejs.org/api/cluster.html.
-
-##### Getting vehicles based on GPS location:
-Clients needs to make HTTP requests to the application in order to get trip details.
-
-**URL**: api/v1/trip/:tripID
-
-**Method**: GET
-
-**URL Params:** tripID=[string]
-
-**Sample Success Response:**
-```
-{
-	status: "success",
-	data: {
-		id: 12131321231,
-		shortName: "109",
-		longName: "Meadowvale Express",
-		stops: [
-			{ lat: , long: , name: , time: },
-			...
-		],
-		path: [
-			{ lat: , long: },
-			...
-		]
-	}
-}
-```
-
-**Sample Failure Response:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-**Sample Call:**
-```
-$ curl http://localhost:3003/api/v1/trips/12131321231
-```
 
 ### Installation
 
@@ -68,23 +15,116 @@ $ curl http://localhost:3003/api/v1/trips/12131321231
 - Linux machine
 - Node JS v8.0+ with NPM
 
-##### Step 1: Install the packages
-1. Open up the terminal and change the directory to the folder "Backend/Trip Details Service" relative to the project directory.
-2. Type the command `npm install`
-
-##### Step 2: Set up the config file
-1. Make a copy of the file "config_template.js" under the folder "Backend/Trip Details Service/src/res", name it "config.js", and save it in the same directory.
-2. Open up "config.js" and edit the port number for the app to use. Note that the port must be free to use. By default, the port number is 3003.
-
-##### Step 3: Run the app
-1. In the "Backend/Trip Details Service" folder of the project directory, type in the command `npm start`. It should launch N processes; one process as the master process, and N - 1 child processes (with N being the number of CPUs on your machine).
-2. It is done!
+##### Steps:
+1. Open the terminal and run the command ```npm install```
+2. Make a copy of ".env-template", name it ".env", and save it
+3. Run the command ```npm start```
 
 ### Usage
-Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
+Once the server is up, you are able to make many HTTP requests to the server, including:
+* Getting trip details
+* Viewing the health of microservices
+
+#### Getting trip details:
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/transits/:transitID/trips/:tripID/schedules/:scheduleID```
+        * Example: ```http://localhost:5002/api/v1/transits/5ed48f83fa6014f5944ae5ad/trips/20058455/schedules/5ed490a3b2dba619d463a1a8```
+		* Note:
+			* The ```:transitID```, ```:tripID```, and ```:scheduleID``` could be found from the ```api/v1/trips?``` endpoint [see more at Trips Locator Service](../Trips%20Locator%20Service/README.md)
+    * Method:
+        * GET
+
+* Sample Success Response:
+    ```json
+    {
+		"status": "success",
+		"data": {
+			"transitName": "MiWay GTFS",
+			"shortName": "45",
+			"longName": "Winston Churchill",
+			"headSign": "Northbound",
+			"type": "3",
+			"path": [
+				{
+					"lat": 43.51297,
+					"long": -79.63313
+				},
+				...
+				{
+					"lat": 43.58379,
+					"long": -79.75894
+				}
+			],
+			"stops": [
+				{
+					"lat": 43.513,
+					"long": -79.63313,
+					"name": "Clarkson Go Station Platform 6",
+					"time": 62880
+				},
+				...
+				{
+					"lat": 43.58378,
+					"long": -79.75902,
+					"name": "Meadowvale Town Centre Drop Off",
+					"time": 65940
+				}
+			]
+		}
+	}
+    ```
+	Note:
+	* The ```...``` means that there is more data (in the several hundreds)
+	* Path locations and the stop locations are ordered in the direction of the bus / train's travel
+	* Times are in 24-hour format
+	* Times are encoded in HH * 3600 + MM * 60 + SS format in the local time of the transit agency
+		* Ex: 19:10:01 = 19 * 3600 + 10 * 60 + 1 = 69001
+
+* Sample Failure Response:**
+    ```json
+    {
+        "status": "failure",
+        "message": "Trip is not found"
+    }
+    ```
+
+#### Getting the health of current service and other microservices
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/health```
+        * Example: ```http://localhost:5002/api/v1/health```
+    * Method:
+        * GET
+
+* Sample Success Response:
+    ```
+    OK
+    ```
+
+* Sample Failure Response:**
+    ```
+    FAILURE
+    ```
+
+### Deploying on Heroku
+1. Authenticate with Heroku:
+    ```bash
+    heroku auth:login
+    heroku container:login
+    ```
+
+2. Run the following:
+    ```bash
+    docker build -t trip_details_service .
+    docker tag trip_details_service registry.heroku.com/on-transit-app-trip-details/web
+    docker push registry.heroku.com/on-transit-app-trip-details/web
+    heroku container:release web --app on-transit-app-trip-details
+    ```
 
 ### Credits
-Emilio Kartono, the sole creator of this project.
+Emilio Kartono
 
 ### Licence
-This project is protected under the GNU Licence. Please refer to LICENCE.txt for further details.
+Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
+This project is protected under the GNU Licence. Please refer to LICENCE.txt in the root directory of this repository for further details.

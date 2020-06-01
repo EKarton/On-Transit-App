@@ -1,191 +1,216 @@
 # On Transit App - API Gateway Service
 
 ### Description
-This microservice is used to control the REST API requests to multiple microservices from one common endpoint. It is used for increased security.
+This microservice is used to control the REST API requests to multiple microservices from one common endpoint. It routes traffic to the appropriate microservices.
 
 ### Table of Contents
-- Overview
 - Installation
 - Usage
 - Credits
 - License
 
-### Overview
-This microservice is comprised of several clusters that work together to make it very scalable.
-<div width="100%">
-    <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/API%20Gateway%20Service/docs/API%20Gateway%20Architecture.png" width="600px"/>
-    </p>
-</div>
-
-On startup, it will launch N clusters (with N being the number of CPUs on the current machine). Each cluster will be running an Express app that will handle client requests. More information can be found on https://nodejs.org/api/cluster.html.
-
 ### Installation
 
 ##### Required Programs and Tools:
-- Linux machine
+- Linux / Unix machine
 - Node JS v8.0+ with NPM
 
-##### Step 1: Install the packages
-1. Open up the terminal and change the directory to the folder "Backend/API Gateway Service" relative to the project directory.
-2. Type the command `npm install`
-
-##### Step 2: Set up the config file
-1. Make a copy of the file "config_template.js" under the folder "Backend/API Gateway Service/src/res", name it "config.js", and save it in the same directory.
-2. Open up "config.js" and edit the port number for the app to use. Note that the port must be free to use. By default, the port number is 3000.
-
-##### Step 3: Run the app
-1. In the "Backend/API Gateway Service" folder of the project directory, type in the command `npm start`. It should launch N processes; one process as the master process, and N - 1 child processes (with N being the number of CPUs on your machine).
-2. It is done!
+##### Steps:
+1. Open the terminal and run the command ```npm install```
+2. Make a copy of ".env-template", name it ".env", and save it
+3. Run the command ```npm start```
 
 ### Usage
-Once the server is up, you are able to make many HTTP requests to the server.
+Once the server is up, you are able to make many HTTP requests to the server, including:
+* Getting trips based on GPS location
+* Getting trip details
+* Viewing the health of microservices
 
-##### Getting trips based on GPS location:
-* **URL**:    
-    api/v1/trips
-* **Method**: 
-    GET
-* **URL Query Params:**
-    lat=[double],
-    long=[double], 
-    radius=[double], 
-	time=[HH:mm:ss]
+#### Getting trips based on GPS location:
 
-**Sample Success Response:**
-```
-{
-    status: "success",
-    data: {
-        "tripIDs": {
-            "5c4e158f3b9294327663817b": {
-                "shortname": "46",
-                "longname": "Tenth Line-Osprey",
-                "headsign": "Northbound",
-                "type": "3",
-                "schedules": [
-                    "5c4e15153b92943276631d19",
-                    "5c4e15153b92943276631d20",
-                    "5c4e15153b92943276631d21"
-                ]
-            },
-            "5c4e158f3b9294327663817f": {
-                "shortname": "46",
-                "longname": "Tenth Line-Osprey",
-                "headsign": "Southbound",
-                "type": "3",
-                "schedules": [
-                    "5c4e15163b92943276631dd1"
-                ]
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/trips?lat=LATITUDE&long=LONGITUDE&time=TIME&radius=RADIUS```
+        * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
+    * Method:
+        * GET
+    * Required URL Query Params:
+        * lat=[double],
+        * long=[double], 
+        * radius=[double], 
+        * time=[HH:mm:ss]
+
+* Sample Success Response with Nearby Trips:
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "5ed1e9d7ffe1942ce10ffea6": {
+                "name": "TTC GTFS",
+                "trips": {
+                    "40150630": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "SOUTH - 510B SPADINA towards QUEENS QUAY",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f624f3f68636608e4d6e",
+                            "5ed1f627f3f68636608eaeb1"
+                        ]
+                    },
+                    "40150637": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "SOUTH - 510A SPADINA towards UNION STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f625f3f68636608e613f",
+                            "5ed1f625f3f68636608e6d61",
+                            "5ed1f62af3f68636608f12c2"
+                        ]
+                    },
+                    "40150824": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f625f3f68636608e68f7",
+                            "5ed1f625f3f68636608e71fe"
+                        ]
+                    },
+                    "40150828": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f628f3f68636608edfbc"
+                        ]
+                    },
+                    "40150892": {
+                        "shortname": "510",
+                        "longname": "SPADINA",
+                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
+                        "type": "0",
+                        "schedules": [
+                            "5ed1f62af3f68636608f281e"
+                        ]
+                    }
+                }
             }
         }
     }
-}
-```
+    ```
 
-**Sample Failure Response:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-**Sample Call:**
-```
-$ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&radius=10&time=11:50:00
-```
+* Sample Success Response with No Nearby Trips:
+    ```json
+    {
+        "status": "success",
+        "data": {}
+    }
+    ```
 
-##### Getting trip details:
-* **URL**:    
-    api/v1/trip/:tripID
-* **Method**: 
-    GET
-* **URL Params:**
-    tripID=[string]
+* Sample Failure Response:**
+    ```json
+    {
+        "status": "failure",
+        "message": "Cannot read property 'name' of null"
+    }
+    ```
 
-**Sample Success Response:**
-```
-{
-	status: "success",
-	data: {
-		id: 12131321231,
-		shortName: "109",
-		longName: "Meadowvale Express",
-		stops: [
-			{ lat: , long: , name: , time: },
-			...
-		],
-		path: [
-			{ lat: , long: },
-			...
-		]
-	}
-}
-```
+#### Getting trip details:
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/transits/:transitID/trips/:tripID/schedules/:scheduleID```
+        * Example: ```http://localhost:5000/api/v1/transits/5ed1ade90d819af6f62c22f2/trips/40150630/schedules/5ed1be3af3f6860e0d6bb7bc```
+    * Method:
+        * GET
 
-**Sample Failure Response:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-**Sample Call:**
-```
-$ curl http://localhost:3000/api/v1/trips/12131321231
-```
+* Sample Success Response:
+    ```json
+    {
+        "status": "success",
+        "data": {
+            "transitName": "TTC GTFS",
+            "shortName": "510",
+            "longName": "SPADINA",
+            "headSign": "SOUTH - 510B SPADINA towards QUEENS QUAY",
+            "type": "0",
+            "path": [
+                {
+                    "lat": 43.66735,
+                    "long": -79.40315
+                },
+                ...
+                {
+                    "lat": 43.66721,
+                    "long": -79.40389
+                }
+            ],
+            "stops": [
+                {
+                    "lat": 43.66722,
+                    "long": -79.40367,
+                    "name": "SPADINA STATION",
+                    "time": 35950
+                }
+                ...
+                {
+                    "lat": 43.63842,
+                    "long": -79.39184,
+                    "name": "QUEENS QUAY LOOP AT LOWER SPADINA AVE",
+                    "time": 37277
+                }
+            ]
+        }
+    }
+    ```
 
-##### Getting vehicles based on GPS location:
-* **URL**:    
-    api/v1/vehicles
-* **Method**: 
-    GET
-* **URL Query Params:**
-    lat=[double]
-    long=[double]
-    radius=[double]
-    
+* Sample Failure Response:**
+    ```json
+    {
+        "status": "failure",
+        "message": "Trip is not found"
+    }
+    ```
 
-**Sample Success Response:**
-```
-{
-	status: "success",
-	data: {
-		vehicles: [
-			{ 
-				id: 105454545, 
-				tripID: 46456456,
-				type: 3
-			},
-			...
-			{ 
-				id: 123123165, 
-				tripID: 98789787,
-				type: 3
-			}
-		]
-	}
-}
-```
+#### Getting the health of current service and other microservices
+* Request requirements:
+    * URL:
+        * Format: ```api/v1/health```
+        * Example: ```http://localhost:5000/api/v1/health```
+    * Method:
+        * GET
 
-**Sample Failure Response:**
-```
-{
-	status: "failure",
-	data: {	}
-	message: "<REASON_FOR_FAILURE>"
-}
-```
-**Sample Call:**
-```
-$ curl http://localhost:3000/api/v1/vehicles?lat=43.5540929&long=-79.7220238&radius=10
-```
+* Sample Success Response:
+    ```
+    OK
+    ```
+
+* Sample Failure Response:**
+    ```
+    FAILURE
+    ```
+
+### Deploying on Heroku
+1. Authenticate with Heroku:
+    ```bash
+    heroku auth:login
+    heroku container:login
+    ```
+
+2. Run the following:
+    ```bash
+    docker build -t api_gateway_service .
+    docker tag api_gateway_service registry.heroku.com/on-transit-app-api-gateway/web
+    docker push registry.heroku.com/on-transit-app-api-gateway/web
+    heroku container:release web --app on-transit-app-api-gateway
+    ```
 
 ### Credits
-Emilio Kartono, the sole creator of this project.
+Emilio Kartono
 
 ### Licence
 Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
-This project is protected under the GNU Licence. Please refer to LICENCE.txt for further details.
+This project is protected under the GNU Licence. Please refer to LICENCE.txt in the root directory of this repository for further details.

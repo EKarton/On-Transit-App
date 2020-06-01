@@ -88,9 +88,7 @@ class App extends React.Component {
                          </div>
                         : null
                 }
-                <div className="right-panel">
-                    <Map />
-                </div>	
+                <Map className="right-panel"/>	
                 {
                     this.props.displayTripDetails
                         ? null

@@ -1,0 +1,20 @@
+{
+  "name": "trip-details-service",
+  "version": "1.0.0",
+  "description": "A microservice used to aggregate complete details about a trip",
+  "main": "server.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Emilio Kartono",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^8.2.0",
+    "express": "^4.16.3",
+    "mongodb": "^3.5.7"
+  }
+}

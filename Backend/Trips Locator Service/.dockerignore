@@ -1,0 +1,10 @@
+
+# Ignore environment-specific files
+node_modules
+.env
+.env-template
+Dockerfile
+
+# Ignore docks
+README.md
+docs
