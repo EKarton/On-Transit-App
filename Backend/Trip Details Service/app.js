@@ -2,29 +2,25 @@
 
 const express = require("express");
 const process = require("process");
-const Database = require("./database");
-const ErrorCodes = require("./constants").ERROR_CODES;
+const Database = require("./models//database");
+const ErrorCodes = require("./models/constants").ERROR_CODES;
 
-const TripDataService = require("./trip-data-service");
+const TripDataService = require("./models/trip-data-service");
 
-const config = require("./res/config");
-
-const DATABASE_URI = config.DATABASE_URI;
-const DATABASE_NAME = config.DATABASE_NAME;
+require('dotenv').config();
 
 var database = null;
 
-module.exports = async function(){
+module.exports = async function () {
 
-    var app = express();
+    let app = express();
 
     database = new Database();
-    await database.connectToDatabase(DATABASE_URI, DATABASE_NAME);
+    await database.connectToDatabase(process.env.MONGODB_URL);
 
-    var tripDataService = new TripDataService(database);
+    let tripDataService = new TripDataService(database);
 
-    var server_port = process.env.YOUR_PORT || process.env.PORT || config.PORT;
-    var server_host = process.env.YOUR_HOST || '0.0.0.0';
+    let server_port = process.env.PORT || 5002;
 
     app.get("/api/v1/transits/:transitID/trips/:tripID/schedules/:scheduleID", (request, response) => {
         let transitID = request.params.transitID;
@@ -50,15 +46,15 @@ module.exports = async function(){
             .catch(error => {
                 let message = "";
                 let statusCode = 500;
-                if (error === ErrorCodes.TRIP_NOT_FOUND){
+                if (error === ErrorCodes.TRIP_NOT_FOUND) {
                     message = "Trip is not found";
                     statusCode = 401;
                 }
-                else if (error === ErrorCodes.SCHEDULE_NOT_FOUND){
+                else if (error === ErrorCodes.SCHEDULE_NOT_FOUND) {
                     message = "Schedule not found";
                     statusCode = 401;
                 }
-                else{
+                else {
                     message = error.message;
                     statusCode = 500;
                 }
@@ -76,20 +72,20 @@ module.exports = async function(){
         res.status(200).send("OK");
     });
 
-    app.listen(server_port, server_host, function() {
+    app.listen(server_port, function () {
         console.log('Listening on port %d', server_port);
     });
 };
 
 process.on("SIGINT", async () => {
-    if (database){
+    if (database) {
         await database.closeDatabase();
     }
     process.exit(-1);
 });
 
 process.on("exit", async () => {
-    if (database){
+    if (database) {
         await database.closeDatabase();
     }
 });

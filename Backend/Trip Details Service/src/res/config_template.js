@@ -1,7 +1,0 @@
-"use strict";
-
-module.exports = {
-	PORT: 3003,
-	DATABASE_URI: "<URI_TO_MONGODB_DATABASE>",
-	DATABASE_NAME: "<NAME_TO_MONGODB_DATABASE>"
-};
