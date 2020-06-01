@@ -31,7 +31,7 @@ Once the server is up, you are able to make many HTTP requests to the server, in
         * Format: ```api/v1/transits/:transitID/trips/:tripID/schedules/:scheduleID```
         * Example: ```http://localhost:5002/api/v1/transits/5ed48f83fa6014f5944ae5ad/trips/20058455/schedules/5ed490a3b2dba619d463a1a8```
 		* Note:
-			* The ```:transitID```, ```:tripID```, and ```:scheduleID``` could be found from the ```api/v1/trips?``` endpoint [see more at Trips Locator Service](https://github.com/EKarton/On-Transit-App/tree/master/Backend/Trips%20Locator%20Service)
+			* The ```:transitID```, ```:tripID```, and ```:scheduleID``` could be found from the ```api/v1/trips?``` endpoint [see more at Trips Locator Service](../Trips%20Locator%20Service/README.md)
     * Method:
         * GET
 
@@ -116,10 +116,10 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 
 2. Run the following:
     ```bash
-    docker build -t api_gateway_service .
-    docker tag api_gateway_service registry.heroku.com/on-transit-app-api-gateway/web
-    docker push registry.heroku.com/on-transit-app-api-gateway/web
-    heroku container:release web --app on-transit-app-api-gateway
+    docker build -t trip_details_service .
+    docker tag trip_details_service registry.heroku.com/on-transit-app-trip-details/web
+    docker push registry.heroku.com/on-transit-app-trip-details/web
+    heroku container:release web --app on-transit-app-trip-details
     ```
 
 ### Credits
