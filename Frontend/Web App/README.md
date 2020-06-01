@@ -82,6 +82,22 @@ You will need:
 
     You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
 
+
+### Deploying on Heroku
+1. Authenticate with Heroku:
+    ```bash
+    heroku auth:login
+    heroku container:login
+    ```
+
+2. Run the following:
+    ```bash
+    docker build -t on_transit_app .
+    docker tag on_transit_app registry.heroku.com/on-transit-app/web
+    docker push registry.heroku.com/on-transit-app/web
+    heroku container:release web --app on-transit-app
+    ```
+
 ## Learn More
 
 You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
