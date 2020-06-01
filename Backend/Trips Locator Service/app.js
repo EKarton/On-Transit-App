@@ -2,10 +2,11 @@
 
 const express = require("express");
 const process = require("process");
-const Config = require("./res/config");
 
-const Database = require("./database");
-const TripsLocator = require("./trips-locator");
+const Database = require("./models/database");
+const TripsLocator = require("./models/trips-locator");
+
+require('dotenv').config();
 
 var database = null;
 
@@ -18,12 +19,11 @@ module.exports = async function () {
     let app = express();
 
     database = new Database();
-    await database.connectToDatabase(Config.DATABASE_URI, Config.DATABASE_NAME);
+    await database.connectToDatabase(process.env.DATABASE_URI);
 
     let tripsLocator = new TripsLocator(database);
 
-    let server_port = process.env.YOUR_PORT || process.env.PORT || Config.PORT;
-    let server_host = process.env.YOUR_HOST || '0.0.0.0';
+    let server_port = process.env.PORT || 5001;
 
     /**
      * Returns a set of trip IDs that are close to a location by a certain radius
@@ -78,7 +78,7 @@ module.exports = async function () {
         res.status(200).send("OK");
     });
 
-    app.listen(server_port, server_host, function () {
+    app.listen(server_port, function () {
         console.log('Listening on port %d', server_port);
     });
 }

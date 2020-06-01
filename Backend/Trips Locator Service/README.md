@@ -4,21 +4,14 @@
 This microservice is used to obtain the closest possible bus route based on a GPS location and a time.
 
 ### Table of Contents
-- Overview
+- How it works
 - Installation
 - Usage
 - Credits
 - License
 
-### Overview
-This microservice is comprised of several clusters that work together to make it very scalable.
-<div width="100%">
-    <p align="center">
-<img src="https://raw.githubusercontent.com/EKarton/On-Transit-App/master/Backend/Trips%20Locator%20Service/docs/Architecture.png" width="600px"/>
-    </p>
-</div>
-
-On startup, it will launch N clusters (with N being the number of CPUs on the current machine). Each cluster will be running an Express app that will handle client requests. More information can be found on https://nodejs.org/api/cluster.html.
+### How it works:
+- ...
 
 ##### Getting possible trips from a GPS location and time
 Clients needs to make HTTP requests to the application in order to get the trips based on their GPS location and time
@@ -137,8 +130,23 @@ $ curl http://localhost:3000/api/v1/trips?lat=43.5540929&long=-79.7220238&time=1
 ### Usage
 Please note that this project is used for educational purposes and is not to be used commercially. We are not liable for any damages or changes done by this project.
 
+### Deploying on Heroku
+1. Authenticate with Heroku:
+    ```
+    heroku auth:login
+    heroku container:login
+    ```
+
+2. Run the following:
+    ```
+    docker build -t trips_locator_service .
+    docker tag trips_locator_service registry.heroku.com/on-transit-app-trips-locator/web
+    docker push registry.heroku.com/on-transit-app-trips-locator/web
+    heroku container:release web --app on-transit-app-trips-locator
+    ```
+
 ### Credits
-Emilio Kartono, the sole creator of this project.
+Emilio Kartono
 
 ### Licence
 This project is protected under the GNU Licence. Please refer to LICENCE.txt for further details.
