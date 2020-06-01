@@ -34,7 +34,7 @@ Once the server is up, you are able to make many HTTP requests to the server, in
         * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
     * Method:
         * GET
-    * URL Query Params:
+    * Required URL Query Params:
         * lat=[double],
         * long=[double], 
         * radius=[double], 

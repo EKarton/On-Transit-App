@@ -42,10 +42,10 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 * Request requirements:
     * URL:
         * Format: ```api/v1/trips?lat=LATITUDE&long=LONGITUDE&time=TIME&radius=RADIUS```
-        * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
+        * Example: ```http://localhost:5001/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
     * Method:
         * GET
-    * URL Query Params:
+    * Required URL Query Params:
         * lat=[double],
         * long=[double], 
         * radius=[double], 
@@ -56,56 +56,29 @@ Once the server is up, you are able to make many HTTP requests to the server, in
     {
         "status": "success",
         "data": {
-            "5ed1e9d7ffe1942ce10ffea6": {
-                "name": "TTC GTFS",
+            "5ed48f83fa6014f5944ae5ad": {
+                "name": "MiWay GTFS",
                 "trips": {
-                    "40150630": {
-                        "shortname": "510",
-                        "longname": "SPADINA",
-                        "headsign": "SOUTH - 510B SPADINA towards QUEENS QUAY",
-                        "type": "0",
+                    "20057802": {
+                        "shortname": "34",
+                        "longname": "Credit Valley",
+                        "headsign": "Westbound",
+                        "type": "3",
                         "schedules": [
-                            "5ed1f624f3f68636608e4d6e",
-                            "5ed1f627f3f68636608eaeb1"
+                            "5ed490a2b2dba619d4638d59",
+                            "5ed490a3b2dba619d463a490"
                         ]
                     },
-                    "40150637": {
-                        "shortname": "510",
-                        "longname": "SPADINA",
-                        "headsign": "SOUTH - 510A SPADINA towards UNION STATION",
-                        "type": "0",
+                    "20058483": {
+                        "shortname": "45",
+                        "longname": "Winston Churchill",
+                        "headsign": "Southbound",
+                        "type": "3",
                         "schedules": [
-                            "5ed1f625f3f68636608e613f",
-                            "5ed1f625f3f68636608e6d61",
-                            "5ed1f62af3f68636608f12c2"
-                        ]
-                    },
-                    "40150824": {
-                        "shortname": "510",
-                        "longname": "SPADINA",
-                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
-                        "type": "0",
-                        "schedules": [
-                            "5ed1f625f3f68636608e68f7",
-                            "5ed1f625f3f68636608e71fe"
-                        ]
-                    },
-                    "40150828": {
-                        "shortname": "510",
-                        "longname": "SPADINA",
-                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
-                        "type": "0",
-                        "schedules": [
-                            "5ed1f628f3f68636608edfbc"
-                        ]
-                    },
-                    "40150892": {
-                        "shortname": "510",
-                        "longname": "SPADINA",
-                        "headsign": "NORTH - 510 SPADINA towards SPADINA STATION",
-                        "type": "0",
-                        "schedules": [
-                            "5ed1f62af3f68636608f281e"
+                            "5ed490a2b2dba619d4639081",
+                            "5ed490a4b2dba619d463aac0",
+                            "5ed490a4b2dba619d463ada8",
+                            "5ed490a5b2dba619d463bda5"
                         ]
                     }
                 }
@@ -133,15 +106,10 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 #### Getting the health of current service and other microservices
 * Request requirements:
     * URL:
-        * Format: ```api/v1/trips?lat=LATITUDE&long=LONGITUDE&time=TIME&radius=RADIUS```
-        * Example: ```http://localhost:5000/api/v1/trips?lat=43.656864&long=-79.399697&time=10:30:00&radius=1```
+        * Format: ```api/v1/health```
+        * Example: ```http://localhost:5001/api/v1/health```
     * Method:
         * GET
-    * URL Query Params:
-        * lat=[double],
-        * long=[double], 
-        * radius=[double], 
-        * time=[HH:mm:ss]
 
 * Sample Success Response:
     ```
