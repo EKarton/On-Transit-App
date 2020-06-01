@@ -20,12 +20,19 @@ class App extends React.Component {
      * This method gets called when the component mounts to
      * the DOM
      */
-    componentDidMount(){       
-        if (!("Notification" in window)){
+    componentDidMount() {
+        if (!("Notification" in window)) {
             alert("Notifications are not supported in this browser!");
         }
 
-        Notification.requestPermission();
+        Notification.requestPermission(permission => {
+            if (permission === "granted") {
+                console.log("Notification permissions granted");
+            } else {
+                console.log("Notification permissions denied");
+            }
+            alert(permission);
+        });
         this.props.startAlarm();
     }
 
@@ -33,7 +40,7 @@ class App extends React.Component {
      * This method gets called when the component unmounts
      * from the DOM
      */
-    componentWillUnmount(){
+    componentWillUnmount() {
         this.props.stopAlarm();
     }
 
@@ -43,24 +50,35 @@ class App extends React.Component {
      */
     dispatchNotification = (message, duration) => {
 
-        // Dispatch the web notification container
-        Notification.requestPermission()
-            .then((permission) => {
-                if (permission !== "granted"){
-                    throw new Error("No access!");
-                }
-            })
-            .then(() => {
-                let notification = new Notification(message);
+        if (!("Notification" in window)) {
+            alert("Notifications are not supported in this browser!");
+        }
 
-                // Close the notification after 10 seconds
-                setTimeout(() => {
-                    notification.close();
-                }, duration);
-            })
-            .catch(() => {
-                console.log("We have no access here!");
+        else if (Notification.permission === "granted") {
+            var notification = new Notification(message);
+
+            // Close the notification after 10 seconds
+            setTimeout(() => {
+                notification.close();
+            }, duration);
+        }
+
+        // Otherwise, we need to ask the user for permission
+        else if (Notification.permission !== "denied") {
+            Notification.requestPermission((permission) => {
+
+                // If the user accepts, create the notification
+                if (permission === "granted") {
+                    var notification = new Notification(message);
+
+                    // Close the notification after 10 seconds
+                    setTimeout(() => {
+                        notification.close();
+                    }, duration);
+                }
+
             });
+        }
 
         // Notifiy the user via the toast UI
         toast(message, {
@@ -71,28 +89,28 @@ class App extends React.Component {
      * Renders the component
      */
     render() {
-        if (this.props.notifications.text !== null){
+        if (this.props.notifications.text !== null) {
             let message = this.props.notifications.text;
             let duration = this.props.notifications.duration;
 
             this.dispatchNotification(message, duration);
             this.props.removeNotification();
         }
-        
+
         return (
             <div className="app-container">
                 {
-                    this.props.displayTripDetails 
+                    this.props.displayTripDetails
                         ? <div className="left-panel">
                             <RouteDetailsView />
-                         </div>
+                        </div>
                         : null
                 }
-                <Map className="right-panel"/>	
+                <Map className="right-panel" />
                 {
                     this.props.displayTripDetails
                         ? null
-                        : <RouteChooserPopup/>
+                        : <RouteChooserPopup />
                 }
                 <ToastContainer />
             </div>
@@ -104,7 +122,7 @@ class App extends React.Component {
  * Maps part of the store's state to this component
  * @param {Object} state The store's state
  */
-function mapStateToProps(state){
+function mapStateToProps(state) {
     return {
         displayTripDetails: state.selectedTrip.tripID !== null,
         notifications: {
