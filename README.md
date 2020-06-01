@@ -1,7 +1,7 @@
 # On Transit App
 
 ### Description
-Do you sleep or work during your commute? Do you often miss your stop because of that? Are you frusterated in finding when and where your stop will take place during your commute? Do you want to be notified when your stop is coming?
+Do you sleep or work during your commute? Do you often miss your stop because of that? Are you frusterated in finding when and where your stop will take place during your commute? Do you want to be notified when your stop is approaching?
 
 The On Transit app may be the solution for you. Equipped with a fast trip detection algorithms, it automatically predicts which bus / train you are taking based on your GPS location and time. Moreover, you can create alarms for your bus stop, which notifies you when your stop is approaching! 
 
