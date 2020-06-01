@@ -10,7 +10,7 @@ The web app is a front-facing application that is used to display routes, predic
 - License
 
 ## Overview of UI:
-When users land on the web page, the app detects which bus the user is on. If there is more than one possible bus the user is on, it will ask the user which bus they are on from the list of possible busses obtained.
+When users land on the web page, the app asks for geolocation and notification permissions. Grant them. Then, the app detects which bus the user is on. If there is more than one possible bus the user is on, it will ask the user which bus they are on from the list of possible busses obtained.
 
 <div width="100%">
     <p align="center">
@@ -40,6 +40,11 @@ Furthermore, users can create a notification for a particular stop by going to t
 </div>
 
 When the user is 5 minutes before reaching their stop, they will be notified.
+<div width="100%">
+    <p align="center">
+<img src="docs/notification-dispatched.png"/>
+    </p>
+</div>
 
 ### Installation
 

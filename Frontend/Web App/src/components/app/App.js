@@ -31,7 +31,6 @@ class App extends React.Component {
             } else {
                 console.log("Notification permissions denied");
             }
-            alert(permission);
         });
         this.props.startAlarm();
     }
