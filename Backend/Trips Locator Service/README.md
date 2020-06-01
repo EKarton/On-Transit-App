@@ -26,6 +26,7 @@ This microservice tries to find the most possible bus route a user could be base
 ##### Required Programs and Tools:
 - Linux / Unix machine
 - Node JS v8.0+ with NPM
+- MongoDB instance / connection to MongoDB
 
 ##### Steps:
 1. Open the terminal and run the command ```npm install```
