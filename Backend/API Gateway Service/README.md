@@ -195,13 +195,13 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 
 ### Deploying on Heroku
 1. Authenticate with Heroku:
-    ```
+    ```bash
     heroku auth:login
     heroku container:login
     ```
 
 2. Run the following:
-    ```
+    ```bash
     docker build -t api_gateway_service .
     docker tag api_gateway_service registry.heroku.com/on-transit-app-api-gateway/web
     docker push registry.heroku.com/on-transit-app-api-gateway/web

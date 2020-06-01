@@ -123,13 +123,13 @@ Once the server is up, you are able to make many HTTP requests to the server, in
 
 ### Deploying on Heroku
 1. Authenticate with Heroku:
-    ```
+    ```bash
     heroku auth:login
     heroku container:login
     ```
 
 2. Run the following:
-    ```
+    ```bash
     docker build -t trips_locator_service .
     docker tag trips_locator_service registry.heroku.com/on-transit-app-trips-locator/web
     docker push registry.heroku.com/on-transit-app-trips-locator/web
