@@ -104,12 +104,14 @@ if __name__ == "__main__":
         # Add the default mongo db instance
         for transit_agency in transit_agencies:
             transit_id = transit_agency["transit_id"]
+            last_updated = transit_agency["last_updated"]
 
-            if transit_id not in already_discovered_transit_ids:
-                database_name = re.sub('[\s\\/$."]', "_", transit_agency["name"])
-                transit_agency["db_name"] = database_name
+            if last_updated is not None:
+                if transit_id not in already_discovered_transit_ids:
+                    database_name = re.sub('[\s\\/$."]', "_", transit_agency["name"])
+                    transit_agency["db_name"] = database_name
 
-                already_discovered_transit_ids.add(transit_id)
+                    already_discovered_transit_ids.add(transit_id)
 
         results += transit_agencies
 
