@@ -616,6 +616,9 @@ if __name__ == "__main__":
     print("Transit agency info to pre-process GTFS data:")
     print(transit_info, "\n")
 
+    if transit_info["gtfs_url"] is None:
+        raise ValueError("transit_info[\"gtfs_url\"] cannot be NULL!")
+
     # Download and extract the GTFS data
     RAW_ZIPFILE_PATH = "data/raw_data/gtfs.zip"
     EXTRACTED_GTFS_FILEPATH = "data/extracted_data/gtfs"
