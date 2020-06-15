@@ -1,4 +1,5 @@
 from pyspark.sql.types import *
+from pyspark.sql.window import Window
 from pyspark.sql import *
 from pyspark.sql import functions as F
 from pyspark import SparkConf, SparkContext
@@ -293,15 +294,44 @@ def build_trips(trips, routes):
 
 
 def build_paths(shapes):
+    """ Takes a shapes dataframe with each row of this format:
+        {
+            shape_id: <INT>
+            shape_pt_sequence: <INT>,
+            latitude: <DOUBLE>,
+            longitude: <DOUBLE>
+        }
+
+        groups each row by shape_id, sorts each group by shape_pt_sequence, and 
+        returns a new dataframe with each row of this format:
+        {
+            path_id: <INT>,
+            path_latitudes: [ <DOUBLE>, ... ]
+            path_longitude: [ <DOUBLE>, ... ]
+        }
+    """
+    paths_window = Window.partitionBy(shapes.shape_id).orderBy(shapes.shape_pt_sequence)
+
     paths = (
-        shapes.sort("shape_pt_sequence")
-        .groupBy("shape_id")
+        shapes.withColumn(
+            "path_latitudes", F.collect_list("latitude").over(paths_window)
+        )
+        .withColumn("path_longitudes", F.collect_list("longitude").over(paths_window))
+        .withColumn(
+            "path_sequences", F.collect_list("shape_pt_sequence").over(paths_window)
+        )
+    )
+
+    paths = (
+        paths.groupBy("shape_id")
         .agg(
-            F.collect_list("latitude").alias("path_latitudes"),
-            F.collect_list("longitude").alias("path_longitudes"),
+            F.max("path_latitudes").alias("path_latitudes"),
+            F.max("path_longitudes").alias("path_longitudes"),
+            F.max("path_sequences").alias("path_sequences"),
         )
         .withColumnRenamed("shape_id", "path_id")
     )
+
     return paths
 
 
@@ -408,16 +438,28 @@ def build_schedule(stop_times):
         times[], locations[], and headsign[] are sorted by their sequence number.
     """
 
+    schedules_window = Window.partitionBy(stop_times.trip_id).orderBy(
+        stop_times.stop_sequence
+    )
+
     schedules = (
-        stop_times.sort("stop_sequence")
-        .groupBy("trip_id")
+        stop_times.withColumn(
+            "times", F.collect_list("arrival_time").over(schedules_window)
+        )
+        .withColumn("locations", F.collect_list("stop_id").over(schedules_window))
+        .withColumn("headsigns", F.collect_list("stop_headsign").over(schedules_window))
+        .withColumn("sequences", F.collect_list("stop_sequence").over(schedules_window))
+    )
+
+    schedules = (
+        schedules.groupBy("trip_id")
         .agg(
-            F.collect_list("arrival_time").alias("times"),
-            F.min("arrival_time").alias("start_time"),
-            F.max("arrival_time").alias("end_time"),
-            F.collect_list("stop_id").alias("locations"),
-            F.collect_list("stop_headsign").alias("headsigns"),
-            F.collect_list("stop_sequence").alias("sequences"),
+            F.max("times").alias("times"),
+            F.max("locations").alias("locations"),
+            F.max("headsigns").alias("headsigns"),
+            F.max("sequences").alias("sequences"),
+            F.min("times").alias("start_time"),
+            F.max("times").alias("end_time"),
         )
     )
 
@@ -617,10 +659,10 @@ if __name__ == "__main__":
     print(transit_info, "\n")
 
     if transit_info["gtfs_url"] is None:
-        raise ValueError("transit_info[\"gtfs_url\"] cannot be NULL!")
+        raise ValueError('transit_info["gtfs_url"] cannot be NULL!')
 
     if transit_info["db_name"] is None:
-        raise ValueError("transit_info[\"db_name\"] cannot be NULL!")
+        raise ValueError('transit_info["db_name"] cannot be NULL!')
 
     # Download and extract the GTFS data
     RAW_ZIPFILE_PATH = "data/raw_data/gtfs.zip"
